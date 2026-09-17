@@ -57,7 +57,7 @@
     <string name="privacy_point_2">स्क्रीनशॉट फ़ोन से बाहर नहीं जाता</string>
     <string name="privacy_point_3">एक्टिविटी इसी डिवाइस पर रहती है</string>
     <string name="accuracy_label">सटीकता का वादा</string>
-    <string name="accuracy_body">भविष्य का AI वर्ज़न सबूत दिखाएगा और ज़रूरी जानकारी की पुष्टि माँगेगा। यह कभी 100% सटीकता का दावा नहीं करेगा।</string>
+    <string name="accuracy_body" formatted="false">भविष्य का AI वर्ज़न सबूत दिखाएगा और ज़रूरी जानकारी की पुष्टि माँगेगा। यह कभी 100% सटीकता का दावा नहीं करेगा।</string>
     <string name="version">प्रोटोटाइप 0.1 · Android</string>
     <string name="import_not_live_title">इमेज सुरक्षित रूप से चुनी गई</string>
     <string name="import_not_live_body">इस मुफ़्त प्रोटोटाइप में क्लाउड विश्लेषण जानबूझकर नहीं जोड़ा गया है। अनुभव देखने के लिए नमूना नतीजा खोलें।</string>
