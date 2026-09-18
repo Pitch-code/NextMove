@@ -90,14 +90,19 @@ adb shell input keyevent KEYCODE_BACK
 sleep 1
 has_id "$PACKAGE:id/screen_home" || fail_with_logs "Back from result did not return Home."
 
-# Verify text sharing opens the safe typed check and Back preserves the draft.
-adb shell am start -W \
+# Verify text sharing cold-starts the safe typed check and Back preserves the draft.
+adb shell am force-stop "$PACKAGE"
+share_output="$(adb shell am start -W \
     -a android.intent.action.SEND \
     -t text/plain \
     --es android.intent.extra.TEXT "pay now and share OTP" \
-    -n "$COMPONENT" >/dev/null
+    -n "$COMPONENT" 2>&1)"
+printf '%s\n' "$share_output" > startup-share.txt
 sleep 2
-has_id "$PACKAGE:id/screen_voice" || fail_with_logs "Shared text did not open the voice/text check."
+has_id "$PACKAGE:id/screen_voice" || {
+    cat startup-share.txt
+    fail_with_logs "Shared text did not open the voice/text check."
+}
 adb shell input swipe 720 1900 720 700 500
 sleep 1
 tap_id "$PACKAGE:id/voice_check" || fail_with_logs "Could not run the typed safety check."
@@ -110,10 +115,12 @@ sleep 1
 capture_ui
 grep -q "pay now and share OTP" "$UI_XML" || fail_with_logs "Voice/text draft was not preserved on Back."
 
-# Finish the shared-text Activity and return to the original Home screen.
+# Finish the shared-text Activity, then cold-start Home for permission checks.
 adb shell input keyevent KEYCODE_BACK
 sleep 1
-has_id "$PACKAGE:id/screen_home" || fail_with_logs "Back from shared text did not return Home."
+adb shell am start -W -n "$COMPONENT" >/dev/null
+sleep 2
+has_id "$PACKAGE:id/screen_home" || fail_with_logs "Normal launch did not return Home."
 
 # Android 13+ must show and grant the real notification runtime permission on request.
 sdk="$(adb shell getprop ro.build.version.sdk | tr -d '\r')"

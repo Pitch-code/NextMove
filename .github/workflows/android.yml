@@ -67,6 +67,7 @@ jobs:
           name: startup-smoke-api-26
           path: |
             startup-launch.txt
+            startup-share.txt
             startup-logcat.txt
             startup-ui.xml
             package-permissions.txt
