@@ -1,6 +1,7 @@
 package com.pitchcode.nextmove;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -1185,6 +1186,9 @@ public final class MainActivity extends Activity {
         }
     }
 
+    // API 33+ gestures use the registered OnBackInvoked callback; this override
+    // intentionally preserves hardware/system Back support on Android 8–12.
+    @SuppressLint("GestureBackNavigation")
     @Override
     public void onBackPressed() {
         navigateBack();
