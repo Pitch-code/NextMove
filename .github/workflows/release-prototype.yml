@@ -9,7 +9,7 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
 
     steps:
       - name: Check out source
@@ -35,17 +35,26 @@ jobs:
       - name: Build and lint prototype
         run: gradle :app:assembleDebug :app:lintDebug
 
+      - name: Launch smoke test on Android 8
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 26
+          arch: x86
+          profile: Nexus 6
+          disable-animations: true
+          script: bash scripts/startup-smoke.sh
+
       - name: Prepare public APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk NextMove-v0.1.0-prototype.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk NextMove-v0.1.1-prototype.apk
 
       - name: Publish public prototype release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create v0.1.0-prototype \
-            NextMove-v0.1.0-prototype.apk \
+          gh release create v0.1.1-prototype \
+            NextMove-v0.1.1-prototype.apk \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title "NextMove Android Prototype 0.1" \
-            --notes "Free Android UI prototype for testing. It includes English and Hindi interfaces and four sample journeys. Live OCR, Gemini, Firebase, login, analytics, and screenshot analysis are intentionally not connected yet." \
+            --title "NextMove Android Prototype 0.1.1" \
+            --notes "Replacement Android prototype with hardened startup compatibility for Realme and other vendor Android builds. English/Hindi UI, four sample journeys, and Android 8 launch-smoke verification are included. Uninstall v0.1.0 before installing this build. Live OCR, Gemini, Firebase, login, analytics, and screenshot analysis remain intentionally disconnected." \
             --prerelease

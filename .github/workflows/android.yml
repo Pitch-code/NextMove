@@ -15,7 +15,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
 
     steps:
       - name: Check out source
@@ -40,6 +40,25 @@ jobs:
 
       - name: Build and lint debug app
         run: gradle :app:assembleDebug :app:lintDebug
+
+      - name: Launch smoke test on Android 8
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 26
+          arch: x86
+          profile: Nexus 6
+          disable-animations: true
+          script: bash scripts/startup-smoke.sh
+
+      - name: Upload startup diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: startup-smoke-api-26
+          path: |
+            startup-launch.txt
+            startup-logcat.txt
+          if-no-files-found: warn
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
