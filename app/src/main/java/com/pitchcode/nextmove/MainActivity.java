@@ -83,6 +83,7 @@ public final class MainActivity extends Activity {
     private EditText voiceInput;
     private TextView voiceStatus;
     private boolean startListeningAfterPermission;
+    private boolean returningFromNotificationSettings;
 
     @Override
     protected void attachBaseContext(Context newBase) {
@@ -134,8 +135,22 @@ public final class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (content != null && currentScreen != null
-                && currentScreen.screen == Screen.SETTINGS) {
+        if (content == null || currentScreen == null) return;
+        if (returningFromNotificationSettings) {
+            returningFromNotificationSettings = false;
+            if (NotificationHelper.areEnabled(this)) {
+                NotificationHelper.showReady(this);
+                Toast.makeText(this, R.string.notification_enabled, Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, R.string.notification_denied, Toast.LENGTH_LONG).show();
+            }
+            ScreenState refresh = currentScreen;
+            handler.post(() -> {
+                restoringPreviousScreen = true;
+                renderState(refresh);
+                restoringPreviousScreen = false;
+            });
+        } else if (currentScreen.screen == Screen.SETTINGS) {
             handler.post(this::renderSettings);
         }
     }
@@ -227,6 +242,13 @@ public final class MainActivity extends Activity {
     }
 
     private void showScreen(View screen, int tab, ScreenState next, boolean replaceCurrent) {
+        if (currentScreen != null
+                && currentScreen.screen == Screen.VOICE
+                && next.screen != Screen.VOICE
+                && voiceInput != null) {
+            currentScreen = new ScreenState(
+                    Screen.VOICE, null, voiceInput.getText().toString());
+        }
         if (currentScreen != null
                 && currentScreen.screen == Screen.PROCESSING
                 && next.screen != Screen.RESULT) {
@@ -633,18 +655,26 @@ public final class MainActivity extends Activity {
 
     private void dialCyberHelpline() {
         try {
-            startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse("tel:1930")));
+            startActivity(createCyberHelplineIntent());
         } catch (RuntimeException error) {
             Toast.makeText(this, R.string.dial_error, Toast.LENGTH_SHORT).show();
         }
     }
 
+    static Intent createCyberHelplineIntent() {
+        return new Intent(Intent.ACTION_DIAL, Uri.parse("tel:1930"));
+    }
+
     private void openCybercrimePortal() {
         try {
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(CYBERCRIME_URL)));
+            startActivity(createCybercrimePortalIntent());
         } catch (RuntimeException error) {
             Toast.makeText(this, R.string.open_link_error, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    static Intent createCybercrimePortalIntent() {
+        return new Intent(Intent.ACTION_VIEW, Uri.parse(CYBERCRIME_URL));
     }
 
     private void markHandled(SampleAnalysis sample) {
@@ -763,8 +793,10 @@ public final class MainActivity extends Activity {
         body.addView(Design.space(this, 8));
         body.addView(Design.text(this, getString(R.string.voice_body), 14, Design.MUTED, false));
         body.addView(Design.space(this, 16));
-        body.addView(infoCard(R.string.voice_privacy_title, R.string.voice_privacy_body,
-                Design.MINT), Design.match());
+        View disclosure = infoCard(R.string.voice_privacy_title, R.string.voice_privacy_body,
+                Design.MINT);
+        disclosure.setId(R.id.voice_disclosure);
+        body.addView(disclosure, Design.match());
         body.addView(Design.space(this, 12));
         body.addView(infoCard(R.string.preliminary_check, R.string.voice_live_boundary,
                 Color.rgb(255, 241, 207)), Design.match());
@@ -795,6 +827,7 @@ public final class MainActivity extends Activity {
 
         TextView speak = Design.button(this, "🎙  " + getString(R.string.start_listening),
                 Design.SAFFRON, Design.INK);
+        speak.setId(R.id.voice_start);
         speak.setOnClickListener(view -> requestMicrophone(true));
         body.addView(speak, Design.match());
         body.addView(Design.space(this, 10));
@@ -1121,6 +1154,7 @@ public final class MainActivity extends Activity {
     }
 
     private void openNotificationSettings() {
+        returningFromNotificationSettings = true;
         try {
             Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                     .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
@@ -1340,9 +1374,10 @@ public final class MainActivity extends Activity {
     }
 
     private String sharedText(Intent intent) {
-        String text = intent == null ? null : intent.getStringExtra(Intent.EXTRA_TEXT);
-        if (text == null) return "";
-        text = text.trim();
+        CharSequence shared = intent == null
+                ? null : intent.getCharSequenceExtra(Intent.EXTRA_TEXT);
+        if (shared == null) return "";
+        String text = shared.toString().trim();
         return text.length() > 4000 ? text.substring(0, 4000) : text;
     }
 

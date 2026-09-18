@@ -17,5 +17,7 @@
     <item name="voice_open" type="id" />
     <item name="voice_input" type="id" />
     <item name="voice_check" type="id" />
+    <item name="voice_disclosure" type="id" />
+    <item name="voice_start" type="id" />
     <item name="notification_enable" type="id" />
 </resources>

@@ -87,3 +87,50 @@ jobs:
           name: nextmove-debug
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+
+  modern-verify:
+    runs-on: macos-14
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Android 16 SDK
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "platforms;android-36" \
+            "build-tools;36.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.1.0"
+
+      - name: Build modern Android tests
+        run: gradle :app:assembleDebug :app:assembleDebugAndroidTest :app:lintDebug
+
+      - name: Verify Android 15 permissions and Back
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          script: gradle :app:connectedDebugAndroidTest
+
+      - name: Upload modern Android test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-15-test-report
+          path: app/build/reports/androidTests/connected/**
+          if-no-files-found: warn
