@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.text.SpannedString;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -104,8 +105,12 @@ public final class MainActivityFlowTest {
                 assertNotNull(input);
                 assertNotNull(disclosure);
                 assertNotNull(start);
+                ViewGroup disclosureParent = (ViewGroup) disclosure.getParent();
+                assertEquals("Disclosure and capture must share the ordered voice form",
+                        disclosureParent, start.getParent());
                 assertTrue("Disclosure must appear before voice capture",
-                        disclosure.getTop() < start.getTop());
+                        disclosureParent.indexOfChild(disclosure)
+                                < disclosureParent.indexOfChild(start));
                 input.setText("unfinished fraud description");
                 click(activity, R.id.nav_settings);
                 activity.onBackPressed();
