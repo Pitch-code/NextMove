@@ -16,6 +16,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.CalendarContract;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -49,7 +50,7 @@ public final class MainActivity extends Activity {
     private static final int REQUEST_NOTIFICATIONS = 201;
     private static final int REQUEST_MICROPHONE = 202;
     private static final String KEY_LANGUAGE = "language";
-    private static final String KEY_NOTIFICATION_INTRO = "notification_intro_shown";
+    private static final String KEY_NOTIFICATION_REQUESTED = "notification_requested";
     private static final String CYBERCRIME_URL = "https://cybercrime.gov.in/";
 
     private enum Screen { HOME, PROCESSING, RESULT, ACTIVITY, SETTINGS, VOICE, VOICE_RESULT }
@@ -113,11 +114,13 @@ public final class MainActivity extends Activity {
                     this::navigateBack);
         }
         buildShell();
-        renderHome();
-        if (isSharedImage(getIntent())) {
-            handler.postDelayed(this::showImageSelectedDialog, 350);
+        if (isSharedText(getIntent())) {
+            renderVoice(sharedText(getIntent()));
         } else {
-            handler.postDelayed(this::offerNotificationSetupOnce, 700);
+            renderHome();
+            if (isSharedImage(getIntent())) {
+                handler.postDelayed(this::showImageSelectedDialog, 350);
+            }
         }
     }
 
@@ -129,10 +132,23 @@ public final class MainActivity extends Activity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (content != null && currentScreen != null
+                && currentScreen.screen == Screen.SETTINGS) {
+            handler.post(this::renderSettings);
+        }
+    }
+
+    @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        if (isSharedImage(intent)) showImageSelectedDialog();
+        if (isSharedText(intent)) {
+            renderVoice(sharedText(intent));
+        } else if (isSharedImage(intent)) {
+            showImageSelectedDialog();
+        }
     }
 
     private void buildShell() {
@@ -286,6 +302,8 @@ public final class MainActivity extends Activity {
         body.addView(Design.space(this, 14));
         body.addView(buildPrivacyStrip(), Design.match());
         body.addView(Design.space(this, 14));
+        body.addView(buildNotificationSetupCard(), Design.match());
+        body.addView(Design.space(this, 14));
         body.addView(buildSafetyToolsCard(), Design.match());
         showScreen(scroll, 0, ScreenState.of(Screen.HOME));
     }
@@ -376,6 +394,28 @@ public final class MainActivity extends Activity {
         copy.addView(Design.text(this, getString(R.string.privacy_short_body), 11, Design.MUTED, false));
         strip.addView(copy, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         return strip;
+    }
+
+    private View buildNotificationSetupCard() {
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 18), Design.dp(this, 17),
+                Design.dp(this, 18), Design.dp(this, 17));
+        card.setBackground(Design.rounded(Color.rgb(255, 241, 207), 20, this));
+        card.addView(Design.text(this, getString(R.string.notification_card_title), 16,
+                Design.INK, true));
+        card.addView(Design.space(this, 6));
+        card.addView(Design.text(this, getString(R.string.notification_card_body), 12,
+                Design.INK, false));
+        card.addView(Design.space(this, 12));
+        TextView enable = Design.chip(this,
+                getString(NotificationHelper.areEnabled(this)
+                        ? R.string.send_test_notification : R.string.enable_notifications),
+                true);
+        enable.setId(R.id.notification_enable);
+        enable.setOnClickListener(view -> requestNotificationAccess());
+        card.addView(enable, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        return card;
     }
 
     private View buildSafetyToolsCard() {
@@ -701,6 +741,10 @@ public final class MainActivity extends Activity {
     }
 
     private void renderVoice() {
+        renderVoice("");
+    }
+
+    private void renderVoice(String initialDescription) {
         ScrollView scroll = scrollPage();
         scroll.setId(R.id.screen_voice);
         LinearLayout body = pageBody();
@@ -716,6 +760,12 @@ public final class MainActivity extends Activity {
         body.addView(Design.text(this, getString(R.string.voice_title), 31, Design.INK, true));
         body.addView(Design.space(this, 8));
         body.addView(Design.text(this, getString(R.string.voice_body), 14, Design.MUTED, false));
+        body.addView(Design.space(this, 16));
+        body.addView(infoCard(R.string.voice_privacy_title, R.string.voice_privacy_body,
+                Design.MINT), Design.match());
+        body.addView(Design.space(this, 12));
+        body.addView(infoCard(R.string.preliminary_check, R.string.voice_live_boundary,
+                Color.rgb(255, 241, 207)), Design.match());
         body.addView(Design.space(this, 20));
 
         voiceInput = new EditText(this);
@@ -728,6 +778,11 @@ public final class MainActivity extends Activity {
         voiceInput.setPadding(Design.dp(this, 16), Design.dp(this, 15),
                 Design.dp(this, 16), Design.dp(this, 15));
         voiceInput.setBackground(Design.outlined(Design.CARD, Design.SOFT, 20, this));
+        voiceInput.setId(R.id.voice_input);
+        if (initialDescription != null && !initialDescription.isEmpty()) {
+            voiceInput.setText(initialDescription);
+            voiceInput.setSelection(voiceInput.length());
+        }
         body.addView(voiceInput, Design.match());
         body.addView(Design.space(this, 10));
 
@@ -744,16 +799,13 @@ public final class MainActivity extends Activity {
 
         TextView check = Design.button(this, getString(R.string.check_situation),
                 Design.INK, Color.WHITE);
+        check.setId(R.id.voice_check);
         check.setOnClickListener(view -> analyzeVoiceDescription());
         body.addView(check, Design.match());
-        body.addView(Design.space(this, 18));
-        body.addView(infoCard(R.string.voice_privacy_title, R.string.voice_privacy_body,
-                Design.MINT), Design.match());
-        body.addView(Design.space(this, 12));
-        body.addView(infoCard(R.string.preliminary_check, R.string.voice_live_boundary,
-                Color.rgb(255, 241, 207)), Design.match());
 
-        showScreen(scroll, 0, ScreenState.of(Screen.VOICE));
+        showScreen(scroll, 0,
+                new ScreenState(Screen.VOICE, null,
+                        initialDescription == null ? "" : initialDescription));
     }
 
     private View infoCard(int titleId, int bodyId, int color) {
@@ -777,6 +829,7 @@ public final class MainActivity extends Activity {
         if (inputMethod != null && voiceInput != null) {
             inputMethod.hideSoftInputFromWindow(voiceInput.getWindowToken(), 0);
         }
+        currentScreen = new ScreenState(Screen.VOICE, null, description);
         renderVoiceResult(description);
     }
 
@@ -942,7 +995,7 @@ public final class MainActivity extends Activity {
                 R.string.microphone_reason,
                 checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
                         ? R.string.allowed : R.string.ask_when_used,
-                () -> requestMicrophone(false)));
+                this::renderVoice));
         card.addView(Design.space(this, 12));
         card.addView(permissionRow(
                 "□",
@@ -1040,22 +1093,6 @@ public final class MainActivity extends Activity {
         return card;
     }
 
-    private void offerNotificationSetupOnce() {
-        if (isFinishing()) return;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-                && NotificationHelper.areEnabled(this)) return;
-        boolean shown = HistoryStore.prefs(this).getBoolean(KEY_NOTIFICATION_INTRO, false);
-        if (shown) return;
-        HistoryStore.prefs(this).edit().putBoolean(KEY_NOTIFICATION_INTRO, true).apply();
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.notification_intro_title)
-                .setMessage(R.string.notification_intro_body)
-                .setNegativeButton(R.string.cancel, null)
-                .setPositiveButton(R.string.enable_notifications,
-                        (dialog, which) -> requestNotificationAccess())
-                .show();
-    }
-
     private void requestNotificationAccess() {
         if (NotificationHelper.areEnabled(this)) {
             NotificationHelper.showReady(this);
@@ -1063,12 +1100,33 @@ public final class MainActivity extends Activity {
             return;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requestPermissions(
-                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
-                    REQUEST_NOTIFICATIONS);
+            boolean requestedBefore = HistoryStore.prefs(this)
+                    .getBoolean(KEY_NOTIFICATION_REQUESTED, false);
+            if (!requestedBefore || shouldShowRequestPermissionRationale(
+                    Manifest.permission.POST_NOTIFICATIONS)) {
+                HistoryStore.prefs(this).edit()
+                        .putBoolean(KEY_NOTIFICATION_REQUESTED, true)
+                        .apply();
+                requestPermissions(
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        REQUEST_NOTIFICATIONS);
+            } else {
+                openNotificationSettings();
+            }
         } else {
-            NotificationHelper.showReady(this);
-            Toast.makeText(this, R.string.notification_older_android, Toast.LENGTH_LONG).show();
+            openNotificationSettings();
+        }
+    }
+
+    private void openNotificationSettings() {
+        try {
+            Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+            startActivity(intent);
+        } catch (RuntimeException error) {
+            Intent fallback = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.parse("package:" + getPackageName()));
+            startActivity(fallback);
         }
     }
 
@@ -1212,7 +1270,7 @@ public final class MainActivity extends Activity {
             case HOME -> renderHome();
             case ACTIVITY -> renderActivity();
             case SETTINGS -> renderSettings();
-            case VOICE -> renderVoice();
+            case VOICE -> renderVoice(state.voiceDescription);
             case RESULT -> renderResult(SampleAnalysis.of(state.sampleKind));
             case VOICE_RESULT -> renderVoiceResult(
                     state.voiceDescription == null ? "" : state.voiceDescription);
@@ -1270,6 +1328,20 @@ public final class MainActivity extends Activity {
                 && Intent.ACTION_SEND.equals(intent.getAction())
                 && intent.getType() != null
                 && intent.getType().startsWith("image/");
+    }
+
+    private boolean isSharedText(Intent intent) {
+        return intent != null
+                && Intent.ACTION_SEND.equals(intent.getAction())
+                && "text/plain".equals(intent.getType())
+                && sharedText(intent).length() > 0;
+    }
+
+    private String sharedText(Intent intent) {
+        String text = intent == null ? null : intent.getStringExtra(Intent.EXTRA_TEXT);
+        if (text == null) return "";
+        text = text.trim();
+        return text.length() > 4000 ? text.substring(0, 4000) : text;
     }
 
     private static String savedLanguage(Context context) {

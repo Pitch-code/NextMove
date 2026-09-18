@@ -133,20 +133,17 @@
     <string name="official_india_body">वित्तीय साइबर फ्रॉड की शिकायत 1930 पर की जा सकती है और cybercrime.gov.in पर पूरी की जा सकती है। NextMove आपकी ओर से रिपोर्ट दर्ज नहीं करता।</string>
 
     <string name="notification_channel_name">NextMove रिमाइंडर</string>
-    <string name="notification_channel_description">आपके चुने ज़रूरी रिमाइंडर और सुरक्षा अपडेट</string>
-    <string name="notification_intro_title">उपयोगी रिमाइंडर की अनुमति दें?</string>
-    <string name="notification_intro_body">NextMove आपके चुने कामों और ज़रूरी सुरक्षा अपडेट की सूचना दे सकता है। इसे कभी भी बदला जा सकता है। Android 12 या पुराने फ़ोन पर सिस्टम अनुमति पॉपअप नहीं दिखाता।</string>
+    <string name="notification_channel_description">प्रोटोटाइप नोटिफ़िकेशन अनुमति की पुष्टि</string>
     <string name="enable_notifications">नोटिफ़िकेशन चालू करें</string>
     <string name="notification_ready_title">NextMove नोटिफ़िकेशन तैयार हैं</string>
-    <string name="notification_ready_body">केवल आपके चुने रिमाइंडर और सुरक्षा अपडेट मिलेंगे।</string>
+    <string name="notification_ready_body">यह जाँच पुष्टि करती है कि आपके फ़ोन पर नोटिफ़िकेशन एक्सेस काम करता है।</string>
     <string name="notification_enabled">नोटिफ़िकेशन चालू हैं</string>
     <string name="notification_denied">नोटिफ़िकेशन बंद हैं। बाद में फ़ोन सेटिंग्स में चालू कर सकते हैं।</string>
-    <string name="notification_older_android">इस Android वर्ज़न पर नोटिफ़िकेशन उपलब्ध हैं; सिस्टम अनुमति पॉपअप की ज़रूरत नहीं है।</string>
 
     <string name="permissions_label">अनुमतियाँ और एक्सेस</string>
     <string name="permissions_body">NextMove केवल फ़ीचर इस्तेमाल करते समय अनुमति माँगता है। यह फ़ोन को चुपचाप नहीं पढ़ता।</string>
     <string name="notifications_title">नोटिफ़िकेशन</string>
-    <string name="notifications_reason">आपके चुने रिमाइंडर और सुरक्षा अपडेट के लिए</string>
+    <string name="notifications_reason">चालू करने और एक टेस्ट नोटिफ़िकेशन पाने के लिए दबाएँ</string>
     <string name="microphone_title">माइक्रोफ़ोन</string>
     <string name="microphone_reason">केवल “बोलना शुरू करें” दबाने पर इस्तेमाल</string>
     <string name="calendar_title">कैलेंडर</string>
@@ -164,4 +161,7 @@
     <string name="safety_tools_title">भारत के लिए सुरक्षा टूल</string>
     <string name="safety_tools_body">संदिग्ध स्थिति बोलें या लिखें, चेतावनी संकेत देखें और आधिकारिक रिपोर्टिंग तक जल्दी पहुँचें।</string>
     <string name="open_voice_check">स्थिति बताएँ</string>
+    <string name="notification_card_title">नोटिफ़िकेशन एक्सेस जाँचें</string>
+    <string name="notification_card_body">अभी एक पुष्टि नोटिफ़िकेशन पाएँ। इस प्रोटोटाइप में तय समय वाले NextMove रिमाइंडर सक्रिय नहीं हैं।</string>
+    <string name="send_test_notification">टेस्ट नोटिफ़िकेशन भेजें</string>
 </resources>

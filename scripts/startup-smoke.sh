@@ -85,9 +85,49 @@ sleep 2
 has_id "$PACKAGE:id/screen_result" || fail_with_logs "Sample result did not open."
 capture_ui
 grep -q "SAMPLE" "$UI_XML" || fail_with_logs "Sample context is not visible."
+grep -q "Electricity bill" "$UI_XML" || fail_with_logs "Selected sample identity is not visible."
 adb shell input keyevent KEYCODE_BACK
 sleep 1
 has_id "$PACKAGE:id/screen_home" || fail_with_logs "Back from result did not return Home."
+
+# Verify text sharing opens the safe typed check and Back preserves the draft.
+adb shell am start -W \
+    -a android.intent.action.SEND \
+    -t text/plain \
+    --es android.intent.extra.TEXT "pay now and share OTP" \
+    -n "$COMPONENT" >/dev/null
+sleep 2
+has_id "$PACKAGE:id/screen_voice" || fail_with_logs "Shared text did not open the voice/text check."
+adb shell input swipe 720 1900 720 700 500
+sleep 1
+tap_id "$PACKAGE:id/voice_check" || fail_with_logs "Could not run the typed safety check."
+has_id "$PACKAGE:id/screen_voice_result" || fail_with_logs "Typed safety result did not open."
+adb shell input keyevent KEYCODE_BACK
+sleep 1
+has_id "$PACKAGE:id/screen_voice" || fail_with_logs "Back did not return to the voice/text screen."
+adb shell input swipe 720 1900 720 700 500
+sleep 1
+capture_ui
+grep -q "pay now and share OTP" "$UI_XML" || fail_with_logs "Voice/text draft was not preserved on Back."
+
+# Finish the shared-text Activity and return to the original Home screen.
+adb shell input keyevent KEYCODE_BACK
+sleep 1
+has_id "$PACKAGE:id/screen_home" || fail_with_logs "Back from shared text did not return Home."
+
+# Android 13+ must show and grant the real notification runtime permission on request.
+sdk="$(adb shell getprop ro.build.version.sdk | tr -d '\r')"
+if [ "$sdk" -ge 33 ]; then
+    adb shell input swipe 720 2000 720 650 500
+    adb shell input swipe 720 2000 720 650 500
+    sleep 1
+    tap_id "$PACKAGE:id/notification_enable" || fail_with_logs "Could not request notifications."
+    tap_id "com.android.permissioncontroller:id/permission_allow_button" \
+        || fail_with_logs "Notification permission dialog did not appear."
+    adb shell dumpsys package "$PACKAGE" > package-permissions.txt
+    grep -q "android.permission.POST_NOTIFICATIONS: granted=true" package-permissions.txt \
+        || fail_with_logs "Notification permission was not granted."
+fi
 
 pid="$(adb shell pidof "$PACKAGE" 2>/dev/null | tr -d '\r' || true)"
 [ -n "$pid" ] || fail_with_logs "App process stopped during interaction checks."

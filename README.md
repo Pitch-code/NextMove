@@ -13,7 +13,7 @@ NextMove is an Android-first action assistant prototype for India. It explores a
 - Voice transcription with typed fallback and explicit provider disclosure
 - Preliminary on-device scam phrase checks (clearly not live AI)
 - India cyber-fraud actions for 1930 and cybercrime.gov.in
-- Android share target for images
+- Android share target for images and selected text
 - Privacy-safe image-picker demonstration
 - Four deterministic sample journeys:
   - Electricity bill

@@ -133,20 +133,17 @@
     <string name="official_india_body">Financial cyber fraud can be reported by calling 1930 and completed at cybercrime.gov.in. NextMove does not file the report for you.</string>
 
     <string name="notification_channel_name">NextMove reminders</string>
-    <string name="notification_channel_description">Important reminders and safety updates you choose</string>
-    <string name="notification_intro_title">Allow helpful reminders?</string>
-    <string name="notification_intro_body">NextMove can notify you about actions you choose and important safety updates. You can change this anytime. On Android 12 or earlier, the phone does not show a notification permission popup.</string>
+    <string name="notification_channel_description">Prototype notification permission confirmation</string>
     <string name="enable_notifications">Enable notifications</string>
     <string name="notification_ready_title">NextMove notifications are ready</string>
-    <string name="notification_ready_body">You’ll only receive reminders and safety updates you choose.</string>
+    <string name="notification_ready_body">This test confirms that notification access works on your phone.</string>
     <string name="notification_enabled">Notifications enabled</string>
     <string name="notification_denied">Notifications are off. You can enable them later in phone settings.</string>
-    <string name="notification_older_android">Notifications are available on this Android version; no system permission popup is required.</string>
 
     <string name="permissions_label">PERMISSIONS &amp; ACCESS</string>
     <string name="permissions_body">NextMove asks only when a feature needs access. It never silently reads your phone.</string>
     <string name="notifications_title">Notifications</string>
-    <string name="notifications_reason">For reminders and safety updates you choose</string>
+    <string name="notifications_reason">Tap to enable and receive one test notification</string>
     <string name="microphone_title">Microphone</string>
     <string name="microphone_reason">Used only after you tap “Start speaking”</string>
     <string name="calendar_title">Calendar</string>
@@ -164,4 +161,7 @@
     <string name="safety_tools_title">Safety tools for India</string>
     <string name="safety_tools_body">Voice or type a suspicious situation, review warning signs, and reach official reporting channels quickly.</string>
     <string name="open_voice_check">Describe a situation</string>
+    <string name="notification_card_title">Test notification access</string>
+    <string name="notification_card_body">Receive one confirmation notification now. Scheduled NextMove reminders are not active in this prototype.</string>
+    <string name="send_test_notification">Send test notification</string>
 </resources>

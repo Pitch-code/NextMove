@@ -50,6 +50,16 @@ jobs:
           disable-animations: true
           script: bash scripts/startup-smoke.sh
 
+      - name: Launch smoke test on Android 15
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          script: bash scripts/startup-smoke.sh
+
       - name: Upload startup diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -59,6 +69,7 @@ jobs:
             startup-launch.txt
             startup-logcat.txt
             startup-ui.xml
+            package-permissions.txt
           if-no-files-found: warn
 
       - name: Upload debug APK
