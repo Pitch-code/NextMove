@@ -42,7 +42,7 @@ jobs:
           arch: x86
           profile: Nexus 6
           disable-animations: true
-          script: bash scripts/startup-smoke.sh
+          script: bash scripts/emulator-verify.sh
 
       - name: Prepare public APK
         run: cp app/build/outputs/apk/debug/app-debug.apk NextMove-v0.2.0-prototype.apk

@@ -48,7 +48,7 @@ jobs:
           arch: x86
           profile: Nexus 6
           disable-animations: true
-          script: bash scripts/startup-smoke.sh
+          script: bash scripts/emulator-verify.sh
 
       - name: Verify permission contract
         run: |
@@ -77,10 +77,8 @@ jobs:
           name: startup-smoke-api-26
           path: |
             startup-launch.txt
-            startup-share.txt
             startup-logcat.txt
-            startup-ui.xml
-            package-permissions.txt
+            app/build/reports/androidTests/connected/**
           if-no-files-found: warn
 
       - name: Upload debug APK
