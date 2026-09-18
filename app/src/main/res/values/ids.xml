@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="screen_home" type="id" />
+    <item name="screen_processing" type="id" />
+    <item name="screen_result" type="id" />
+    <item name="screen_activity" type="id" />
+    <item name="screen_settings" type="id" />
+    <item name="screen_voice" type="id" />
+    <item name="screen_voice_result" type="id" />
+    <item name="nav_home" type="id" />
+    <item name="nav_activity" type="id" />
+    <item name="nav_settings" type="id" />
+    <item name="sample_bill" type="id" />
+    <item name="sample_visit" type="id" />
+    <item name="sample_return" type="id" />
+    <item name="sample_scam" type="id" />
+    <item name="voice_open" type="id" />
+</resources>

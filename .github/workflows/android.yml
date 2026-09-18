@@ -58,6 +58,7 @@ jobs:
           path: |
             startup-launch.txt
             startup-logcat.txt
+            startup-ui.xml
           if-no-files-found: warn
 
       - name: Upload debug APK
