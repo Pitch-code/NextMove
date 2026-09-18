@@ -41,7 +41,7 @@ public final class MainActivityFlowTest {
                 assertNotNull(activity.findViewById(R.id.screen_settings));
             });
 
-            pressSystemBack();
+            pressSystemBack(scenario);
             scenario.onActivity(activity -> {
                 assertFalse(activity.isFinishing());
                 assertNotNull(activity.findViewById(R.id.screen_home));
@@ -57,7 +57,7 @@ public final class MainActivityFlowTest {
                 assertTrue(containsText(result, "SAMPLE · Electricity bill"));
             });
 
-            pressSystemBack();
+            pressSystemBack(scenario);
             scenario.onActivity(activity -> {
                 assertFalse(activity.isFinishing());
                 assertNotNull(activity.findViewById(R.id.screen_home));
@@ -175,8 +175,12 @@ public final class MainActivityFlowTest {
         assertTrue("View should handle click " + viewId, view.performClick());
     }
 
-    private void pressSystemBack() {
-        UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).pressBack();
+    private void pressSystemBack(ActivityScenario<MainActivity> scenario) {
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).pressBack();
+        } else {
+            scenario.onActivity(MainActivity::onBackPressed);
+        }
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
     }
 
