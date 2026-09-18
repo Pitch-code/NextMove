@@ -17,9 +17,21 @@ has_id() {
     grep -q "resource-id=\"$1\"" "$UI_XML"
 }
 
+wait_for_id() {
+    for _attempt in 1 2 3 4 5; do
+        if has_id "$1"; then
+            return 0
+        fi
+        sleep 2
+    done
+    return 1
+}
+
 tap_id() {
-    capture_ui
-    coords="$(python3 - "$UI_XML" "$1" <<'PY'
+    coords=""
+    for _attempt in 1 2 3 4 5; do
+        capture_ui
+        coords="$(python3 - "$UI_XML" "$1" <<'PY'
 import re
 import sys
 import xml.etree.ElementTree as ET
@@ -34,12 +46,15 @@ for node in root.iter("node"):
             break
 PY
 )"
-    if [ -z "$coords" ]; then
-        echo "Could not find UI target $1"
-        return 1
-    fi
-    adb shell input tap $coords
-    sleep 1
+        if [ -n "$coords" ]; then
+            adb shell input tap $coords
+            sleep 1
+            return 0
+        fi
+        sleep 2
+    done
+    echo "Could not find UI target $1"
+    return 1
 }
 
 fail_with_logs() {
@@ -72,23 +87,23 @@ fi
 
 # Verify system Back returns from Settings to Home without killing the app.
 tap_id "$PACKAGE:id/nav_settings" || fail_with_logs "Could not open Settings."
-has_id "$PACKAGE:id/screen_settings" || fail_with_logs "Settings screen did not open."
+wait_for_id "$PACKAGE:id/screen_settings" || fail_with_logs "Settings screen did not open."
 adb shell input keyevent KEYCODE_BACK
 sleep 1
-has_id "$PACKAGE:id/screen_home" || fail_with_logs "Back did not return to Home."
+wait_for_id "$PACKAGE:id/screen_home" || fail_with_logs "Back did not return to Home."
 
 # Verify a selected sample is clearly represented and Back returns Home.
 adb shell input swipe 720 1900 720 750 500
 sleep 1
 tap_id "$PACKAGE:id/sample_bill" || fail_with_logs "Could not select bill sample."
 sleep 2
-has_id "$PACKAGE:id/screen_result" || fail_with_logs "Sample result did not open."
+wait_for_id "$PACKAGE:id/screen_result" || fail_with_logs "Sample result did not open."
 capture_ui
 grep -q "SAMPLE" "$UI_XML" || fail_with_logs "Sample context is not visible."
 grep -q "Electricity bill" "$UI_XML" || fail_with_logs "Selected sample identity is not visible."
 adb shell input keyevent KEYCODE_BACK
 sleep 1
-has_id "$PACKAGE:id/screen_home" || fail_with_logs "Back from result did not return Home."
+wait_for_id "$PACKAGE:id/screen_home" || fail_with_logs "Back from result did not return Home."
 
 # Verify text sharing cold-starts the safe typed check and Back preserves the draft.
 adb shell am force-stop "$PACKAGE"
@@ -99,17 +114,17 @@ share_output="$(adb shell am start -W \
     -n "$COMPONENT" 2>&1)"
 printf '%s\n' "$share_output" > startup-share.txt
 sleep 2
-has_id "$PACKAGE:id/screen_voice" || {
+wait_for_id "$PACKAGE:id/screen_voice" || {
     cat startup-share.txt
     fail_with_logs "Shared text did not open the voice/text check."
 }
 adb shell input swipe 720 1900 720 700 500
 sleep 1
 tap_id "$PACKAGE:id/voice_check" || fail_with_logs "Could not run the typed safety check."
-has_id "$PACKAGE:id/screen_voice_result" || fail_with_logs "Typed safety result did not open."
+wait_for_id "$PACKAGE:id/screen_voice_result" || fail_with_logs "Typed safety result did not open."
 adb shell input keyevent KEYCODE_BACK
 sleep 1
-has_id "$PACKAGE:id/screen_voice" || fail_with_logs "Back did not return to the voice/text screen."
+wait_for_id "$PACKAGE:id/screen_voice" || fail_with_logs "Back did not return to the voice/text screen."
 adb shell input swipe 720 1900 720 700 500
 sleep 1
 capture_ui
@@ -120,7 +135,7 @@ adb shell input keyevent KEYCODE_BACK
 sleep 1
 adb shell am start -W -n "$COMPONENT" >/dev/null
 sleep 2
-has_id "$PACKAGE:id/screen_home" || fail_with_logs "Normal launch did not return Home."
+wait_for_id "$PACKAGE:id/screen_home" || fail_with_logs "Normal launch did not return Home."
 
 # Android 13+ must show and grant the real notification runtime permission on request.
 sdk="$(adb shell getprop ro.build.version.sdk | tr -d '\r')"
