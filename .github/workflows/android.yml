@@ -15,7 +15,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
 
     steps:
       - name: Check out source
@@ -40,6 +40,47 @@ jobs:
 
       - name: Build and lint debug app
         run: gradle :app:assembleDebug :app:lintDebug
+
+      - name: Launch smoke test on Android 8
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 26
+          arch: x86
+          profile: Nexus 6
+          disable-animations: true
+          script: |
+            set +e
+            APK="app/build/outputs/apk/debug/app-debug.apk"
+            PACKAGE="com.pitchcode.nextmove"
+            COMPONENT="$PACKAGE/.MainActivity"
+            adb install -r "$APK"
+            install_rc=$?
+            adb logcat -c
+            adb shell am force-stop "$PACKAGE"
+            launch_output="$(adb shell am start -W -n "$COMPONENT" 2>&1)"
+            launch_rc=$?
+            printf '%s\n' "$launch_output" > startup-launch.txt
+            sleep 5
+            pid="$(adb shell pidof "$PACKAGE" 2>/dev/null | tr -d '\r' || true)"
+            adb logcat -d -v threadtime > startup-logcat.txt
+            if [ "$install_rc" -ne 0 ] || [ "$launch_rc" -ne 0 ] || \
+               ! grep -q "Status: ok" startup-launch.txt || [ -z "$pid" ]; then
+              echo "Startup smoke failed; process is not alive."
+              grep -E "AndroidRuntime|FATAL EXCEPTION|Process: $PACKAGE|am_crash|Force finishing" \
+                startup-logcat.txt || true
+              exit 1
+            fi
+            echo "Startup smoke passed with process $pid."
+
+      - name: Upload startup diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: startup-smoke-api-26
+          path: |
+            startup-launch.txt
+            startup-logcat.txt
+          if-no-files-found: warn
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4

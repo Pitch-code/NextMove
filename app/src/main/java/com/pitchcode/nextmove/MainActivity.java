@@ -15,7 +15,6 @@ import android.provider.MediaStore;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowInsetsController;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
@@ -43,17 +42,27 @@ public final class MainActivity extends Activity {
 
     @Override
     protected void attachBaseContext(Context newBase) {
-        String code = HistoryStore.prefs(newBase).getString(KEY_LANGUAGE, "en");
-        Locale locale = Locale.forLanguageTag(code);
-        Configuration configuration = new Configuration(newBase.getResources().getConfiguration());
-        configuration.setLocale(locale);
-        super.attachBaseContext(newBase.createConfigurationContext(configuration));
+        Context localizedContext = newBase;
+        String code = savedLanguage(newBase);
+        if (code != null) {
+            try {
+                Locale locale = Locale.forLanguageTag(code);
+                Configuration configuration = new Configuration(
+                        newBase.getResources().getConfiguration());
+                configuration.setLocale(locale);
+                localizedContext = newBase.createConfigurationContext(configuration);
+            } catch (RuntimeException vendorFailure) {
+                // Some vendor Android builds can reject a wrapped configuration context.
+                // Falling back keeps the app usable in the device's current language.
+                localizedContext = newBase;
+            }
+        }
+        super.attachBaseContext(localizedContext);
     }
 
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
-        configureSystemBars();
         buildShell();
         renderHome();
         if (isSharedImage(getIntent())) {
@@ -66,24 +75,6 @@ public final class MainActivity extends Activity {
         super.onNewIntent(intent);
         setIntent(intent);
         if (isSharedImage(intent)) showImageSelectedDialog();
-    }
-
-    private void configureSystemBars() {
-        getWindow().setStatusBarColor(Design.PAPER);
-        getWindow().setNavigationBarColor(Design.PAPER);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            WindowInsetsController controller = getWindow().getInsetsController();
-            if (controller != null) {
-                controller.setSystemBarsAppearance(
-                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-                                | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
-                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-                                | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
-            }
-        } else {
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
-        }
     }
 
     private void buildShell() {
@@ -648,8 +639,25 @@ public final class MainActivity extends Activity {
                 && intent.getType().startsWith("image/");
     }
 
+    private static String savedLanguage(Context context) {
+        try {
+            String code = HistoryStore.prefs(context).getString(KEY_LANGUAGE, null);
+            if ("en".equals(code) || "hi".equals(code)) return code;
+            if (code != null) {
+                HistoryStore.prefs(context).edit().remove(KEY_LANGUAGE).apply();
+            }
+        } catch (ClassCastException invalidStoredValue) {
+            HistoryStore.prefs(context).edit().remove(KEY_LANGUAGE).apply();
+        }
+        return null;
+    }
+
     private String currentLanguage() {
-        return HistoryStore.prefs(this).getString(KEY_LANGUAGE, "en");
+        String saved = savedLanguage(this);
+        if (saved != null) return saved;
+        String deviceLanguage = getResources().getConfiguration()
+                .getLocales().get(0).getLanguage();
+        return "hi".equals(deviceLanguage) ? "hi" : "en";
     }
 
     private void toggleLanguage() {
