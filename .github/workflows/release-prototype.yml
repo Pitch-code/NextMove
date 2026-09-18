@@ -1,0 +1,51 @@
+name: Publish prototype APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Android 16 SDK
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "platforms;android-36" \
+            "build-tools;36.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.1.0"
+
+      - name: Build and lint prototype
+        run: gradle :app:assembleDebug :app:lintDebug
+
+      - name: Prepare public APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk NextMove-v0.1.0-prototype.apk
+
+      - name: Publish public prototype release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v0.1.0-prototype \
+            NextMove-v0.1.0-prototype.apk \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "NextMove Android Prototype 0.1" \
+            --notes "Free Android UI prototype for testing. It includes English and Hindi interfaces and four sample journeys. Live OCR, Gemini, Firebase, login, analytics, and screenshot analysis are intentionally not connected yet." \
+            --prerelease
