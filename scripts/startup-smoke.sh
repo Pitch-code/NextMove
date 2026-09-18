@@ -118,14 +118,17 @@ wait_for_id "$PACKAGE:id/screen_voice" || {
     cat startup-share.txt
     fail_with_logs "Shared text did not open the voice/text check."
 }
-adb shell input swipe 720 1900 720 700 500
+adb shell input swipe 720 2000 720 650 500
+adb shell input swipe 720 2000 720 650 500
+adb shell input swipe 720 2000 720 650 500
 sleep 1
 tap_id "$PACKAGE:id/voice_check" || fail_with_logs "Could not run the typed safety check."
 wait_for_id "$PACKAGE:id/screen_voice_result" || fail_with_logs "Typed safety result did not open."
 adb shell input keyevent KEYCODE_BACK
 sleep 1
 wait_for_id "$PACKAGE:id/screen_voice" || fail_with_logs "Back did not return to the voice/text screen."
-adb shell input swipe 720 1900 720 700 500
+adb shell input swipe 720 2000 720 650 500
+adb shell input swipe 720 2000 720 650 500
 sleep 1
 capture_ui
 grep -q "pay-now-share-OTP" "$UI_XML" || fail_with_logs "Voice/text draft was not preserved on Back."

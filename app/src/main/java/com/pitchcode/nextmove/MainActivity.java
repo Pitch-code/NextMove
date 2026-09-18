@@ -748,6 +748,8 @@ public final class MainActivity extends Activity {
         ScrollView scroll = scrollPage();
         scroll.setId(R.id.screen_voice);
         LinearLayout body = pageBody();
+        body.setFocusableInTouchMode(true);
+        body.requestFocus();
         scroll.addView(body);
 
         TextView back = Design.chip(this, "‹ " + getString(R.string.back), false);
