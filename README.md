@@ -8,7 +8,12 @@ NextMove is an Android-first action assistant prototype for India. It explores a
 
 - Calm, custom native Android interface
 - English and Hindi language switching
-- Android share target for images
+- Correct in-app Back navigation across tabs, samples and voice checks
+- Contextual notification permission and a visible permission centre
+- Voice transcription with typed fallback and explicit provider disclosure
+- Preliminary on-device scam phrase checks (clearly not live AI)
+- India cyber-fraud actions for 1930 and cybercrime.gov.in
+- Android share target for images and selected text
 - Privacy-safe image-picker demonstration
 - Four deterministic sample journeys:
   - Electricity bill
@@ -19,11 +24,11 @@ NextMove is an Android-first action assistant prototype for India. It explores a
 - Calendar hand-off with user confirmation
 - Device-only handled-item history
 - Clear disclosure that live OCR and AI are not connected
-- No login, analytics, network access, cloud service or API key
+- No login, analytics, cloud service, embedded API key or broad inbox/calendar access
 
 ## Important prototype boundary
 
-This repository intentionally contains **no live OCR, Gemini or Firebase integration**. Selected images never leave the phone and are not read by the prototype. The sample analyzer exists to validate product language, interaction design, accessibility and trust before paid infrastructure is introduced.
+This repository intentionally contains **no live OCR, Gemini, Firebase or internet threat-intelligence integration**. Selected images never leave the phone and are not read by the prototype. Voice transcription is performed by the speech-recognition provider configured on the user’s phone, which may process audio online; NextMove does not save the audio. The preliminary voice result checks only a local list of common scam phrases and explicitly discloses that it did not search the internet.
 
 The future production pipeline is expected to use image-quality checks, OCR with text coordinates, schema-constrained AI extraction, deterministic validation, evidence highlighting, confidence thresholds and explicit user confirmation. It must never claim 100% accuracy.
 
@@ -79,9 +84,15 @@ The debug APK is created at `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Privacy
 
+- The app declares notification and microphone permissions only for their visible features.
+- Notification access is requested contextually; Android 12 and earlier have no runtime notification popup.
+- Microphone access is requested only after the user chooses voice input.
+- No SMS, call-log, contacts, broad storage, calendar-write or direct-call permission is declared.
+- Calendar events are handed to the user’s calendar app for confirmation.
+- Messages and images are selected through Android Share and system pickers.
 - No account is required.
-- No network permission is declared.
-- No image is uploaded or analyzed.
+- No screenshot is uploaded or analyzed.
+- Voice audio is not stored by NextMove; the configured speech provider may process it online.
 - Prototype activity is stored in private app preferences.
 - App backup and device transfer exclude that local activity.
 
@@ -92,7 +103,8 @@ The debug APK is created at `app/build/outputs/apk/debug/app-debug.apk`.
 3. Add a private server boundary and abuse controls.
 4. Integrate OCR and structured AI extraction behind feature flags.
 5. Measure field-level accuracy and abstention before public release.
-6. Add notifications only after users validate the action model.
+6. Connect app-owned reminders only after users validate the notification model.
+7. Connect live, sourced threat intelligence through a private backend—never through an API key in the app.
 
 ## License
 

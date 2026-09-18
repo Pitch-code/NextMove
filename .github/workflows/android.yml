@@ -48,7 +48,27 @@ jobs:
           arch: x86
           profile: Nexus 6
           disable-animations: true
-          script: bash scripts/startup-smoke.sh
+          script: bash scripts/emulator-verify.sh
+
+      - name: Verify permission contract
+        run: |
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          PERMISSIONS="$($ANDROID_HOME/build-tools/36.0.0/aapt dump permissions "$APK")"
+          printf '%s\n' "$PERMISSIONS"
+          grep -q "android.permission.POST_NOTIFICATIONS" <<< "$PERMISSIONS"
+          grep -q "android.permission.RECORD_AUDIO" <<< "$PERMISSIONS"
+          if grep -Eq "READ_SMS|RECEIVE_SMS|SEND_SMS|READ_CALENDAR|WRITE_CALENDAR|CALL_PHONE|READ_CALL_LOG|READ_CONTACTS|MANAGE_EXTERNAL_STORAGE|SCHEDULE_EXACT_ALARM" <<< "$PERMISSIONS"; then
+            echo "Restricted phone-data permission found."
+            exit 1
+          fi
+
+      - name: Verify local voice risk engine
+        run: |
+          mkdir -p /tmp/nextmove-tests
+          javac -d /tmp/nextmove-tests \
+            app/src/main/java/com/pitchcode/nextmove/safety/VoiceRiskAssessment.java \
+            scripts/VoiceRiskAssessmentTest.java
+          java -cp /tmp/nextmove-tests VoiceRiskAssessmentTest
 
       - name: Upload startup diagnostics
         if: always()
@@ -58,6 +78,7 @@ jobs:
           path: |
             startup-launch.txt
             startup-logcat.txt
+            app/build/reports/androidTests/connected/**
           if-no-files-found: warn
 
       - name: Upload debug APK

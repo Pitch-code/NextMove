@@ -8,7 +8,7 @@ COMPONENT="$PACKAGE/.MainActivity"
 
 adb install -r "$APK"
 install_rc=$?
-adb logcat -c
+adb logcat -c || true
 adb shell am force-stop "$PACKAGE"
 launch_output="$(adb shell am start -W -n "$COMPONENT" 2>&1)"
 launch_rc=$?

@@ -42,19 +42,19 @@ jobs:
           arch: x86
           profile: Nexus 6
           disable-animations: true
-          script: bash scripts/startup-smoke.sh
+          script: bash scripts/emulator-verify.sh
 
       - name: Prepare public APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk NextMove-v0.1.1-prototype.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk NextMove-v0.2.0-prototype.apk
 
       - name: Publish public prototype release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create v0.1.1-prototype \
-            NextMove-v0.1.1-prototype.apk \
+          gh release create v0.2.0-prototype \
+            NextMove-v0.2.0-prototype.apk \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title "NextMove Android Prototype 0.1.1" \
-            --notes "Replacement Android prototype with hardened startup compatibility for Realme and other vendor Android builds. English/Hindi UI, four sample journeys, and Android 8 launch-smoke verification are included. Uninstall v0.1.0 before installing this build. Live OCR, Gemini, Firebase, login, analytics, and screenshot analysis remain intentionally disconnected." \
+            --title "NextMove Android Prototype 0.2" \
+            --notes "Android prototype with fixed in-app Back navigation, notification setup, explicit sample labels, privacy-safe permission explanations, English/Hindi voice description, preliminary on-device scam signals, and official India cyber-fraud actions. Live Gemini and internet threat intelligence remain transparently disconnected." \
             --prerelease

@@ -1,20 +1,31 @@
 package com.pitchcode.nextmove;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.CalendarContract;
 import android.provider.MediaStore;
+import android.provider.Settings;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.window.OnBackInvokedDispatcher;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
@@ -24,21 +35,55 @@ import android.widget.Toast;
 
 import com.pitchcode.nextmove.data.HistoryStore;
 import com.pitchcode.nextmove.data.SampleAnalysis;
+import com.pitchcode.nextmove.notifications.NotificationHelper;
+import com.pitchcode.nextmove.safety.VoiceRiskAssessment;
 import com.pitchcode.nextmove.ui.Design;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
 public final class MainActivity extends Activity {
     private static final int REQUEST_IMAGE = 200;
+    private static final int REQUEST_NOTIFICATIONS = 201;
+    private static final int REQUEST_MICROPHONE = 202;
     private static final String KEY_LANGUAGE = "language";
+    private static final String KEY_NOTIFICATION_REQUESTED = "notification_requested";
+    private static final String CYBERCRIME_URL = "https://cybercrime.gov.in/";
+
+    private enum Screen { HOME, PROCESSING, RESULT, ACTIVITY, SETTINGS, VOICE, VOICE_RESULT }
+
+    private static final class ScreenState {
+        final Screen screen;
+        final SampleAnalysis.Kind sampleKind;
+        final String voiceDescription;
+
+        ScreenState(Screen screen, SampleAnalysis.Kind sampleKind, String voiceDescription) {
+            this.screen = screen;
+            this.sampleKind = sampleKind;
+            this.voiceDescription = voiceDescription;
+        }
+
+        static ScreenState of(Screen screen) {
+            return new ScreenState(screen, null, null);
+        }
+    }
 
     private final Handler handler = new Handler(Looper.getMainLooper());
+    private final ArrayDeque<ScreenState> screenHistory = new ArrayDeque<>();
     private FrameLayout content;
     private LinearLayout navigation;
     private int selectedTab = 0;
-    private SampleAnalysis.Kind pendingKind = SampleAnalysis.Kind.BILL;
+    private ScreenState currentScreen;
+    private boolean restoringPreviousScreen;
+    private Runnable pendingAnalysis;
+    private SpeechRecognizer speechRecognizer;
+    private EditText voiceInput;
+    private TextView voiceStatus;
+    private boolean startListeningAfterPermission;
+    private boolean returningFromNotificationSettings;
 
     @Override
     protected void attachBaseContext(Context newBase) {
@@ -63,10 +108,50 @@ public final class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
+        NotificationHelper.createChannel(this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT,
+                    this::navigateBack);
+        }
         buildShell();
-        renderHome();
-        if (isSharedImage(getIntent())) {
-            handler.postDelayed(this::showImageSelectedDialog, 350);
+        if (isSharedText(getIntent())) {
+            renderVoice(sharedText(getIntent()));
+        } else {
+            renderHome();
+            if (isSharedImage(getIntent())) {
+                handler.postDelayed(this::showImageSelectedDialog, 350);
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        handler.removeCallbacksAndMessages(null);
+        destroySpeechRecognizer();
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (content == null || currentScreen == null) return;
+        if (returningFromNotificationSettings) {
+            returningFromNotificationSettings = false;
+            if (NotificationHelper.areEnabled(this)) {
+                NotificationHelper.showReady(this);
+                Toast.makeText(this, R.string.notification_enabled, Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, R.string.notification_denied, Toast.LENGTH_LONG).show();
+            }
+            ScreenState refresh = currentScreen;
+            handler.post(() -> {
+                restoringPreviousScreen = true;
+                renderState(refresh);
+                restoringPreviousScreen = false;
+            });
+        } else if (currentScreen.screen == Screen.SETTINGS) {
+            handler.post(this::renderSettings);
         }
     }
 
@@ -74,7 +159,11 @@ public final class MainActivity extends Activity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        if (isSharedImage(intent)) showImageSelectedDialog();
+        if (isSharedText(intent)) {
+            renderVoice(sharedText(intent));
+        } else if (isSharedImage(intent)) {
+            showImageSelectedDialog();
+        }
     }
 
     private void buildShell() {
@@ -112,6 +201,11 @@ public final class MainActivity extends Activity {
     private View navItem(String symbol, int label, int index, Runnable action) {
         LinearLayout item = Design.column(this);
         item.setGravity(Gravity.CENTER);
+        item.setId(switch (index) {
+            case 1 -> R.id.nav_activity;
+            case 2 -> R.id.nav_settings;
+            default -> R.id.nav_home;
+        });
         item.setMinimumHeight(Design.dp(this, 52));
         item.setContentDescription(getString(label));
         item.setClickable(true);
@@ -147,7 +241,28 @@ public final class MainActivity extends Activity {
         return body;
     }
 
-    private void showScreen(View screen, int tab) {
+    private void showScreen(View screen, int tab, ScreenState next, boolean replaceCurrent) {
+        if (currentScreen != null
+                && currentScreen.screen == Screen.VOICE
+                && next.screen != Screen.VOICE
+                && voiceInput != null) {
+            currentScreen = new ScreenState(
+                    Screen.VOICE, null, voiceInput.getText().toString());
+        }
+        if (currentScreen != null
+                && currentScreen.screen == Screen.PROCESSING
+                && next.screen != Screen.RESULT) {
+            cancelPendingAnalysis();
+        }
+        if (currentScreen != null
+                && currentScreen.screen == Screen.VOICE
+                && next.screen != Screen.VOICE) {
+            destroySpeechRecognizer();
+        }
+        if (!restoringPreviousScreen && currentScreen != null && !sameScreen(currentScreen, next)) {
+            if (!replaceCurrent) screenHistory.push(currentScreen);
+        }
+        currentScreen = next;
         selectedTab = tab;
         buildNavigation();
         content.removeAllViews();
@@ -156,6 +271,14 @@ public final class MainActivity extends Activity {
         screen.setAlpha(0f);
         screen.setTranslationY(Design.dp(this, 7));
         screen.animate().alpha(1f).translationY(0f).setDuration(230).start();
+    }
+
+    private void showScreen(View screen, int tab, ScreenState next) {
+        showScreen(screen, tab, next, false);
+    }
+
+    private boolean sameScreen(ScreenState first, ScreenState second) {
+        return first.screen == second.screen && first.sampleKind == second.sampleKind;
     }
 
     private View brandHeader() {
@@ -180,6 +303,7 @@ public final class MainActivity extends Activity {
 
     private void renderHome() {
         ScrollView scroll = scrollPage();
+        scroll.setId(R.id.screen_home);
         LinearLayout body = pageBody();
         scroll.addView(body);
         body.addView(brandHeader());
@@ -199,7 +323,11 @@ public final class MainActivity extends Activity {
         body.addView(buildTodayCard(), Design.match());
         body.addView(Design.space(this, 14));
         body.addView(buildPrivacyStrip(), Design.match());
-        showScreen(scroll, 0);
+        body.addView(Design.space(this, 14));
+        body.addView(buildNotificationSetupCard(), Design.match());
+        body.addView(Design.space(this, 14));
+        body.addView(buildSafetyToolsCard(), Design.match());
+        showScreen(scroll, 0, ScreenState.of(Screen.HOME));
     }
 
     private View buildShareCard() {
@@ -223,6 +351,13 @@ public final class MainActivity extends Activity {
         choose.setContentDescription(getString(R.string.choose_image));
         choose.setOnClickListener(view -> openImagePicker());
         card.addView(choose, Design.match());
+        card.addView(Design.space(this, 10));
+        TextView voice = Design.button(this, "🎙  " + getString(R.string.voice_button),
+                Color.TRANSPARENT, Color.WHITE);
+        voice.setId(R.id.voice_open);
+        voice.setBackground(Design.outlined(Color.TRANSPARENT, Design.SAFFRON, 17, this));
+        voice.setOnClickListener(view -> renderVoice());
+        card.addView(voice, Design.match());
         return card;
     }
 
@@ -243,6 +378,12 @@ public final class MainActivity extends Activity {
     private void addSampleChip(LinearLayout row, SampleAnalysis.Kind kind) {
         SampleAnalysis sample = SampleAnalysis.of(kind);
         TextView chip = Design.chip(this, getString(sample.chip), kind == SampleAnalysis.Kind.BILL);
+        chip.setId(switch (kind) {
+            case BILL -> R.id.sample_bill;
+            case VISIT -> R.id.sample_visit;
+            case RETURN -> R.id.sample_return;
+            case SCAM -> R.id.sample_scam;
+        });
         chip.setOnClickListener(view -> simulateAnalysis(kind));
         LinearLayout.LayoutParams params = Design.match();
         params.setMarginEnd(Design.dp(this, 9));
@@ -277,14 +418,62 @@ public final class MainActivity extends Activity {
         return strip;
     }
 
-    private void simulateAnalysis(SampleAnalysis.Kind kind) {
-        pendingKind = kind;
-        renderProcessing();
-        handler.postDelayed(() -> renderResult(SampleAnalysis.of(pendingKind)), 1450);
+    private View buildNotificationSetupCard() {
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 18), Design.dp(this, 17),
+                Design.dp(this, 18), Design.dp(this, 17));
+        card.setBackground(Design.rounded(Color.rgb(255, 241, 207), 20, this));
+        card.addView(Design.text(this, getString(R.string.notification_card_title), 16,
+                Design.INK, true));
+        card.addView(Design.space(this, 6));
+        card.addView(Design.text(this, getString(R.string.notification_card_body), 12,
+                Design.INK, false));
+        card.addView(Design.space(this, 12));
+        TextView enable = Design.chip(this,
+                getString(NotificationHelper.areEnabled(this)
+                        ? R.string.send_test_notification : R.string.enable_notifications),
+                true);
+        enable.setId(R.id.notification_enable);
+        enable.setOnClickListener(view -> requestNotificationAccess());
+        card.addView(enable, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        return card;
     }
 
-    private void renderProcessing() {
+    private View buildSafetyToolsCard() {
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 18), Design.dp(this, 17),
+                Design.dp(this, 18), Design.dp(this, 17));
+        card.setBackground(Design.outlined(Design.CARD, Design.SOFT, 20, this));
+        card.addView(Design.text(this, getString(R.string.safety_tools_title), 17,
+                Design.INK, true));
+        card.addView(Design.space(this, 6));
+        card.addView(Design.text(this, getString(R.string.safety_tools_body), 13,
+                Design.MUTED, false));
+        card.addView(Design.space(this, 13));
+        TextView open = Design.chip(this, "🎙  " + getString(R.string.open_voice_check), true);
+        open.setOnClickListener(view -> renderVoice());
+        card.addView(open, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        return card;
+    }
+
+    private void simulateAnalysis(SampleAnalysis.Kind kind) {
+        cancelPendingAnalysis();
+        SampleAnalysis sample = SampleAnalysis.of(kind);
+        renderProcessing(sample);
+        pendingAnalysis = () -> {
+            if (currentScreen != null && currentScreen.screen == Screen.PROCESSING) {
+                pendingAnalysis = null;
+                renderResult(sample);
+            }
+        };
+        handler.postDelayed(pendingAnalysis, 1450);
+    }
+
+    private void renderProcessing(SampleAnalysis sample) {
         LinearLayout page = Design.column(this);
+        page.setId(R.id.screen_processing);
         page.setGravity(Gravity.CENTER);
         page.setPadding(Design.dp(this, 30), Design.dp(this, 30),
                 Design.dp(this, 30), Design.dp(this, 30));
@@ -293,7 +482,12 @@ public final class MainActivity extends Activity {
         orbit.setBackground(Design.rounded(Design.SAFFRON, 30, this));
         page.addView(orbit, new LinearLayout.LayoutParams(Design.dp(this, 82), Design.dp(this, 82)));
         orbit.animate().rotationBy(360).setDuration(1200).start();
-        page.addView(Design.space(this, 25));
+        page.addView(Design.space(this, 18));
+        TextView sampleContext = Design.label(this,
+                getString(R.string.processing_sample, getString(sample.chip)));
+        sampleContext.setGravity(Gravity.CENTER);
+        page.addView(sampleContext, Design.match());
+        page.addView(Design.space(this, 8));
         TextView title = Design.text(this, getString(R.string.processing_title), 25, Design.INK, true);
         title.setGravity(Gravity.CENTER);
         page.addView(title, Design.match());
@@ -303,7 +497,7 @@ public final class MainActivity extends Activity {
         page.addView(processingStep("2", R.string.processing_step_2));
         page.addView(Design.space(this, 9));
         page.addView(processingStep("3", R.string.processing_step_3));
-        showScreen(page, 0);
+        showScreen(page, 0, new ScreenState(Screen.PROCESSING, sample.kind, null));
     }
 
     private View processingStep(String number, int stringId) {
@@ -323,14 +517,16 @@ public final class MainActivity extends Activity {
 
     private void renderResult(SampleAnalysis sample) {
         ScrollView scroll = scrollPage();
+        scroll.setId(R.id.screen_result);
         LinearLayout body = pageBody();
         scroll.addView(body);
 
         LinearLayout top = Design.row(this);
         TextView back = Design.chip(this, "‹ " + getString(R.string.back), false);
-        back.setOnClickListener(view -> renderHome());
+        back.setOnClickListener(view -> navigateBack());
         top.addView(back);
-        TextView prototype = Design.label(this, getString(R.string.device_only));
+        TextView prototype = Design.label(this,
+                getString(R.string.sample_context, getString(sample.chip)));
         prototype.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
         top.addView(prototype, new LinearLayout.LayoutParams(0, Design.dp(this, 44), 1));
         body.addView(top);
@@ -369,22 +565,43 @@ public final class MainActivity extends Activity {
         action.addView(Design.space(this, 8));
         action.addView(Design.text(this, getString(sample.action), 16, Design.INK, true));
         action.addView(Design.space(this, 16));
-        TextView calendar = Design.button(this, getString(R.string.add_reminder), Design.INK, Color.WHITE);
-        calendar.setOnClickListener(view -> openCalendar(sample));
-        action.addView(calendar, Design.match());
+        if (sample.danger) {
+            TextView helpline = Design.button(this, getString(R.string.call_1930),
+                    Design.INK, Color.WHITE);
+            helpline.setOnClickListener(view -> dialCyberHelpline());
+            action.addView(helpline, Design.match());
+            action.addView(Design.space(this, 9));
+            TextView portal = Design.button(this, getString(R.string.report_cybercrime),
+                    Color.TRANSPARENT, Design.INK);
+            portal.setBackground(Design.outlined(Color.TRANSPARENT, Design.INK, 17, this));
+            portal.setOnClickListener(view -> openCybercrimePortal());
+            action.addView(portal, Design.match());
+        } else {
+            TextView calendar = Design.button(this, getString(R.string.add_reminder),
+                    Design.INK, Color.WHITE);
+            calendar.setOnClickListener(view -> openCalendar(sample));
+            action.addView(calendar, Design.match());
+        }
         action.addView(Design.space(this, 9));
-        TextView handled = Design.button(this, getString(R.string.mark_handled), Color.TRANSPARENT, Design.INK);
+        TextView handled = Design.button(this, getString(R.string.mark_handled),
+                Color.TRANSPARENT, Design.INK);
         handled.setBackground(Design.outlined(Color.TRANSPARENT, Design.INK, 17, this));
         handled.setOnClickListener(view -> markHandled(sample));
         action.addView(handled, Design.match());
         body.addView(action, Design.match());
         body.addView(Design.space(this, 14));
         body.addView(buildEvidence(sample), Design.match());
+        if (sample.danger) {
+            body.addView(Design.space(this, 14));
+            body.addView(buildOfficialIndiaCard(), Design.match());
+        }
         body.addView(Design.space(this, 12));
         TextView notice = Design.text(this, getString(R.string.prototype_notice), 11, Design.MUTED, false);
         notice.setPadding(Design.dp(this, 4), 0, Design.dp(this, 4), 0);
         body.addView(notice);
-        showScreen(scroll, 0);
+        showScreen(scroll, 0,
+                new ScreenState(Screen.RESULT, sample.kind, null),
+                currentScreen != null && currentScreen.screen == Screen.PROCESSING);
     }
 
     private View buildFacts(SampleAnalysis sample) {
@@ -424,6 +641,42 @@ public final class MainActivity extends Activity {
         return card;
     }
 
+    private View buildOfficialIndiaCard() {
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 18), Design.dp(this, 17),
+                Design.dp(this, 18), Design.dp(this, 17));
+        card.setBackground(Design.rounded(Design.MINT, 20, this));
+        card.addView(Design.label(this, getString(R.string.official_india_label)));
+        card.addView(Design.space(this, 8));
+        card.addView(Design.text(this, getString(R.string.official_india_body), 13,
+                Design.INK, false));
+        return card;
+    }
+
+    private void dialCyberHelpline() {
+        try {
+            startActivity(createCyberHelplineIntent());
+        } catch (RuntimeException error) {
+            Toast.makeText(this, R.string.dial_error, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    static Intent createCyberHelplineIntent() {
+        return new Intent(Intent.ACTION_DIAL, Uri.parse("tel:1930"));
+    }
+
+    private void openCybercrimePortal() {
+        try {
+            startActivity(createCybercrimePortalIntent());
+        } catch (RuntimeException error) {
+            Toast.makeText(this, R.string.open_link_error, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    static Intent createCybercrimePortalIntent() {
+        return new Intent(Intent.ACTION_VIEW, Uri.parse(CYBERCRIME_URL));
+    }
+
     private void markHandled(SampleAnalysis sample) {
         HistoryStore.add(this, sample.kind);
         Toast.makeText(this, R.string.done_toast, Toast.LENGTH_SHORT).show();
@@ -450,6 +703,7 @@ public final class MainActivity extends Activity {
 
     private void renderActivity() {
         ScrollView scroll = scrollPage();
+        scroll.setId(R.id.screen_activity);
         LinearLayout body = pageBody();
         scroll.addView(body);
         body.addView(brandHeader());
@@ -492,7 +746,7 @@ public final class MainActivity extends Activity {
             body.addView(clear, new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
-        showScreen(scroll, 1);
+        showScreen(scroll, 1, ScreenState.of(Screen.ACTIVITY));
     }
 
     private View historyCard(SampleAnalysis sample) {
@@ -516,8 +770,198 @@ public final class MainActivity extends Activity {
         return card;
     }
 
+    private void renderVoice() {
+        renderVoice("");
+    }
+
+    private void renderVoice(String initialDescription) {
+        ScrollView scroll = scrollPage();
+        scroll.setId(R.id.screen_voice);
+        LinearLayout body = pageBody();
+        body.setFocusableInTouchMode(true);
+        body.requestFocus();
+        scroll.addView(body);
+
+        TextView back = Design.chip(this, "‹ " + getString(R.string.back), false);
+        back.setOnClickListener(view -> navigateBack());
+        body.addView(back, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        body.addView(Design.space(this, 24));
+        body.addView(Design.label(this, getString(R.string.voice_eyebrow)));
+        body.addView(Design.space(this, 8));
+        body.addView(Design.text(this, getString(R.string.voice_title), 31, Design.INK, true));
+        body.addView(Design.space(this, 8));
+        body.addView(Design.text(this, getString(R.string.voice_body), 14, Design.MUTED, false));
+        body.addView(Design.space(this, 16));
+        View disclosure = infoCard(R.string.voice_privacy_title, R.string.voice_privacy_body,
+                Design.MINT);
+        disclosure.setId(R.id.voice_disclosure);
+        body.addView(disclosure, Design.match());
+        body.addView(Design.space(this, 12));
+        body.addView(infoCard(R.string.preliminary_check, R.string.voice_live_boundary,
+                Color.rgb(255, 241, 207)), Design.match());
+        body.addView(Design.space(this, 20));
+
+        voiceInput = new EditText(this);
+        voiceInput.setTextSize(15);
+        voiceInput.setTextColor(Design.INK);
+        voiceInput.setHintTextColor(Design.MUTED);
+        voiceInput.setHint(R.string.voice_hint);
+        voiceInput.setGravity(Gravity.TOP | Gravity.START);
+        voiceInput.setMinHeight(Design.dp(this, 150));
+        voiceInput.setPadding(Design.dp(this, 16), Design.dp(this, 15),
+                Design.dp(this, 16), Design.dp(this, 15));
+        voiceInput.setBackground(Design.outlined(Design.CARD, Design.SOFT, 20, this));
+        voiceInput.setId(R.id.voice_input);
+        if (initialDescription != null && !initialDescription.isEmpty()) {
+            voiceInput.setText(initialDescription);
+            voiceInput.setSelection(voiceInput.length());
+        }
+        body.addView(voiceInput, Design.match());
+        body.addView(Design.space(this, 10));
+
+        voiceStatus = Design.text(this, getString(R.string.voice_ready), 12,
+                Design.MUTED, false);
+        body.addView(voiceStatus, Design.match());
+        body.addView(Design.space(this, 14));
+
+        TextView speak = Design.button(this, "🎙  " + getString(R.string.start_listening),
+                Design.SAFFRON, Design.INK);
+        speak.setId(R.id.voice_start);
+        speak.setOnClickListener(view -> requestMicrophone(true));
+        body.addView(speak, Design.match());
+        body.addView(Design.space(this, 10));
+
+        TextView check = Design.button(this, getString(R.string.check_situation),
+                Design.INK, Color.WHITE);
+        check.setId(R.id.voice_check);
+        check.setOnClickListener(view -> analyzeVoiceDescription());
+        body.addView(check, Design.match());
+
+        showScreen(scroll, 0,
+                new ScreenState(Screen.VOICE, null,
+                        initialDescription == null ? "" : initialDescription));
+    }
+
+    private View infoCard(int titleId, int bodyId, int color) {
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 17), Design.dp(this, 16),
+                Design.dp(this, 17), Design.dp(this, 16));
+        card.setBackground(Design.rounded(color, 19, this));
+        card.addView(Design.text(this, getString(titleId), 14, Design.INK, true));
+        card.addView(Design.space(this, 6));
+        card.addView(Design.text(this, getString(bodyId), 12, Design.INK, false));
+        return card;
+    }
+
+    private void analyzeVoiceDescription() {
+        String description = voiceInput == null ? "" : voiceInput.getText().toString().trim();
+        if (description.isEmpty()) {
+            Toast.makeText(this, R.string.describe_first, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        InputMethodManager inputMethod = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        if (inputMethod != null && voiceInput != null) {
+            inputMethod.hideSoftInputFromWindow(voiceInput.getWindowToken(), 0);
+        }
+        currentScreen = new ScreenState(Screen.VOICE, null, description);
+        renderVoiceResult(description);
+    }
+
+    private void renderVoiceResult(String description) {
+        VoiceRiskAssessment assessment = VoiceRiskAssessment.evaluate(description);
+        ScrollView scroll = scrollPage();
+        scroll.setId(R.id.screen_voice_result);
+        LinearLayout body = pageBody();
+        scroll.addView(body);
+
+        TextView back = Design.chip(this, "‹ " + getString(R.string.back), false);
+        back.setOnClickListener(view -> navigateBack());
+        body.addView(back, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        body.addView(Design.space(this, 22));
+        body.addView(Design.label(this, getString(R.string.preliminary_check)));
+        body.addView(Design.space(this, 8));
+        body.addView(Design.text(this,
+                getString(assessment.highRisk
+                        ? R.string.voice_high_risk_title : R.string.voice_review_title),
+                29, Design.INK, true));
+        body.addView(Design.space(this, 10));
+        body.addView(Design.text(this,
+                getString(assessment.highRisk
+                        ? R.string.voice_high_risk_body : R.string.voice_review_body),
+                14, Design.MUTED, false));
+        body.addView(Design.space(this, 18));
+
+        LinearLayout signals = Design.column(this);
+        signals.setPadding(Design.dp(this, 17), Design.dp(this, 16),
+                Design.dp(this, 17), Design.dp(this, 16));
+        signals.setBackground(Design.rounded(
+                assessment.highRisk ? Design.DANGER_SOFT : Color.rgb(255, 241, 207),
+                19, this));
+        signals.addView(Design.text(this,
+                getString(R.string.signals_found, assessment.signalCount),
+                15, assessment.highRisk ? Design.DANGER : Design.INK, true));
+        body.addView(signals, Design.match());
+        body.addView(Design.space(this, 14));
+
+        LinearLayout descriptionCard = Design.column(this);
+        descriptionCard.setPadding(Design.dp(this, 17), Design.dp(this, 16),
+                Design.dp(this, 17), Design.dp(this, 16));
+        Design.card(descriptionCard, Design.CARD, 20, this);
+        descriptionCard.addView(Design.label(this, getString(R.string.your_description)));
+        descriptionCard.addView(Design.space(this, 8));
+        descriptionCard.addView(Design.text(this, description, 14, Design.INK, false));
+        body.addView(descriptionCard, Design.match());
+        body.addView(Design.space(this, 14));
+
+        LinearLayout steps = Design.column(this);
+        steps.setPadding(Design.dp(this, 17), Design.dp(this, 16),
+                Design.dp(this, 17), Design.dp(this, 16));
+        Design.card(steps, Design.CARD, 20, this);
+        steps.addView(Design.label(this, getString(R.string.safe_next_steps)));
+        steps.addView(Design.space(this, 11));
+        steps.addView(safetyStep("1", R.string.safe_step_1));
+        steps.addView(Design.space(this, 10));
+        steps.addView(safetyStep("2", R.string.safe_step_2));
+        steps.addView(Design.space(this, 10));
+        steps.addView(safetyStep("3", R.string.safe_step_3));
+        body.addView(steps, Design.match());
+        body.addView(Design.space(this, 14));
+
+        TextView helpline = Design.button(this, getString(R.string.call_1930),
+                Design.INK, Color.WHITE);
+        helpline.setOnClickListener(view -> dialCyberHelpline());
+        body.addView(helpline, Design.match());
+        body.addView(Design.space(this, 9));
+        TextView report = Design.button(this, getString(R.string.report_cybercrime),
+                Color.TRANSPARENT, Design.INK);
+        report.setBackground(Design.outlined(Color.TRANSPARENT, Design.INK, 17, this));
+        report.setOnClickListener(view -> openCybercrimePortal());
+        body.addView(report, Design.match());
+        body.addView(Design.space(this, 16));
+        body.addView(infoCard(R.string.preliminary_check, R.string.voice_live_boundary,
+                Color.rgb(255, 241, 207)), Design.match());
+
+        showScreen(scroll, 0,
+                new ScreenState(Screen.VOICE_RESULT, null, description));
+    }
+
+    private View safetyStep(String number, int textId) {
+        LinearLayout row = Design.row(this);
+        TextView count = Design.text(this, number, 12, Design.INK, true);
+        count.setGravity(Gravity.CENTER);
+        count.setBackground(Design.rounded(Design.MINT, 13, this));
+        row.addView(count, new LinearLayout.LayoutParams(Design.dp(this, 32), Design.dp(this, 32)));
+        TextView text = Design.text(this, getString(textId), 13, Design.INK, false);
+        text.setPadding(Design.dp(this, 11), 0, 0, 0);
+        row.addView(text, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        return row;
+    }
+
     private void renderSettings() {
         ScrollView scroll = scrollPage();
+        scroll.setId(R.id.screen_settings);
         LinearLayout body = pageBody();
         scroll.addView(body);
         body.addView(brandHeader());
@@ -528,6 +972,10 @@ public final class MainActivity extends Activity {
         body.addView(Design.space(this, 24));
         body.addView(settingsLanguageCard(), Design.match());
         body.addView(Design.space(this, 14));
+        body.addView(settingsPermissionsCard(), Design.match());
+        body.addView(Design.space(this, 14));
+        body.addView(settingsShareSafelyCard(), Design.match());
+        body.addView(Design.space(this, 14));
         body.addView(settingsPrivacyCard(), Design.match());
         body.addView(Design.space(this, 14));
         body.addView(settingsAccuracyCard(), Design.match());
@@ -535,7 +983,7 @@ public final class MainActivity extends Activity {
         TextView version = Design.text(this, getString(R.string.version), 11, Design.MUTED, false);
         version.setGravity(Gravity.CENTER);
         body.addView(version, Design.match());
-        showScreen(scroll, 2);
+        showScreen(scroll, 2, ScreenState.of(Screen.SETTINGS));
     }
 
     private View settingsLanguageCard() {
@@ -556,6 +1004,89 @@ public final class MainActivity extends Activity {
         row.addView(gap, new LinearLayout.LayoutParams(Design.dp(this, 10), 1));
         row.addView(hindiButton, Design.weight());
         card.addView(row, Design.match());
+        return card;
+    }
+
+    private View settingsPermissionsCard() {
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 17), Design.dp(this, 17),
+                Design.dp(this, 17), Design.dp(this, 17));
+        Design.card(card, Design.CARD, 21, this);
+        card.addView(Design.label(this, getString(R.string.permissions_label)));
+        card.addView(Design.space(this, 8));
+        card.addView(Design.text(this, getString(R.string.permissions_body), 13,
+                Design.MUTED, false));
+        card.addView(Design.space(this, 14));
+        card.addView(permissionRow(
+                "🔔",
+                R.string.notifications_title,
+                R.string.notifications_reason,
+                NotificationHelper.areEnabled(this) ? R.string.allowed : R.string.not_allowed,
+                this::requestNotificationAccess));
+        card.addView(Design.space(this, 12));
+        card.addView(permissionRow(
+                "🎙",
+                R.string.microphone_title,
+                R.string.microphone_reason,
+                checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+                        ? R.string.allowed : R.string.ask_when_used,
+                this::renderVoice));
+        card.addView(Design.space(this, 12));
+        card.addView(permissionRow(
+                "□",
+                R.string.calendar_title,
+                R.string.calendar_reason,
+                R.string.not_required,
+                null));
+        card.addView(Design.space(this, 12));
+        card.addView(permissionRow(
+                "✉",
+                R.string.messages_title,
+                R.string.messages_reason,
+                R.string.not_required,
+                null));
+        card.addView(Design.space(this, 14));
+        card.addView(Design.divider(this));
+        card.addView(Design.space(this, 12));
+        card.addView(Design.text(this, getString(R.string.permission_center_note), 12,
+                Design.MUTED, false));
+        return card;
+    }
+
+    private View permissionRow(
+            String icon,
+            int titleId,
+            int reasonId,
+            int statusId,
+            Runnable action) {
+        LinearLayout row = Design.row(this);
+        TextView symbol = Design.text(this, icon, 16, Design.INK, true);
+        symbol.setGravity(Gravity.CENTER);
+        symbol.setBackground(Design.rounded(Design.PAPER, 14, this));
+        row.addView(symbol, new LinearLayout.LayoutParams(Design.dp(this, 40), Design.dp(this, 40)));
+
+        LinearLayout copy = Design.column(this);
+        copy.setPadding(Design.dp(this, 11), 0, Design.dp(this, 8), 0);
+        copy.addView(Design.text(this, getString(titleId), 13, Design.INK, true));
+        copy.addView(Design.text(this, getString(reasonId), 11, Design.MUTED, false));
+        row.addView(copy, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+
+        TextView status = Design.chip(this, getString(statusId), statusId == R.string.allowed);
+        if (action != null) status.setOnClickListener(view -> action.run());
+        row.addView(status);
+        return row;
+    }
+
+    private View settingsShareSafelyCard() {
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 17), Design.dp(this, 17),
+                Design.dp(this, 17), Design.dp(this, 17));
+        card.setBackground(Design.rounded(Color.rgb(255, 241, 207), 21, this));
+        card.addView(Design.text(this, getString(R.string.share_safely_title), 16,
+                Design.INK, true));
+        card.addView(Design.space(this, 7));
+        card.addView(Design.text(this, getString(R.string.share_safely_body), 13,
+                Design.INK, false));
         return card;
     }
 
@@ -595,6 +1126,202 @@ public final class MainActivity extends Activity {
         card.addView(Design.space(this, 9));
         card.addView(Design.text(this, getString(R.string.accuracy_body), 14, Design.INK, false));
         return card;
+    }
+
+    private void requestNotificationAccess() {
+        if (NotificationHelper.areEnabled(this)) {
+            NotificationHelper.showReady(this);
+            Toast.makeText(this, R.string.notification_enabled, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            boolean requestedBefore = HistoryStore.prefs(this)
+                    .getBoolean(KEY_NOTIFICATION_REQUESTED, false);
+            if (!requestedBefore || shouldShowRequestPermissionRationale(
+                    Manifest.permission.POST_NOTIFICATIONS)) {
+                HistoryStore.prefs(this).edit()
+                        .putBoolean(KEY_NOTIFICATION_REQUESTED, true)
+                        .apply();
+                requestPermissions(
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        REQUEST_NOTIFICATIONS);
+            } else {
+                openNotificationSettings();
+            }
+        } else {
+            openNotificationSettings();
+        }
+    }
+
+    private void openNotificationSettings() {
+        returningFromNotificationSettings = true;
+        try {
+            Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+            startActivity(intent);
+        } catch (RuntimeException error) {
+            Intent fallback = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.parse("package:" + getPackageName()));
+            startActivity(fallback);
+        }
+    }
+
+    private void requestMicrophone(boolean startListening) {
+        startListeningAfterPermission = startListening;
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED) {
+            if (startListening) startVoiceRecognition();
+            else Toast.makeText(this, R.string.allowed, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_MICROPHONE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(
+            int requestCode,
+            String[] permissions,
+            int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        boolean granted = grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+        if (requestCode == REQUEST_NOTIFICATIONS) {
+            if (granted) {
+                NotificationHelper.showReady(this);
+                Toast.makeText(this, R.string.notification_enabled, Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, R.string.notification_denied, Toast.LENGTH_LONG).show();
+            }
+            if (currentScreen != null && currentScreen.screen == Screen.SETTINGS) renderSettings();
+        } else if (requestCode == REQUEST_MICROPHONE) {
+            if (granted && startListeningAfterPermission) {
+                startVoiceRecognition();
+            } else if (!granted) {
+                if (voiceStatus != null) voiceStatus.setText(R.string.voice_permission_denied);
+                Toast.makeText(this, R.string.voice_permission_denied, Toast.LENGTH_LONG).show();
+            }
+            if (currentScreen != null && currentScreen.screen == Screen.SETTINGS) renderSettings();
+        }
+    }
+
+    private void startVoiceRecognition() {
+        if (voiceInput == null || currentScreen == null || currentScreen.screen != Screen.VOICE) {
+            renderVoice();
+            handler.postDelayed(this::startVoiceRecognition, 250);
+            return;
+        }
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+            voiceStatus.setText(R.string.voice_unavailable);
+            return;
+        }
+        destroySpeechRecognizer();
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+        speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override public void onReadyForSpeech(Bundle params) {
+                if (voiceStatus != null) voiceStatus.setText(R.string.listening);
+            }
+            @Override public void onBeginningOfSpeech() {}
+            @Override public void onRmsChanged(float rmsdB) {}
+            @Override public void onBufferReceived(byte[] buffer) {}
+            @Override public void onEndOfSpeech() {}
+            @Override public void onError(int error) {
+                if (voiceStatus != null) voiceStatus.setText(R.string.voice_error);
+            }
+            @Override public void onResults(Bundle results) {
+                applyVoiceResults(results);
+            }
+            @Override public void onPartialResults(Bundle partialResults) {
+                applyVoiceResults(partialResults);
+            }
+            @Override public void onEvent(int eventType, Bundle params) {}
+        });
+
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                        RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE,
+                        currentLanguage().equals("hi") ? "hi-IN" : "en-IN")
+                .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
+        try {
+            speechRecognizer.startListening(intent);
+        } catch (RuntimeException error) {
+            voiceStatus.setText(R.string.voice_unavailable);
+            destroySpeechRecognizer();
+        }
+    }
+
+    private void applyVoiceResults(Bundle results) {
+        if (results == null || voiceInput == null) return;
+        ArrayList<String> matches = results.getStringArrayList(
+                SpeechRecognizer.RESULTS_RECOGNITION);
+        if (matches != null && !matches.isEmpty()) {
+            voiceInput.setText(matches.get(0));
+            voiceInput.setSelection(voiceInput.length());
+            if (voiceStatus != null) voiceStatus.setText(R.string.voice_ready);
+        }
+    }
+
+    private void destroySpeechRecognizer() {
+        if (speechRecognizer == null) return;
+        try {
+            speechRecognizer.cancel();
+            speechRecognizer.destroy();
+        } catch (RuntimeException ignored) {
+            // The vendor speech service may already be disconnected.
+        }
+        speechRecognizer = null;
+    }
+
+    private void cancelPendingAnalysis() {
+        if (pendingAnalysis != null) {
+            handler.removeCallbacks(pendingAnalysis);
+            pendingAnalysis = null;
+        }
+    }
+
+    // API 33+ gestures use the registered OnBackInvoked callback; this override
+    // intentionally preserves hardware/system Back support on Android 8–12.
+    @SuppressLint("GestureBackNavigation")
+    @Override
+    public void onBackPressed() {
+        navigateBack();
+    }
+
+    private void navigateBack() {
+        cancelPendingAnalysis();
+        destroySpeechRecognizer();
+        if (screenHistory.isEmpty()) {
+            finish();
+            return;
+        }
+        ScreenState previous = screenHistory.pop();
+        restoringPreviousScreen = true;
+        renderState(previous);
+        restoringPreviousScreen = false;
+    }
+
+    private void renderState(ScreenState state) {
+        switch (state.screen) {
+            case HOME -> renderHome();
+            case ACTIVITY -> renderActivity();
+            case SETTINGS -> renderSettings();
+            case VOICE -> renderVoice(state.voiceDescription);
+            case RESULT -> renderResult(SampleAnalysis.of(state.sampleKind));
+            case VOICE_RESULT -> renderVoiceResult(
+                    state.voiceDescription == null ? "" : state.voiceDescription);
+            case PROCESSING -> {
+                SampleAnalysis sample = SampleAnalysis.of(state.sampleKind);
+                renderProcessing(sample);
+                pendingAnalysis = () -> {
+                    if (currentScreen != null && currentScreen.screen == Screen.PROCESSING) {
+                        pendingAnalysis = null;
+                        renderResult(sample);
+                    }
+                };
+                handler.postDelayed(pendingAnalysis, 1450);
+            }
+        }
     }
 
     private void openImagePicker() {
@@ -637,6 +1364,21 @@ public final class MainActivity extends Activity {
                 && Intent.ACTION_SEND.equals(intent.getAction())
                 && intent.getType() != null
                 && intent.getType().startsWith("image/");
+    }
+
+    private boolean isSharedText(Intent intent) {
+        return intent != null
+                && Intent.ACTION_SEND.equals(intent.getAction())
+                && "text/plain".equals(intent.getType())
+                && sharedText(intent).length() > 0;
+    }
+
+    private String sharedText(Intent intent) {
+        CharSequence shared = intent == null
+                ? null : intent.getCharSequenceExtra(Intent.EXTRA_TEXT);
+        if (shared == null) return "";
+        String text = shared.toString().trim();
+        return text.length() > 4000 ? text.substring(0, 4000) : text;
     }
 
     private static String savedLanguage(Context context) {
