@@ -95,7 +95,7 @@ adb shell am force-stop "$PACKAGE"
 share_output="$(adb shell am start -W \
     -a android.intent.action.SEND \
     -t text/plain \
-    --es android.intent.extra.TEXT "pay now and share OTP" \
+    --es android.intent.extra.TEXT "pay-now-share-OTP" \
     -n "$COMPONENT" 2>&1)"
 printf '%s\n' "$share_output" > startup-share.txt
 sleep 2
@@ -113,7 +113,7 @@ has_id "$PACKAGE:id/screen_voice" || fail_with_logs "Back did not return to the 
 adb shell input swipe 720 1900 720 700 500
 sleep 1
 capture_ui
-grep -q "pay now and share OTP" "$UI_XML" || fail_with_logs "Voice/text draft was not preserved on Back."
+grep -q "pay-now-share-OTP" "$UI_XML" || fail_with_logs "Voice/text draft was not preserved on Back."
 
 # Finish the shared-text Activity, then cold-start Home for permission checks.
 adb shell input keyevent KEYCODE_BACK
