@@ -78,6 +78,8 @@ sleep 1
 has_id "$PACKAGE:id/screen_home" || fail_with_logs "Back did not return to Home."
 
 # Verify a selected sample is clearly represented and Back returns Home.
+adb shell input swipe 720 1900 720 750 500
+sleep 1
 tap_id "$PACKAGE:id/sample_bill" || fail_with_logs "Could not select bill sample."
 sleep 2
 has_id "$PACKAGE:id/screen_result" || fail_with_logs "Sample result did not open."
