@@ -47,6 +47,9 @@
     <string name="activity_empty">अभी कुछ पूरा नहीं हुआ</string>
     <string name="activity_empty_body">एक नमूना देखें और उसे पूरा करें। वह यहाँ दिखाई देगा।</string>
     <string name="clear_history">एक्टिविटी साफ़ करें</string>
+    <string name="activity_alerts_label">हाल के मैसेज अलर्ट</string>
+    <string name="activity_handled_label">पूरे किए गए</string>
+    <string name="clear_alerts">अलर्ट साफ़ करें</string>
     <string name="settings_title">आपकी शांति के लिए बनाया गया</string>
     <string name="settings_body">आसान विकल्प, साफ़ सीमाएँ और बिना बताए कोई एक्सेस नहीं।</string>
     <string name="language_label">ऐप की भाषा</string>
@@ -58,7 +61,7 @@
     <string name="privacy_point_3">एक्टिविटी इसी डिवाइस पर रहती है</string>
     <string name="accuracy_label">सटीकता का वादा</string>
     <string name="accuracy_body" formatted="false">भविष्य का AI वर्ज़न सबूत दिखाएगा और ज़रूरी जानकारी की पुष्टि माँगेगा। यह कभी 100% सटीकता का दावा नहीं करेगा।</string>
-    <string name="version">प्रोटोटाइप 0.2 · Android</string>
+    <string name="version">प्रोटोटाइप 0.3 · Android</string>
     <string name="import_not_live_title">इमेज सुरक्षित रूप से चुनी गई</string>
     <string name="import_not_live_body">इस मुफ़्त प्रोटोटाइप में क्लाउड विश्लेषण जानबूझकर नहीं जोड़ा गया है। अनुभव देखने के लिए नमूना नतीजा खोलें।</string>
     <string name="preview_result">नमूना नतीजा देखें</string>
@@ -148,14 +151,14 @@
     <string name="microphone_reason">केवल “बोलना शुरू करें” दबाने पर इस्तेमाल</string>
     <string name="calendar_title">कैलेंडर</string>
     <string name="calendar_reason">पूरी पहुँच नहीं—हर इवेंट की पुष्टि कैलेंडर ऐप करता है</string>
-    <string name="messages_title">मैसेज</string>
-    <string name="messages_reason">इनबॉक्स एक्सेस नहीं—केवल चुना मैसेज शेयर करें</string>
+    <string name="messages_title">मैसेज अलर्ट</string>
+    <string name="messages_reason">नए SMS और ऐप मैसेज अलर्ट को फ़ोन पर स्कैम संकेतों के लिए जाँचता है</string>
     <string name="allowed">अनुमति है</string>
     <string name="not_allowed">अनुमति नहीं</string>
     <string name="not_required">ज़रूरत नहीं</string>
     <string name="ask_when_used">इस्तेमाल पर पूछेंगे</string>
     <string name="manage_notifications">चालू करें</string>
-    <string name="permission_center_note">SMS और कॉल लॉग की पहुँच जानबूझकर नहीं ली गई क्योंकि यह बहुत संवेदनशील और Google Play पर सीमित है। एक संदिग्ध चीज़ सुरक्षित रूप से भेजने के लिए Android Share इस्तेमाल करें।</string>
+    <string name="permission_center_note">मैसेज अलर्ट Android की Notification Access का उपयोग करते हैं, प्रतिबंधित SMS अनुमति का नहीं। जाँच आपके फ़ोन पर होती है और कुछ भी अपलोड नहीं होता। आप इसे कभी भी रोक या बंद कर सकते हैं।</string>
     <string name="share_safely_title">इनबॉक्स एक्सेस के बिना जाँचें</string>
     <string name="share_safely_body">Messages, WhatsApp, Gmail या Photos में Share दबाएँ और NextMove चुनें। क्या जाँचना है, यह आपके नियंत्रण में रहता है।</string>
     <string name="safety_tools_title">भारत के लिए सुरक्षा टूल</string>
@@ -164,4 +167,61 @@
     <string name="notification_card_title">नोटिफ़िकेशन एक्सेस जाँचें</string>
     <string name="notification_card_body">अभी एक पुष्टि नोटिफ़िकेशन पाएँ। इस प्रोटोटाइप में तय समय वाले NextMove रिमाइंडर सक्रिय नहीं हैं।</string>
     <string name="send_test_notification">टेस्ट नोटिफ़िकेशन भेजें</string>
+
+    <!-- मैसेज स्कैनिंग -->
+    <string name="scan_service_label">NextMove मैसेज अलर्ट</string>
+    <string name="alert_channel_name">स्कैम अलर्ट</string>
+    <string name="alert_channel_description">जब कोई आने वाला मैसेज स्कैम जैसा लगे तो चेतावनी देता है</string>
+    <string name="alert_high_title">संभावित स्कैम मैसेज</string>
+    <string name="alert_review_title">जाँचने लायक मैसेज</string>
+    <string name="alert_body_source">%1$s से। क्यों और क्या करें, यह देखने के लिए दबाएँ।</string>
+    <string name="alert_tap_hint">NextMove ने इसे आपके फ़ोन पर जाँचा। सुरक्षित अगले कदम देखने के लिए खोलें।</string>
+    <string name="alert_eyebrow">स्वचालित मैसेज जाँच</string>
+    <string name="alert_detail_title">इस मैसेज में स्कैम के चेतावनी संकेत हैं</string>
+    <string name="alert_detail_body">NextMove ने धोखाधड़ी में आम तौर पर इस्तेमाल होने वाले शब्द देखे। यह फ़ोन पर की गई शुरुआती चेतावनी है, पक्का प्रमाण नहीं। कोई कदम उठाने से पहले स्वतंत्र रूप से पुष्टि करें।</string>
+    <string name="alert_from_label">कहाँ मिला</string>
+    <string name="alert_unknown_source">एक मैसेजिंग ऐप</string>
+    <string name="alert_message_label">क्या पाया गया</string>
+    <string name="alert_signals_label">चेतावनी संकेत</string>
+    <string name="alert_signals_value" formatted="false">%1$d संकेत: %2$s</string>
+    <string name="scan_disclaimer_title">यह जाँच कैसे काम करती है</string>
+    <string name="scan_disclaimer_body">NextMove आपके फ़ोन पर मैसेज अलर्ट पढ़ता है और आम स्कैम शब्दों से मिलान करता है। यह पूरी तरह फ़ोन पर चलता है, आपका पूरा इनबॉक्स नहीं पढ़ सकता, और अभी लाइव इंटरनेट खतरा जानकारी से नहीं जुड़ता।</string>
+    <string name="flagged_missing">वह अलर्ट अब उपलब्ध नहीं है।</string>
+    <string name="scan_enabled_toast">मैसेज सुरक्षा चालू है।</string>
+    <string name="scan_not_enabled_toast">मैसेज सुरक्षा अभी चालू नहीं है। आप कभी भी Notification Access चालू कर सकते हैं।</string>
+    <string name="scan_settings_error">इस फ़ोन पर Notification Access सेटिंग्स नहीं खुल सकीं।</string>
+    <string name="scan_card_on_title">मैसेज सुरक्षा चालू है</string>
+    <string name="scan_card_on_body">NextMove नए SMS और ऐप मैसेज को स्कैम संकेतों के लिए चुपचाप जाँचता है और आपको चेतावनी देता है।</string>
+    <string name="scan_card_off_title">मैसेज सुरक्षा चालू करें</string>
+    <string name="scan_card_off_body">NextMove को नए SMS और ऐप मैसेज स्कैम संकेतों के लिए जाँचने दें ताकि समय रहते चेतावनी मिले।</string>
+    <string name="scan_manage">प्रबंधित करें</string>
+    <string name="scan_enable_button">सुरक्षा चालू करें</string>
+    <string name="scan_toggle_title">स्कैनिंग</string>
+    <string name="scan_toggle_reason">एक्सेस हटाए बिना मैसेज जाँच रोकें या फिर शुरू करें</string>
+    <string name="set_up_status">सेट अप करें</string>
+    <string name="on_status">चालू</string>
+    <string name="off_status">बंद</string>
+    <string name="paused_status">रुका हुआ</string>
+
+    <!-- पहली बार सेटअप -->
+    <string name="setup_eyebrow">स्वागत है</string>
+    <string name="setup_title">NextMove सेट अप करें</string>
+    <string name="setup_body">तीन झटपट अनुमतियाँ ताकि NextMove आपकी सुरक्षा और याद दिलाने में मदद कर सके। इन्हें बाद में सेटिंग्स में बदल सकते हैं।</string>
+    <string name="setup_notifications_title">नोटिफ़िकेशन</string>
+    <string name="setup_notifications_body">रिमाइंडर और स्कैम अलर्ट दिखाने के लिए</string>
+    <string name="setup_mic_title">माइक्रोफ़ोन</string>
+    <string name="setup_mic_body">वैकल्पिक — आवाज़ सुरक्षा जाँच के लिए</string>
+    <string name="setup_scan_title">मैसेज अलर्ट</string>
+    <string name="setup_scan_body">Notification Access, फ़ोन पर नए मैसेज जाँचने के लिए</string>
+    <string name="setup_privacy_title">आपकी प्राइवेसी सबसे पहले</string>
+    <string name="setup_privacy_body">सब कुछ आपके फ़ोन पर जाँचा जाता है। NextMove का कोई अकाउंट नहीं, कुछ अपलोड नहीं होता, और आपका पूरा इनबॉक्स कभी नहीं पढ़ा जाता।</string>
+    <string name="setup_continue_button">आगे बढ़ें</string>
+    <string name="setup_finish_button">सेटअप पूरा करें</string>
+    <string name="setup_skip_button">अभी छोड़ें</string>
+    <string name="setup_listener_dialog_title">मैसेज अलर्ट की अनुमति दें</string>
+    <string name="setup_listener_dialog_body">अगली स्क्रीन पर NextMove ढूँढें और एक्सेस चालू करें। इससे NextMove आपके फ़ोन पर नए मैसेज अलर्ट पढ़कर स्कैम के बारे में चेतावनी दे सकता है। यह केवल फ़ोन पर जाँचता है और कुछ भी अपलोड नहीं करता।</string>
+    <string name="setup_open_settings">सेटिंग्स खोलें</string>
+    <string name="ready_status">तैयार</string>
+    <string name="needed_status">ज़रूरी</string>
+    <string name="run_setup_again">सेटअप फिर से चलाएँ</string>
 </resources>

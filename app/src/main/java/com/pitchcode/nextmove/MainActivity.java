@@ -20,6 +20,7 @@ import android.provider.Settings;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
+import android.text.format.DateUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,10 +34,12 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.pitchcode.nextmove.data.FlaggedStore;
 import com.pitchcode.nextmove.data.HistoryStore;
 import com.pitchcode.nextmove.data.SampleAnalysis;
 import com.pitchcode.nextmove.notifications.NotificationHelper;
 import com.pitchcode.nextmove.safety.VoiceRiskAssessment;
+import com.pitchcode.nextmove.scan.MessageScanService;
 import com.pitchcode.nextmove.ui.Design;
 
 import java.util.ArrayDeque;
@@ -46,28 +49,46 @@ import java.util.List;
 import java.util.Locale;
 
 public final class MainActivity extends Activity {
+    public static final String EXTRA_FLAGGED_ID = "com.pitchcode.nextmove.FLAGGED_ID";
+
     private static final int REQUEST_IMAGE = 200;
     private static final int REQUEST_NOTIFICATIONS = 201;
     private static final int REQUEST_MICROPHONE = 202;
+    private static final int REQUEST_SETUP_NOTIFICATIONS = 203;
+    private static final int REQUEST_SETUP_MIC = 204;
     private static final String KEY_LANGUAGE = "language";
     private static final String KEY_NOTIFICATION_REQUESTED = "notification_requested";
+    private static final String KEY_SETUP_DONE = "setup_done";
     private static final String CYBERCRIME_URL = "https://cybercrime.gov.in/";
 
-    private enum Screen { HOME, PROCESSING, RESULT, ACTIVITY, SETTINGS, VOICE, VOICE_RESULT }
+    private enum Screen {
+        HOME, PROCESSING, RESULT, ACTIVITY, SETTINGS, VOICE, VOICE_RESULT, SETUP, FLAGGED
+    }
 
     private static final class ScreenState {
         final Screen screen;
         final SampleAnalysis.Kind sampleKind;
         final String voiceDescription;
+        final long flaggedId;
 
         ScreenState(Screen screen, SampleAnalysis.Kind sampleKind, String voiceDescription) {
+            this(screen, sampleKind, voiceDescription, -1L);
+        }
+
+        ScreenState(Screen screen, SampleAnalysis.Kind sampleKind,
+                    String voiceDescription, long flaggedId) {
             this.screen = screen;
             this.sampleKind = sampleKind;
             this.voiceDescription = voiceDescription;
+            this.flaggedId = flaggedId;
         }
 
         static ScreenState of(Screen screen) {
             return new ScreenState(screen, null, null);
+        }
+
+        static ScreenState flagged(long id) {
+            return new ScreenState(Screen.FLAGGED, null, null, id);
         }
     }
 
@@ -84,6 +105,7 @@ public final class MainActivity extends Activity {
     private TextView voiceStatus;
     private boolean startListeningAfterPermission;
     private boolean returningFromNotificationSettings;
+    private boolean returningFromListenerSettings;
 
     @Override
     protected void attachBaseContext(Context newBase) {
@@ -117,6 +139,10 @@ public final class MainActivity extends Activity {
         buildShell();
         if (isSharedText(getIntent())) {
             renderVoice(sharedText(getIntent()));
+        } else if (hasFlaggedExtra(getIntent())) {
+            renderFlaggedDetail(flaggedExtra(getIntent()));
+        } else if (!isSetupComplete()) {
+            renderSetup();
         } else {
             renderHome();
             if (isSharedImage(getIntent())) {
@@ -136,7 +162,19 @@ public final class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         if (content == null || currentScreen == null) return;
-        if (returningFromNotificationSettings) {
+        if (returningFromListenerSettings) {
+            returningFromListenerSettings = false;
+            boolean active = MessageScanService.isListenerEnabled(this);
+            Toast.makeText(this,
+                    active ? R.string.scan_enabled_toast : R.string.scan_not_enabled_toast,
+                    active ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG).show();
+            ScreenState refresh = currentScreen;
+            handler.post(() -> {
+                restoringPreviousScreen = true;
+                renderState(refresh);
+                restoringPreviousScreen = false;
+            });
+        } else if (returningFromNotificationSettings) {
             returningFromNotificationSettings = false;
             if (NotificationHelper.areEnabled(this)) {
                 NotificationHelper.showReady(this);
@@ -152,6 +190,8 @@ public final class MainActivity extends Activity {
             });
         } else if (currentScreen.screen == Screen.SETTINGS) {
             handler.post(this::renderSettings);
+        } else if (currentScreen.screen == Screen.SETUP) {
+            handler.post(this::renderSetup);
         }
     }
 
@@ -161,6 +201,8 @@ public final class MainActivity extends Activity {
         setIntent(intent);
         if (isSharedText(intent)) {
             renderVoice(sharedText(intent));
+        } else if (hasFlaggedExtra(intent)) {
+            renderFlaggedDetail(flaggedExtra(intent));
         } else if (isSharedImage(intent)) {
             showImageSelectedDialog();
         }
@@ -278,7 +320,9 @@ public final class MainActivity extends Activity {
     }
 
     private boolean sameScreen(ScreenState first, ScreenState second) {
-        return first.screen == second.screen && first.sampleKind == second.sampleKind;
+        return first.screen == second.screen
+                && first.sampleKind == second.sampleKind
+                && first.flaggedId == second.flaggedId;
     }
 
     private View brandHeader() {
@@ -323,6 +367,8 @@ public final class MainActivity extends Activity {
         body.addView(buildTodayCard(), Design.match());
         body.addView(Design.space(this, 14));
         body.addView(buildPrivacyStrip(), Design.match());
+        body.addView(Design.space(this, 14));
+        body.addView(buildScanStatusCard(), Design.match());
         body.addView(Design.space(this, 14));
         body.addView(buildNotificationSetupCard(), Design.match());
         body.addView(Design.space(this, 14));
@@ -436,6 +482,40 @@ public final class MainActivity extends Activity {
         enable.setId(R.id.notification_enable);
         enable.setOnClickListener(view -> requestNotificationAccess());
         card.addView(enable, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        return card;
+    }
+
+    private View buildScanStatusCard() {
+        boolean active = MessageScanService.isActive(this);
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 18), Design.dp(this, 17),
+                Design.dp(this, 18), Design.dp(this, 17));
+        card.setBackground(Design.rounded(
+                active ? Design.MINT : Color.rgb(255, 241, 207), 20, this));
+        LinearLayout titleRow = Design.row(this);
+        TextView dot = Design.text(this, "🛡", 15, Design.INK, true);
+        dot.setGravity(Gravity.CENTER);
+        dot.setBackground(Design.rounded(active ? Color.rgb(198, 226, 208) : Design.CARD, 13, this));
+        titleRow.addView(dot, new LinearLayout.LayoutParams(Design.dp(this, 34), Design.dp(this, 34)));
+        TextView title = Design.text(this,
+                getString(active ? R.string.scan_card_on_title : R.string.scan_card_off_title),
+                16, Design.INK, true);
+        title.setPadding(Design.dp(this, 10), 0, 0, 0);
+        titleRow.addView(title, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        card.addView(titleRow, Design.match());
+        card.addView(Design.space(this, 8));
+        card.addView(Design.text(this,
+                getString(active ? R.string.scan_card_on_body : R.string.scan_card_off_body),
+                12, Design.INK, false));
+        card.addView(Design.space(this, 12));
+        TextView chip = Design.chip(this,
+                getString(active ? R.string.scan_manage : R.string.scan_enable_button), true);
+        chip.setOnClickListener(view -> {
+            if (active) renderSettings();
+            else promptEnableScan();
+        });
+        card.addView(chip, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         return card;
     }
@@ -713,6 +793,26 @@ public final class MainActivity extends Activity {
         body.addView(Design.text(this, getString(R.string.activity_body), 14, Design.MUTED, false));
         body.addView(Design.space(this, 22));
 
+        List<FlaggedStore.Item> alerts = FlaggedStore.read(this);
+        if (!alerts.isEmpty()) {
+            body.addView(Design.label(this, getString(R.string.activity_alerts_label)));
+            body.addView(Design.space(this, 10));
+            for (FlaggedStore.Item alert : alerts) {
+                body.addView(flaggedActivityCard(alert), Design.match());
+                body.addView(Design.space(this, 10));
+            }
+            TextView clearAlerts = Design.chip(this, getString(R.string.clear_alerts), false);
+            clearAlerts.setOnClickListener(view -> {
+                FlaggedStore.clear(this);
+                renderActivity();
+            });
+            body.addView(clearAlerts, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            body.addView(Design.space(this, 22));
+            body.addView(Design.label(this, getString(R.string.activity_handled_label)));
+            body.addView(Design.space(this, 10));
+        }
+
         List<SampleAnalysis.Kind> history = HistoryStore.read(this);
         if (history.isEmpty()) {
             LinearLayout empty = Design.column(this);
@@ -767,6 +867,31 @@ public final class MainActivity extends Activity {
         card.setClickable(true);
         card.setFocusable(true);
         card.setOnClickListener(view -> renderResult(sample));
+        return card;
+    }
+
+    private View flaggedActivityCard(FlaggedStore.Item item) {
+        LinearLayout card = Design.row(this);
+        card.setPadding(Design.dp(this, 15), Design.dp(this, 15),
+                Design.dp(this, 15), Design.dp(this, 15));
+        card.setBackground(Design.outlined(Design.DANGER_SOFT, Design.SOFT, 19, this));
+        TextView warn = Design.text(this, "⚠", 15, Design.DANGER, true);
+        warn.setGravity(Gravity.CENTER);
+        warn.setBackground(Design.rounded(Color.WHITE, 15, this));
+        card.addView(warn, new LinearLayout.LayoutParams(Design.dp(this, 40), Design.dp(this, 40)));
+        LinearLayout copy = Design.column(this);
+        copy.setPadding(Design.dp(this, 12), 0, Design.dp(this, 8), 0);
+        copy.addView(Design.text(this, getString(item.highRisk
+                ? R.string.alert_high_title : R.string.alert_review_title), 14, Design.INK, true));
+        copy.addView(Design.text(this,
+                (item.source.isEmpty() ? getString(R.string.alert_unknown_source) : item.source)
+                        + " · " + DateUtils.getRelativeTimeSpanString(item.timeMillis),
+                11, Design.MUTED, false));
+        card.addView(copy, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        card.addView(Design.text(this, "›", 25, Design.MUTED, false));
+        card.setClickable(true);
+        card.setFocusable(true);
+        card.setOnClickListener(view -> renderFlaggedDetail(item.id));
         return card;
     }
 
@@ -959,6 +1084,304 @@ public final class MainActivity extends Activity {
         return row;
     }
 
+    // ---------------------------------------------------------------------
+    // First-run setup flow
+    // ---------------------------------------------------------------------
+
+    private void renderSetup() {
+        boolean notificationsReady = NotificationHelper.areEnabled(this);
+        boolean micReady = checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED;
+        boolean scanReady = MessageScanService.isListenerEnabled(this);
+        boolean allReady = notificationsReady && micReady && scanReady;
+
+        ScrollView scroll = scrollPage();
+        scroll.setId(R.id.screen_setup);
+        LinearLayout body = pageBody();
+        scroll.addView(body);
+
+        body.addView(brandHeader());
+        body.addView(Design.space(this, 26));
+        body.addView(Design.label(this, getString(R.string.setup_eyebrow)));
+        body.addView(Design.space(this, 8));
+        body.addView(Design.text(this, getString(R.string.setup_title), 30, Design.INK, true));
+        body.addView(Design.space(this, 10));
+        body.addView(Design.text(this, getString(R.string.setup_body), 14, Design.MUTED, false));
+        body.addView(Design.space(this, 22));
+
+        LinearLayout steps = Design.column(this);
+        steps.setPadding(Design.dp(this, 18), Design.dp(this, 8),
+                Design.dp(this, 18), Design.dp(this, 8));
+        Design.card(steps, Design.CARD, 22, this);
+        steps.addView(setupRow(R.id.setup_row_notifications, "🔔",
+                R.string.setup_notifications_title, R.string.setup_notifications_body,
+                notificationsReady));
+        steps.addView(Design.divider(this));
+        steps.addView(setupRow(R.id.setup_row_mic, "🎙",
+                R.string.setup_mic_title, R.string.setup_mic_body, micReady));
+        steps.addView(Design.divider(this));
+        steps.addView(setupRow(R.id.setup_row_scan, "🛡",
+                R.string.setup_scan_title, R.string.setup_scan_body, scanReady));
+        body.addView(steps, Design.match());
+        body.addView(Design.space(this, 14));
+
+        body.addView(infoCard(R.string.setup_privacy_title, R.string.setup_privacy_body,
+                Design.MINT), Design.match());
+        body.addView(Design.space(this, 18));
+
+        if (allReady) {
+            TextView finish = Design.button(this, getString(R.string.setup_finish_button),
+                    Design.INK, Color.WHITE);
+            finish.setId(R.id.setup_finish);
+            finish.setOnClickListener(view -> finishSetup());
+            body.addView(finish, Design.match());
+        } else {
+            TextView continueButton = Design.button(this, getString(R.string.setup_continue_button),
+                    Design.SAFFRON, Design.INK);
+            continueButton.setId(R.id.setup_continue);
+            continueButton.setOnClickListener(view -> beginSetupPermissionFlow());
+            body.addView(continueButton, Design.match());
+        }
+        body.addView(Design.space(this, 10));
+        TextView skip = Design.button(this, getString(R.string.setup_skip_button),
+                Color.TRANSPARENT, Design.INK);
+        skip.setId(R.id.setup_skip);
+        skip.setBackground(Design.outlined(Color.TRANSPARENT, Design.INK, 17, this));
+        skip.setOnClickListener(view -> finishSetup());
+        body.addView(skip, Design.match());
+
+        showScreen(scroll, 0, ScreenState.of(Screen.SETUP));
+    }
+
+    private View setupRow(int rowId, String icon, int titleId, int bodyId, boolean ready) {
+        LinearLayout row = Design.row(this);
+        row.setId(rowId);
+        row.setPadding(0, Design.dp(this, 13), 0, Design.dp(this, 13));
+        TextView symbol = Design.text(this, icon, 16, Design.INK, true);
+        symbol.setGravity(Gravity.CENTER);
+        symbol.setBackground(Design.rounded(Design.PAPER, 14, this));
+        row.addView(symbol, new LinearLayout.LayoutParams(Design.dp(this, 42), Design.dp(this, 42)));
+
+        LinearLayout copy = Design.column(this);
+        copy.setPadding(Design.dp(this, 12), 0, Design.dp(this, 8), 0);
+        copy.addView(Design.text(this, getString(titleId), 14, Design.INK, true));
+        copy.addView(Design.text(this, getString(bodyId), 11, Design.MUTED, false));
+        row.addView(copy, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+
+        TextView status = Design.chip(this,
+                getString(ready ? R.string.ready_status : R.string.needed_status), ready);
+        row.addView(status);
+        return row;
+    }
+
+    private void beginSetupPermissionFlow() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+            HistoryStore.prefs(this).edit()
+                    .putBoolean(KEY_NOTIFICATION_REQUESTED, true).apply();
+            requestPermissions(
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                    REQUEST_SETUP_NOTIFICATIONS);
+            return;
+        }
+        setupStepMicrophone();
+    }
+
+    private void setupStepMicrophone() {
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_SETUP_MIC);
+            return;
+        }
+        setupStepListener();
+    }
+
+    private void setupStepListener() {
+        if (MessageScanService.isListenerEnabled(this)) {
+            if (currentScreen != null && currentScreen.screen == Screen.SETUP) renderSetup();
+            return;
+        }
+        showListenerExplainer();
+    }
+
+    private void showListenerExplainer() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.setup_listener_dialog_title)
+                .setMessage(R.string.setup_listener_dialog_body)
+                .setNegativeButton(R.string.cancel, (dialog, which) -> {
+                    if (currentScreen != null && currentScreen.screen == Screen.SETUP) renderSetup();
+                })
+                .setPositiveButton(R.string.setup_open_settings,
+                        (dialog, which) -> openListenerSettings())
+                .show();
+    }
+
+    private void openListenerSettings() {
+        returningFromListenerSettings = true;
+        try {
+            startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
+        } catch (RuntimeException error) {
+            returningFromListenerSettings = false;
+            Toast.makeText(this, R.string.scan_settings_error, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void promptEnableScan() {
+        if (MessageScanService.isListenerEnabled(this)) {
+            MessageScanService.setScanEnabled(this, true);
+            Toast.makeText(this, R.string.scan_enabled_toast, Toast.LENGTH_SHORT).show();
+            refreshCurrentScreen();
+            return;
+        }
+        showListenerExplainer();
+    }
+
+    private void refreshCurrentScreen() {
+        if (currentScreen == null) {
+            renderHome();
+            return;
+        }
+        restoringPreviousScreen = true;
+        renderState(currentScreen);
+        restoringPreviousScreen = false;
+    }
+
+    private void finishSetup() {
+        markSetupComplete();
+        screenHistory.clear();
+        currentScreen = null;
+        renderHome();
+    }
+
+    private boolean isSetupComplete() {
+        return HistoryStore.prefs(this).getBoolean(KEY_SETUP_DONE, false);
+    }
+
+    private void markSetupComplete() {
+        HistoryStore.prefs(this).edit().putBoolean(KEY_SETUP_DONE, true).apply();
+    }
+
+    // ---------------------------------------------------------------------
+    // Flagged-message alert detail
+    // ---------------------------------------------------------------------
+
+    private boolean hasFlaggedExtra(Intent intent) {
+        return intent != null && intent.getLongExtra(EXTRA_FLAGGED_ID, -1L) > 0L;
+    }
+
+    private long flaggedExtra(Intent intent) {
+        return intent == null ? -1L : intent.getLongExtra(EXTRA_FLAGGED_ID, -1L);
+    }
+
+    private void renderFlaggedDetail(long id) {
+        FlaggedStore.Item item = FlaggedStore.find(this, id);
+        if (item == null) {
+            Toast.makeText(this, R.string.flagged_missing, Toast.LENGTH_SHORT).show();
+            if (!isSetupComplete()) {
+                renderSetup();
+            } else {
+                renderActivity();
+            }
+            return;
+        }
+
+        ScrollView scroll = scrollPage();
+        scroll.setId(R.id.screen_flagged);
+        LinearLayout body = pageBody();
+        scroll.addView(body);
+
+        TextView back = Design.chip(this, "‹ " + getString(R.string.back), false);
+        back.setOnClickListener(view -> navigateBack());
+        body.addView(back, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        body.addView(Design.space(this, 22));
+        body.addView(Design.label(this, getString(R.string.alert_eyebrow)));
+        body.addView(Design.space(this, 8));
+
+        TextView ready = Design.text(this, "⚠  " + getString(item.highRisk
+                ? R.string.alert_high_title : R.string.alert_review_title), 13,
+                Design.DANGER, true);
+        ready.setPadding(Design.dp(this, 13), Design.dp(this, 8),
+                Design.dp(this, 13), Design.dp(this, 8));
+        ready.setBackground(Design.rounded(Design.DANGER_SOFT, 14, this));
+        body.addView(ready, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        body.addView(Design.space(this, 14));
+        body.addView(Design.text(this, getString(R.string.alert_detail_title), 28, Design.INK, true));
+        body.addView(Design.space(this, 10));
+        body.addView(Design.text(this, getString(R.string.alert_detail_body), 14, Design.MUTED, false));
+        body.addView(Design.space(this, 18));
+
+        LinearLayout sourceCard = Design.column(this);
+        sourceCard.setPadding(Design.dp(this, 18), Design.dp(this, 16),
+                Design.dp(this, 18), Design.dp(this, 16));
+        Design.card(sourceCard, Design.CARD, 20, this);
+        sourceCard.addView(Design.label(this, getString(R.string.alert_from_label)));
+        sourceCard.addView(Design.space(this, 6));
+        sourceCard.addView(Design.text(this,
+                item.source.isEmpty() ? getString(R.string.alert_unknown_source) : item.source,
+                15, Design.INK, true));
+        sourceCard.addView(Design.space(this, 4));
+        sourceCard.addView(Design.text(this,
+                DateUtils.getRelativeTimeSpanString(item.timeMillis).toString(),
+                11, Design.MUTED, false));
+        body.addView(sourceCard, Design.match());
+        body.addView(Design.space(this, 12));
+
+        LinearLayout messageCard = Design.column(this);
+        messageCard.setPadding(Design.dp(this, 18), Design.dp(this, 16),
+                Design.dp(this, 18), Design.dp(this, 16));
+        messageCard.setBackground(Design.outlined(Design.CARD, Design.SOFT, 20, this));
+        messageCard.addView(Design.label(this, getString(R.string.alert_message_label)));
+        messageCard.addView(Design.space(this, 8));
+        TextView quote = Design.text(this, item.snippet, 14, Design.INK, false);
+        quote.setPadding(Design.dp(this, 12), Design.dp(this, 11),
+                Design.dp(this, 12), Design.dp(this, 11));
+        quote.setBackground(Design.rounded(Color.rgb(255, 247, 225), 12, this));
+        messageCard.addView(quote, Design.match());
+        if (item.matched != null && !item.matched.isEmpty()) {
+            messageCard.addView(Design.space(this, 12));
+            messageCard.addView(Design.label(this, getString(R.string.alert_signals_label)));
+            messageCard.addView(Design.space(this, 6));
+            messageCard.addView(Design.text(this,
+                    getString(R.string.alert_signals_value, item.signals, item.matched),
+                    13, Design.DANGER, true));
+        }
+        body.addView(messageCard, Design.match());
+        body.addView(Design.space(this, 14));
+
+        LinearLayout steps = Design.column(this);
+        steps.setPadding(Design.dp(this, 17), Design.dp(this, 16),
+                Design.dp(this, 17), Design.dp(this, 16));
+        Design.card(steps, Design.CARD, 20, this);
+        steps.addView(Design.label(this, getString(R.string.safe_next_steps)));
+        steps.addView(Design.space(this, 11));
+        steps.addView(safetyStep("1", R.string.safe_step_1));
+        steps.addView(Design.space(this, 10));
+        steps.addView(safetyStep("2", R.string.safe_step_2));
+        steps.addView(Design.space(this, 10));
+        steps.addView(safetyStep("3", R.string.safe_step_3));
+        body.addView(steps, Design.match());
+        body.addView(Design.space(this, 14));
+
+        TextView helpline = Design.button(this, getString(R.string.call_1930),
+                Design.INK, Color.WHITE);
+        helpline.setOnClickListener(view -> dialCyberHelpline());
+        body.addView(helpline, Design.match());
+        body.addView(Design.space(this, 9));
+        TextView report = Design.button(this, getString(R.string.report_cybercrime),
+                Color.TRANSPARENT, Design.INK);
+        report.setBackground(Design.outlined(Color.TRANSPARENT, Design.INK, 17, this));
+        report.setOnClickListener(view -> openCybercrimePortal());
+        body.addView(report, Design.match());
+        body.addView(Design.space(this, 16));
+        body.addView(infoCard(R.string.scan_disclaimer_title, R.string.scan_disclaimer_body,
+                Color.rgb(255, 241, 207)), Design.match());
+
+        showScreen(scroll, 0, ScreenState.flagged(id));
+    }
+
     private void renderSettings() {
         ScrollView scroll = scrollPage();
         scroll.setId(R.id.screen_settings);
@@ -1039,18 +1462,67 @@ public final class MainActivity extends Activity {
                 R.string.not_required,
                 null));
         card.addView(Design.space(this, 12));
-        card.addView(permissionRow(
-                "✉",
-                R.string.messages_title,
-                R.string.messages_reason,
-                R.string.not_required,
-                null));
+        card.addView(buildScanPermissionRow());
+        boolean listenerEnabled = MessageScanService.isListenerEnabled(this);
+        if (listenerEnabled) {
+            card.addView(Design.space(this, 12));
+            card.addView(buildScanToggleRow());
+        }
         card.addView(Design.space(this, 14));
         card.addView(Design.divider(this));
         card.addView(Design.space(this, 12));
         card.addView(Design.text(this, getString(R.string.permission_center_note), 12,
                 Design.MUTED, false));
+        card.addView(Design.space(this, 12));
+        TextView runSetup = Design.chip(this, getString(R.string.run_setup_again), false);
+        runSetup.setOnClickListener(view -> renderSetup());
+        card.addView(runSetup, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         return card;
+    }
+
+    private View buildScanPermissionRow() {
+        boolean listenerEnabled = MessageScanService.isListenerEnabled(this);
+        boolean scanOn = listenerEnabled && MessageScanService.isScanEnabled(this);
+        int statusId;
+        if (!listenerEnabled) {
+            statusId = R.string.set_up_status;
+        } else if (scanOn) {
+            statusId = R.string.on_status;
+        } else {
+            statusId = R.string.paused_status;
+        }
+        return permissionRow(
+                "🛡",
+                R.string.messages_title,
+                R.string.messages_reason,
+                statusId,
+                listenerEnabled ? this::openListenerSettings : this::promptEnableScan);
+    }
+
+    private View buildScanToggleRow() {
+        boolean scanOn = MessageScanService.isScanEnabled(this);
+        LinearLayout row = Design.row(this);
+        TextView symbol = Design.text(this, "⟳", 16, Design.INK, true);
+        symbol.setGravity(Gravity.CENTER);
+        symbol.setBackground(Design.rounded(Design.PAPER, 14, this));
+        row.addView(symbol, new LinearLayout.LayoutParams(Design.dp(this, 40), Design.dp(this, 40)));
+
+        LinearLayout copy = Design.column(this);
+        copy.setPadding(Design.dp(this, 11), 0, Design.dp(this, 8), 0);
+        copy.addView(Design.text(this, getString(R.string.scan_toggle_title), 13, Design.INK, true));
+        copy.addView(Design.text(this, getString(R.string.scan_toggle_reason), 11, Design.MUTED, false));
+        row.addView(copy, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+
+        TextView toggle = Design.chip(this,
+                getString(scanOn ? R.string.on_status : R.string.off_status), scanOn);
+        toggle.setId(R.id.scan_toggle);
+        toggle.setOnClickListener(view -> {
+            MessageScanService.setScanEnabled(this, !scanOn);
+            renderSettings();
+        });
+        row.addView(toggle);
+        return row;
     }
 
     private View permissionRow(
@@ -1201,6 +1673,10 @@ public final class MainActivity extends Activity {
                 Toast.makeText(this, R.string.voice_permission_denied, Toast.LENGTH_LONG).show();
             }
             if (currentScreen != null && currentScreen.screen == Screen.SETTINGS) renderSettings();
+        } else if (requestCode == REQUEST_SETUP_NOTIFICATIONS) {
+            setupStepMicrophone();
+        } else if (requestCode == REQUEST_SETUP_MIC) {
+            setupStepListener();
         }
     }
 
@@ -1306,6 +1782,8 @@ public final class MainActivity extends Activity {
             case HOME -> renderHome();
             case ACTIVITY -> renderActivity();
             case SETTINGS -> renderSettings();
+            case SETUP -> renderSetup();
+            case FLAGGED -> renderFlaggedDetail(state.flaggedId);
             case VOICE -> renderVoice(state.voiceDescription);
             case RESULT -> renderResult(SampleAnalysis.of(state.sampleKind));
             case VOICE_RESULT -> renderVoiceResult(

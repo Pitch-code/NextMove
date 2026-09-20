@@ -1,5 +1,8 @@
 package com.pitchcode.nextmove.safety;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 public final class VoiceRiskAssessment {
@@ -14,22 +17,24 @@ public final class VoiceRiskAssessment {
 
     public final int signalCount;
     public final boolean highRisk;
+    public final List<String> matchedTerms;
 
-    private VoiceRiskAssessment(int signalCount) {
+    private VoiceRiskAssessment(int signalCount, List<String> matchedTerms) {
         this.signalCount = signalCount;
         this.highRisk = signalCount >= 2;
+        this.matchedTerms = Collections.unmodifiableList(matchedTerms);
     }
 
     public static VoiceRiskAssessment evaluate(String description) {
-        String normalized = description.toLowerCase(Locale.ROOT);
-        int count = 0;
+        String normalized = description == null ? "" : description.toLowerCase(Locale.ROOT);
+        List<String> matched = new ArrayList<>();
         for (String term : HIGH_RISK_TERMS) {
-            if (normalized.contains(term)) count++;
+            if (normalized.contains(term)) matched.add(term);
         }
         if (normalized.contains("http://") || normalized.contains("https://")
                 || normalized.contains("www.")) {
-            count++;
+            matched.add("link");
         }
-        return new VoiceRiskAssessment(count);
+        return new VoiceRiskAssessment(matched.size(), matched);
     }
 }
