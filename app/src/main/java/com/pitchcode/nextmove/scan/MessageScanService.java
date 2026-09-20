@@ -1,8 +1,10 @@
 package com.pitchcode.nextmove.scan;
 
 import android.app.Notification;
+import android.app.Person;
 import android.content.ComponentName;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.service.notification.NotificationListenerService;
@@ -17,6 +19,7 @@ import com.pitchcode.nextmove.safety.VoiceRiskAssessment;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -110,13 +113,7 @@ public final class MessageScanService extends NotificationListenerService {
         if (extras == null) return;
 
         String sender = charSequence(extras, Notification.EXTRA_TITLE);
-        StringBuilder message = new StringBuilder();
-        appendIfPresent(message, charSequence(extras, Notification.EXTRA_TEXT));
-        appendIfPresent(message, charSequence(extras, Notification.EXTRA_BIG_TEXT));
-        appendIfPresent(message, charSequence(extras, Notification.EXTRA_SUB_TEXT));
-        appendIfPresent(message, charSequence(extras, Notification.EXTRA_SUMMARY_TEXT));
-
-        String body = message.toString().trim();
+        String body = collectMessageText(notification, extras);
         if (body.isEmpty()) return;
 
         String combined = (sender + " " + body).trim();
@@ -160,12 +157,56 @@ public final class MessageScanService extends NotificationListenerService {
         return "Message";
     }
 
-    private static void appendIfPresent(StringBuilder builder, String value) {
+    /**
+     * Gathers all readable text from a message notification. This covers plain
+     * notifications, expanded (BigText) notifications, bundled multi-line
+     * (InboxStyle) notifications, and WhatsApp-style conversation notifications
+     * (MessagingStyle), which carry each recent message separately.
+     */
+    private String collectMessageText(Notification notification, Bundle extras) {
+        LinkedHashSet<String> parts = new LinkedHashSet<>();
+        addPart(parts, charSequence(extras, Notification.EXTRA_TEXT));
+        addPart(parts, charSequence(extras, Notification.EXTRA_BIG_TEXT));
+        addPart(parts, charSequence(extras, Notification.EXTRA_SUB_TEXT));
+        addPart(parts, charSequence(extras, Notification.EXTRA_SUMMARY_TEXT));
+
+        CharSequence[] lines = extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES);
+        if (lines != null) {
+            for (CharSequence line : lines) {
+                addPart(parts, line == null ? null : line.toString());
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            try {
+                Notification.MessagingStyle style = Notification.MessagingStyle
+                        .extractMessagingStyleFromNotification(notification);
+                if (style != null) {
+                    for (Notification.MessagingStyle.Message m : style.getMessages()) {
+                        if (m == null || m.getText() == null) continue;
+                        Person person = m.getSenderPerson();
+                        String name = person != null && person.getName() != null
+                                ? person.getName().toString().trim() : "";
+                        addPart(parts, (name.isEmpty() ? "" : name + ": ") + m.getText());
+                    }
+                }
+            } catch (RuntimeException ignored) {
+                // Some vendor notifications report a malformed MessagingStyle.
+            }
+        }
+
+        StringBuilder builder = new StringBuilder();
+        for (String part : parts) {
+            if (builder.length() > 0) builder.append('\n');
+            builder.append(part);
+        }
+        return builder.toString().trim();
+    }
+
+    private static void addPart(LinkedHashSet<String> parts, String value) {
         if (value == null) return;
         String trimmed = value.trim();
-        if (trimmed.isEmpty()) return;
-        if (builder.length() > 0) builder.append(' ');
-        builder.append(trimmed);
+        if (!trimmed.isEmpty()) parts.add(trimmed);
     }
 
     private static String charSequence(Bundle extras, String key) {

@@ -61,7 +61,7 @@
     <string name="privacy_point_3">Activity remains on this device</string>
     <string name="accuracy_label">ACCURACY PROMISE</string>
     <string name="accuracy_body" formatted="false">The future AI version will show evidence and ask you to confirm important details. It will never claim 100% accuracy.</string>
-    <string name="version">Prototype 0.3 · Android</string>
+    <string name="version">Prototype 0.3.1 · Android</string>
     <string name="import_not_live_title">Image selected safely</string>
     <string name="import_not_live_body">Cloud analysis is intentionally not connected in this free prototype. Preview a sample result to experience the flow.</string>
     <string name="preview_result">Preview sample result</string>
