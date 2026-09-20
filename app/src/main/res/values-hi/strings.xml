@@ -61,7 +61,7 @@
     <string name="privacy_point_3">एक्टिविटी इसी डिवाइस पर रहती है</string>
     <string name="accuracy_label">सटीकता का वादा</string>
     <string name="accuracy_body" formatted="false">भविष्य का AI वर्ज़न सबूत दिखाएगा और ज़रूरी जानकारी की पुष्टि माँगेगा। यह कभी 100% सटीकता का दावा नहीं करेगा।</string>
-    <string name="version">प्रोटोटाइप 0.3.1 · Android</string>
+    <string name="version">प्रोटोटाइप 0.4.0 · Android</string>
     <string name="import_not_live_title">इमेज सुरक्षित रूप से चुनी गई</string>
     <string name="import_not_live_body">इस मुफ़्त प्रोटोटाइप में क्लाउड विश्लेषण जानबूझकर नहीं जोड़ा गया है। अनुभव देखने के लिए नमूना नतीजा खोलें।</string>
     <string name="preview_result">नमूना नतीजा देखें</string>
@@ -224,4 +224,38 @@
     <string name="ready_status">तैयार</string>
     <string name="needed_status">ज़रूरी</string>
     <string name="run_setup_again">सेटअप फिर से चलाएँ</string>
+
+    <!-- ट्रायल / प्रीमियम -->
+    <string name="trial_banner_text">फ्री ट्रायल · %1$d दिन बाकी</string>
+    <string name="trial_banner_upgrade">अपग्रेड करें</string>
+    <string name="premium_badge">प्रीमियम · सभी फ़ीचर अनलॉक</string>
+    <string name="ad_placeholder_label">विज्ञापन · डेमो प्लेसहोल्डर</string>
+    <string name="ad_placeholder_body">पब्लिश किए गए ऐप में फ्री ट्रायल के दौरान यहाँ असली विज्ञापन दिखेंगे।</string>
+    <string name="plan_label">आपका प्लान</string>
+    <string name="plan_trial_status">फ्री ट्रायल — %1$d दिन बाकी</string>
+    <string name="plan_premium_status">प्रीमियम — सभी फ़ीचर अनलॉक</string>
+    <string name="paywall_eyebrow">फ्री ट्रायल खत्म</string>
+    <string name="paywall_title">NextMove इस्तेमाल जारी रखने के लिए अपग्रेड करें</string>
+    <string name="paywall_body">आपका 7-दिन का फ्री ट्रायल खत्म हो गया है। स्कैम सुरक्षा और सभी फ़ीचर फिर से चालू करने के लिए प्रीमियम लें।</string>
+    <string name="paywall_premium_eyebrow">प्रीमियम सक्रिय</string>
+    <string name="paywall_premium_title">आप प्रीमियम पर हैं</string>
+    <string name="paywall_premium_body">सभी फ़ीचर अनलॉक हैं और विज्ञापन बंद हैं। NextMove का साथ देने के लिए धन्यवाद।</string>
+    <string name="paywall_plan_name">NextMove प्रीमियम</string>
+    <string name="paywall_plan_price">प्रोटोटाइप — इस डेमो बिल्ड में कोई असली शुल्क नहीं</string>
+    <string name="paywall_benefit_1">स्कैम मैसेज स्कैनिंग चालू रहती है</string>
+    <string name="paywall_benefit_2">आवाज़ और टेक्स्ट सुरक्षा जाँच</string>
+    <string name="paywall_benefit_3">कोई विज्ञापन नहीं</string>
+    <string name="paywall_benefit_4">असीमित हिस्ट्री और अलर्ट</string>
+    <string name="paywall_upgrade_button">प्रीमियम लें</string>
+    <string name="paywall_continue">ऐप पर जाएँ</string>
+    <string name="paywall_note">केवल डेमो: यह बिना भुगतान के प्रीमियम को स्थानीय रूप से अनलॉक करता है। असली Google Play बिलिंग Play Store लॉन्च पर जोड़ी जाएगी।</string>
+    <string name="upgraded_toast">प्रीमियम अनलॉक (डेमो)।</string>
+    <string name="demo_controls_label">डेमो कंट्रोल (प्रोटोटाइप)</string>
+    <string name="demo_controls_body">ये बटन केवल 7 दिन इंतज़ार किए बिना ट्रायल और प्रीमियम स्थिति जाँचने के लिए हैं। असली रिलीज़ से पहले हटा दिए जाएँगे।</string>
+    <string name="demo_premium_on">प्रीमियम सिम्युलेट करें</string>
+    <string name="demo_premium_off">प्रीमियम बंद करें</string>
+    <string name="demo_reset_trial">ट्रायल रीसेट करें</string>
+    <string name="demo_expire_trial">ट्रायल खत्म सिम्युलेट करें</string>
+    <string name="trial_reset_toast">ट्रायल 7 दिन पर रीसेट (डेमो)।</string>
+    <string name="trial_expired_toast">ट्रायल खत्म के रूप में चिह्नित (डेमो)।</string>
 </resources>
