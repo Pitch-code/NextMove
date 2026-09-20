@@ -44,17 +44,35 @@ jobs:
           disable-animations: true
           script: bash scripts/emulator-verify.sh
 
+      - name: Resolve prototype version
+        id: version
+        run: |
+          NAME="$(grep -oP 'versionName\s+"\K[^"]+' app/build.gradle)"
+          if [ -z "$NAME" ]; then
+            echo "Could not read versionName from app/build.gradle" >&2
+            exit 1
+          fi
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "Resolved versionName: $NAME"
+
       - name: Prepare public APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk NextMove-v0.2.0-prototype.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk "NextMove-v${{ steps.version.outputs.name }}-prototype.apk"
 
       - name: Publish public prototype release
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: "v${{ steps.version.outputs.name }}-prototype"
+          APK: "NextMove-v${{ steps.version.outputs.name }}-prototype.apk"
         run: |
-          gh release create v0.2.0-prototype \
-            NextMove-v0.2.0-prototype.apk \
-            --repo "$GITHUB_REPOSITORY" \
-            --target "$GITHUB_SHA" \
-            --title "NextMove Android Prototype 0.2" \
-            --notes "Android prototype with fixed in-app Back navigation, notification setup, explicit sample labels, privacy-safe permission explanations, English/Hindi voice description, preliminary on-device scam signals, and official India cyber-fraud actions. Live Gemini and internet threat intelligence remain transparently disconnected." \
-            --prerelease
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; uploading/refreshing the APK asset."
+            gh release upload "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" \
+              "$APK" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "NextMove Android Prototype ${{ steps.version.outputs.name }}" \
+              --notes "Android prototype. This build adds on-device message-alert scanning (SMS, WhatsApp and other chat apps) via Notification Access with scam alerts and safe next steps, plus a guided first-run setup flow. Live Gemini and internet threat intelligence remain transparently disconnected." \
+              --prerelease
+          fi
