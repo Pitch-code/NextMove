@@ -1,11 +1,10 @@
 package com.pitchcode.nextmove.scan;
 
 import android.app.Notification;
-import android.app.Person;
 import android.content.ComponentName;
 import android.content.Context;
-import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.provider.Settings;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
@@ -177,22 +176,24 @@ public final class MessageScanService extends NotificationListenerService {
             }
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            try {
-                Notification.MessagingStyle style = Notification.MessagingStyle
-                        .extractMessagingStyleFromNotification(notification);
-                if (style != null) {
-                    for (Notification.MessagingStyle.Message m : style.getMessages()) {
-                        if (m == null || m.getText() == null) continue;
-                        Person person = m.getSenderPerson();
-                        String name = person != null && person.getName() != null
-                                ? person.getName().toString().trim() : "";
-                        addPart(parts, (name.isEmpty() ? "" : name + ": ") + m.getText());
-                    }
+        // MessagingStyle notifications (WhatsApp and other chat apps) store each
+        // recent message as a Bundle in EXTRA_MESSAGES. Reading it directly avoids
+        // any AndroidX dependency and works on every supported version.
+        try {
+            Parcelable[] messages = extras.getParcelableArray(Notification.EXTRA_MESSAGES);
+            if (messages != null) {
+                for (Parcelable parcel : messages) {
+                    if (!(parcel instanceof Bundle)) continue;
+                    Bundle messageBundle = (Bundle) parcel;
+                    CharSequence text = messageBundle.getCharSequence("text");
+                    if (text == null) continue;
+                    CharSequence msgSender = messageBundle.getCharSequence("sender");
+                    String name = msgSender == null ? "" : msgSender.toString().trim();
+                    addPart(parts, (name.isEmpty() ? "" : name + ": ") + text);
                 }
-            } catch (RuntimeException ignored) {
-                // Some vendor notifications report a malformed MessagingStyle.
             }
+        } catch (RuntimeException ignored) {
+            // Some vendor notifications report a malformed message bundle array.
         }
 
         StringBuilder builder = new StringBuilder();
