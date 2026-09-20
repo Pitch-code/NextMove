@@ -61,7 +61,7 @@
     <string name="privacy_point_3">Activity remains on this device</string>
     <string name="accuracy_label">ACCURACY PROMISE</string>
     <string name="accuracy_body" formatted="false">The future AI version will show evidence and ask you to confirm important details. It will never claim 100% accuracy.</string>
-    <string name="version">Prototype 0.3.1 · Android</string>
+    <string name="version">Prototype 0.4.0 · Android</string>
     <string name="import_not_live_title">Image selected safely</string>
     <string name="import_not_live_body">Cloud analysis is intentionally not connected in this free prototype. Preview a sample result to experience the flow.</string>
     <string name="preview_result">Preview sample result</string>
@@ -224,4 +224,38 @@
     <string name="ready_status">Ready</string>
     <string name="needed_status">Needed</string>
     <string name="run_setup_again">Run setup again</string>
+
+    <!-- Trial / premium -->
+    <string name="trial_banner_text">Free trial · %1$d days left</string>
+    <string name="trial_banner_upgrade">Upgrade</string>
+    <string name="premium_badge">Premium · all features unlocked</string>
+    <string name="ad_placeholder_label">AD · DEMO PLACEHOLDER</string>
+    <string name="ad_placeholder_body">Real ads appear here in the published app during the free trial.</string>
+    <string name="plan_label">YOUR PLAN</string>
+    <string name="plan_trial_status">Free trial — %1$d days left</string>
+    <string name="plan_premium_status">Premium — all features unlocked</string>
+    <string name="paywall_eyebrow">FREE TRIAL ENDED</string>
+    <string name="paywall_title">Upgrade to keep using NextMove</string>
+    <string name="paywall_body">Your 7-day free trial has ended. Upgrade to Premium to switch scam protection and all features back on.</string>
+    <string name="paywall_premium_eyebrow">PREMIUM ACTIVE</string>
+    <string name="paywall_premium_title">You’re on Premium</string>
+    <string name="paywall_premium_body">All features are unlocked and ads are off. Thank you for supporting NextMove.</string>
+    <string name="paywall_plan_name">NextMove Premium</string>
+    <string name="paywall_plan_price">Prototype — no real charge in this demo build</string>
+    <string name="paywall_benefit_1">Scam message scanning stays on</string>
+    <string name="paywall_benefit_2">Voice and text safety checks</string>
+    <string name="paywall_benefit_3">No ads</string>
+    <string name="paywall_benefit_4">Unlimited history and alerts</string>
+    <string name="paywall_upgrade_button">Upgrade to Premium</string>
+    <string name="paywall_continue">Continue to app</string>
+    <string name="paywall_note">Demo only: this unlocks Premium locally with no payment. Real Google Play billing is added at Play Store launch.</string>
+    <string name="upgraded_toast">Premium unlocked (demo).</string>
+    <string name="demo_controls_label">DEMO CONTROLS (PROTOTYPE)</string>
+    <string name="demo_controls_body">These buttons exist only to test trial and premium states without waiting 7 days. They are removed before the real release.</string>
+    <string name="demo_premium_on">Simulate Premium</string>
+    <string name="demo_premium_off">Turn off Premium</string>
+    <string name="demo_reset_trial">Reset trial</string>
+    <string name="demo_expire_trial">Simulate trial ended</string>
+    <string name="trial_reset_toast">Trial reset to 7 days (demo).</string>
+    <string name="trial_expired_toast">Trial marked as ended (demo).</string>
 </resources>

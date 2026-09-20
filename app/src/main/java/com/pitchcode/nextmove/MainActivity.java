@@ -36,6 +36,7 @@ import android.widget.Toast;
 
 import com.pitchcode.nextmove.data.FlaggedStore;
 import com.pitchcode.nextmove.data.HistoryStore;
+import com.pitchcode.nextmove.data.PlanState;
 import com.pitchcode.nextmove.data.SampleAnalysis;
 import com.pitchcode.nextmove.notifications.NotificationHelper;
 import com.pitchcode.nextmove.safety.VoiceRiskAssessment;
@@ -62,7 +63,7 @@ public final class MainActivity extends Activity {
     private static final String CYBERCRIME_URL = "https://cybercrime.gov.in/";
 
     private enum Screen {
-        HOME, PROCESSING, RESULT, ACTIVITY, SETTINGS, VOICE, VOICE_RESULT, SETUP, FLAGGED
+        HOME, PROCESSING, RESULT, ACTIVITY, SETTINGS, VOICE, VOICE_RESULT, SETUP, FLAGGED, PAYWALL
     }
 
     private static final class ScreenState {
@@ -137,12 +138,14 @@ public final class MainActivity extends Activity {
                     this::navigateBack);
         }
         buildShell();
-        if (isSharedText(getIntent())) {
+        if (!isSetupComplete()) {
+            renderSetup();
+        } else if (PlanState.isLocked(this)) {
+            renderPaywall();
+        } else if (isSharedText(getIntent())) {
             renderVoice(sharedText(getIntent()));
         } else if (hasFlaggedExtra(getIntent())) {
             renderFlaggedDetail(flaggedExtra(getIntent()));
-        } else if (!isSetupComplete()) {
-            renderSetup();
         } else {
             renderHome();
             if (isSharedImage(getIntent())) {
@@ -199,7 +202,9 @@ public final class MainActivity extends Activity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        if (isSharedText(intent)) {
+        if (PlanState.isLocked(this)) {
+            renderPaywall();
+        } else if (isSharedText(intent)) {
             renderVoice(sharedText(intent));
         } else if (hasFlaggedExtra(intent)) {
             renderFlaggedDetail(flaggedExtra(intent));
@@ -346,12 +351,15 @@ public final class MainActivity extends Activity {
     }
 
     private void renderHome() {
+        if (PlanState.isLocked(this)) { renderPaywall(); return; }
         ScrollView scroll = scrollPage();
         scroll.setId(R.id.screen_home);
         LinearLayout body = pageBody();
         scroll.addView(body);
         body.addView(brandHeader());
-        body.addView(Design.space(this, 30));
+        body.addView(Design.space(this, 16));
+        body.addView(buildTrialBanner(), Design.match());
+        body.addView(Design.space(this, 16));
         body.addView(Design.label(this, getString(R.string.home_eyebrow)));
         body.addView(Design.space(this, 8));
         body.addView(Design.text(this, getString(R.string.home_title), 34, Design.INK, true));
@@ -373,6 +381,10 @@ public final class MainActivity extends Activity {
         body.addView(buildNotificationSetupCard(), Design.match());
         body.addView(Design.space(this, 14));
         body.addView(buildSafetyToolsCard(), Design.match());
+        if (!PlanState.isPremium(this)) {
+            body.addView(Design.space(this, 14));
+            body.addView(buildAdPlaceholder(), Design.match());
+        }
         showScreen(scroll, 0, ScreenState.of(Screen.HOME));
     }
 
@@ -552,6 +564,7 @@ public final class MainActivity extends Activity {
     }
 
     private void renderProcessing(SampleAnalysis sample) {
+        if (PlanState.isLocked(this)) { renderPaywall(); return; }
         LinearLayout page = Design.column(this);
         page.setId(R.id.screen_processing);
         page.setGravity(Gravity.CENTER);
@@ -596,6 +609,7 @@ public final class MainActivity extends Activity {
     }
 
     private void renderResult(SampleAnalysis sample) {
+        if (PlanState.isLocked(this)) { renderPaywall(); return; }
         ScrollView scroll = scrollPage();
         scroll.setId(R.id.screen_result);
         LinearLayout body = pageBody();
@@ -782,6 +796,7 @@ public final class MainActivity extends Activity {
     }
 
     private void renderActivity() {
+        if (PlanState.isLocked(this)) { renderPaywall(); return; }
         ScrollView scroll = scrollPage();
         scroll.setId(R.id.screen_activity);
         LinearLayout body = pageBody();
@@ -900,6 +915,7 @@ public final class MainActivity extends Activity {
     }
 
     private void renderVoice(String initialDescription) {
+        if (PlanState.isLocked(this)) { renderPaywall(); return; }
         ScrollView scroll = scrollPage();
         scroll.setId(R.id.screen_voice);
         LinearLayout body = pageBody();
@@ -994,6 +1010,7 @@ public final class MainActivity extends Activity {
     }
 
     private void renderVoiceResult(String description) {
+        if (PlanState.isLocked(this)) { renderPaywall(); return; }
         VoiceRiskAssessment assessment = VoiceRiskAssessment.evaluate(description);
         ScrollView scroll = scrollPage();
         scroll.setId(R.id.screen_voice_result);
@@ -1082,6 +1099,190 @@ public final class MainActivity extends Activity {
         text.setPadding(Design.dp(this, 11), 0, 0, 0);
         row.addView(text, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         return row;
+    }
+
+    // ---------------------------------------------------------------------
+    // Trial / premium (paywall)
+    // ---------------------------------------------------------------------
+
+    private void renderPaywall() {
+        ScrollView scroll = scrollPage();
+        scroll.setId(R.id.screen_paywall);
+        LinearLayout body = pageBody();
+        scroll.addView(body);
+
+        body.addView(brandHeader());
+        body.addView(Design.space(this, 28));
+
+        boolean premium = PlanState.isPremium(this);
+        body.addView(Design.label(this, getString(premium
+                ? R.string.paywall_premium_eyebrow : R.string.paywall_eyebrow)));
+        body.addView(Design.space(this, 8));
+        body.addView(Design.text(this, getString(premium
+                ? R.string.paywall_premium_title : R.string.paywall_title), 30, Design.INK, true));
+        body.addView(Design.space(this, 10));
+        body.addView(Design.text(this, getString(premium
+                ? R.string.paywall_premium_body : R.string.paywall_body), 15, Design.MUTED, false));
+        body.addView(Design.space(this, 22));
+
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 20), Design.dp(this, 20),
+                Design.dp(this, 20), Design.dp(this, 20));
+        Design.card(card, Design.INK, 24, this);
+        card.addView(Design.text(this, getString(R.string.paywall_plan_name), 20, Color.WHITE, true));
+        card.addView(Design.space(this, 4));
+        card.addView(Design.text(this, getString(R.string.paywall_plan_price), 13,
+                Color.rgb(204, 215, 210), false));
+        card.addView(Design.space(this, 16));
+        card.addView(paywallBenefit(R.string.paywall_benefit_1));
+        card.addView(Design.space(this, 9));
+        card.addView(paywallBenefit(R.string.paywall_benefit_2));
+        card.addView(Design.space(this, 9));
+        card.addView(paywallBenefit(R.string.paywall_benefit_3));
+        card.addView(Design.space(this, 9));
+        card.addView(paywallBenefit(R.string.paywall_benefit_4));
+        body.addView(card, Design.match());
+        body.addView(Design.space(this, 16));
+
+        if (!premium) {
+            TextView upgrade = Design.button(this, getString(R.string.paywall_upgrade_button),
+                    Design.SAFFRON, Design.INK);
+            upgrade.setId(R.id.plan_upgrade);
+            upgrade.setOnClickListener(view -> simulateUpgrade());
+            body.addView(upgrade, Design.match());
+            body.addView(Design.space(this, 10));
+            body.addView(Design.text(this, getString(R.string.paywall_note), 11,
+                    Design.MUTED, false));
+        } else {
+            TextView continueButton = Design.button(this, getString(R.string.paywall_continue),
+                    Design.INK, Color.WHITE);
+            continueButton.setOnClickListener(view -> {
+                screenHistory.clear();
+                currentScreen = null;
+                renderHome();
+            });
+            body.addView(continueButton, Design.match());
+        }
+
+        body.addView(Design.space(this, 18));
+        body.addView(buildDemoControls(), Design.match());
+
+        showScreen(scroll, 0, ScreenState.of(Screen.PAYWALL));
+    }
+
+    private View paywallBenefit(int textId) {
+        LinearLayout row = Design.row(this);
+        TextView tick = Design.text(this, "✓", 13, Design.INK, true);
+        tick.setGravity(Gravity.CENTER);
+        tick.setBackground(Design.rounded(Design.SAFFRON, 12, this));
+        row.addView(tick, new LinearLayout.LayoutParams(Design.dp(this, 26), Design.dp(this, 26)));
+        TextView text = Design.text(this, getString(textId), 14, Color.WHITE, false);
+        text.setPadding(Design.dp(this, 11), 0, 0, 0);
+        row.addView(text, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        return row;
+    }
+
+    private void simulateUpgrade() {
+        PlanState.setPremium(this, true);
+        Toast.makeText(this, R.string.upgraded_toast, Toast.LENGTH_SHORT).show();
+        screenHistory.clear();
+        currentScreen = null;
+        renderHome();
+    }
+
+    /** Prototype-only controls so both trial and locked states can be exercised. */
+    private View buildDemoControls() {
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 17), Design.dp(this, 16),
+                Design.dp(this, 17), Design.dp(this, 16));
+        card.setBackground(Design.outlined(Design.CARD, Design.SOFT, 20, this));
+        card.addView(Design.label(this, getString(R.string.demo_controls_label)));
+        card.addView(Design.space(this, 6));
+        card.addView(Design.text(this, getString(R.string.demo_controls_body), 12,
+                Design.MUTED, false));
+        card.addView(Design.space(this, 12));
+
+        LinearLayout row = Design.row(this);
+        boolean premium = PlanState.isPremium(this);
+        TextView premiumToggle = Design.chip(this, getString(premium
+                ? R.string.demo_premium_off : R.string.demo_premium_on), premium);
+        premiumToggle.setId(R.id.plan_demo_premium);
+        premiumToggle.setOnClickListener(view -> {
+            PlanState.setPremium(this, !premium);
+            screenHistory.clear();
+            currentScreen = null;
+            if (PlanState.isLocked(this)) renderPaywall(); else renderHome();
+        });
+        row.addView(premiumToggle, Design.weight());
+        View gap = new View(this);
+        row.addView(gap, new LinearLayout.LayoutParams(Design.dp(this, 10), 1));
+        TextView resetTrial = Design.chip(this, getString(R.string.demo_reset_trial), false);
+        resetTrial.setOnClickListener(view -> {
+            PlanState.setPremium(this, false);
+            PlanState.resetTrial(this);
+            Toast.makeText(this, R.string.trial_reset_toast, Toast.LENGTH_SHORT).show();
+            screenHistory.clear();
+            currentScreen = null;
+            renderHome();
+        });
+        row.addView(resetTrial, Design.weight());
+        card.addView(row, Design.match());
+        card.addView(Design.space(this, 10));
+        TextView expire = Design.chip(this, getString(R.string.demo_expire_trial), false);
+        expire.setOnClickListener(view -> {
+            PlanState.setPremium(this, false);
+            PlanState.expireTrial(this);
+            Toast.makeText(this, R.string.trial_expired_toast, Toast.LENGTH_SHORT).show();
+            screenHistory.clear();
+            currentScreen = null;
+            renderPaywall();
+        });
+        card.addView(expire, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        return card;
+    }
+
+    private View buildTrialBanner() {
+        LinearLayout strip = Design.row(this);
+        strip.setPadding(Design.dp(this, 15), Design.dp(this, 12),
+                Design.dp(this, 15), Design.dp(this, 12));
+        boolean premium = PlanState.isPremium(this);
+        strip.setBackground(Design.rounded(
+                premium ? Design.MINT : Color.rgb(255, 241, 207), 16, this));
+        LinearLayout copy = Design.column(this);
+        if (premium) {
+            copy.addView(Design.text(this, getString(R.string.premium_badge), 13, Design.INK, true));
+        } else {
+            int days = PlanState.daysLeft(this);
+            copy.addView(Design.text(this,
+                    getString(R.string.trial_banner_text, days), 13, Design.INK, true));
+        }
+        strip.addView(copy, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        if (!premium) {
+            TextView upgrade = Design.chip(this, getString(R.string.trial_banner_upgrade), true);
+            upgrade.setOnClickListener(view -> renderPaywall());
+            strip.addView(upgrade);
+        }
+        return strip;
+    }
+
+    private View buildAdPlaceholder() {
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 16), Design.dp(this, 18),
+                Design.dp(this, 16), Design.dp(this, 18));
+        card.setBackground(Design.outlined(Color.rgb(243, 240, 232), Design.SOFT, 16, this));
+        card.setGravity(Gravity.CENTER);
+        TextView tag = Design.text(this, getString(R.string.ad_placeholder_label), 10,
+                Design.MUTED, true);
+        tag.setLetterSpacing(0.12f);
+        tag.setGravity(Gravity.CENTER);
+        card.addView(tag, Design.match());
+        card.addView(Design.space(this, 4));
+        TextView body = Design.text(this, getString(R.string.ad_placeholder_body), 12,
+                Design.MUTED, false);
+        body.setGravity(Gravity.CENTER);
+        card.addView(body, Design.match());
+        return card;
     }
 
     // ---------------------------------------------------------------------
@@ -1275,6 +1476,7 @@ public final class MainActivity extends Activity {
     }
 
     private void renderFlaggedDetail(long id) {
+        if (PlanState.isLocked(this)) { renderPaywall(); return; }
         FlaggedStore.Item item = FlaggedStore.find(this, id);
         if (item == null) {
             Toast.makeText(this, R.string.flagged_missing, Toast.LENGTH_SHORT).show();
@@ -1383,6 +1585,7 @@ public final class MainActivity extends Activity {
     }
 
     private void renderSettings() {
+        if (PlanState.isLocked(this)) { renderPaywall(); return; }
         ScrollView scroll = scrollPage();
         scroll.setId(R.id.screen_settings);
         LinearLayout body = pageBody();
@@ -1393,6 +1596,8 @@ public final class MainActivity extends Activity {
         body.addView(Design.space(this, 8));
         body.addView(Design.text(this, getString(R.string.settings_body), 14, Design.MUTED, false));
         body.addView(Design.space(this, 24));
+        body.addView(settingsPlanCard(), Design.match());
+        body.addView(Design.space(this, 14));
         body.addView(settingsLanguageCard(), Design.match());
         body.addView(Design.space(this, 14));
         body.addView(settingsPermissionsCard(), Design.match());
@@ -1407,6 +1612,30 @@ public final class MainActivity extends Activity {
         version.setGravity(Gravity.CENTER);
         body.addView(version, Design.match());
         showScreen(scroll, 2, ScreenState.of(Screen.SETTINGS));
+    }
+
+    private View settingsPlanCard() {
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 17), Design.dp(this, 17),
+                Design.dp(this, 17), Design.dp(this, 17));
+        Design.card(card, Design.CARD, 21, this);
+        card.addView(Design.label(this, getString(R.string.plan_label)));
+        card.addView(Design.space(this, 8));
+        boolean premium = PlanState.isPremium(this);
+        if (premium) {
+            card.addView(Design.text(this, getString(R.string.plan_premium_status), 16,
+                    Design.INK, true));
+        } else {
+            int days = PlanState.daysLeft(this);
+            card.addView(Design.text(this,
+                    getString(R.string.plan_trial_status, days), 16, Design.INK, true));
+            card.addView(Design.space(this, 12));
+            TextView upgrade = Design.chip(this, getString(R.string.trial_banner_upgrade), true);
+            upgrade.setOnClickListener(view -> renderPaywall());
+            card.addView(upgrade, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        }
+        return card;
     }
 
     private View settingsLanguageCard() {
@@ -1783,6 +2012,7 @@ public final class MainActivity extends Activity {
             case ACTIVITY -> renderActivity();
             case SETTINGS -> renderSettings();
             case SETUP -> renderSetup();
+            case PAYWALL -> renderPaywall();
             case FLAGGED -> renderFlaggedDetail(state.flaggedId);
             case VOICE -> renderVoice(state.voiceDescription);
             case RESULT -> renderResult(SampleAnalysis.of(state.sampleKind));

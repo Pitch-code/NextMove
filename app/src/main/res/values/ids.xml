@@ -29,4 +29,7 @@
     <item name="setup_row_mic" type="id" />
     <item name="setup_row_scan" type="id" />
     <item name="scan_toggle" type="id" />
+    <item name="screen_paywall" type="id" />
+    <item name="plan_upgrade" type="id" />
+    <item name="plan_demo_premium" type="id" />
 </resources>

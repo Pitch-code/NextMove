@@ -12,6 +12,7 @@ import android.text.TextUtils;
 
 import com.pitchcode.nextmove.data.FlaggedStore;
 import com.pitchcode.nextmove.data.HistoryStore;
+import com.pitchcode.nextmove.data.PlanState;
 import com.pitchcode.nextmove.notifications.NotificationHelper;
 import com.pitchcode.nextmove.safety.VoiceRiskAssessment;
 
@@ -95,6 +96,8 @@ public final class MessageScanService extends NotificationListenerService {
 
     private void handleNotification(StatusBarNotification sbn) {
         if (sbn == null || !isScanEnabled(this)) return;
+        // Scanning is a paid/trial feature: stop once the trial has ended.
+        if (!PlanState.hasAccess(this)) return;
 
         String pkg = sbn.getPackageName();
         if (pkg == null || pkg.equals(getPackageName())) return;

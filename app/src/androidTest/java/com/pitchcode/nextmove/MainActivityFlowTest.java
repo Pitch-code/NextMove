@@ -37,15 +37,44 @@ public final class MainActivityFlowTest {
     private static final String PREFS = "nextmove_local";
     private static final String KEY_SETUP_DONE = "setup_done";
 
+    private static final String KEY_PREMIUM = "premium";
+    private static final String KEY_TRIAL_START = "trial_start";
+    private static final long DAY_MS = 24L * 60L * 60L * 1000L;
+
     private void setSetupComplete(boolean complete) {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .edit().putBoolean(KEY_SETUP_DONE, complete).apply();
     }
 
+    private void setPlan(boolean premium, long trialStart) {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                .putBoolean(KEY_PREMIUM, premium)
+                .putLong(KEY_TRIAL_START, trialStart)
+                .apply();
+    }
+
     @Before
     public void markSetupCompleteByDefault() {
         setSetupComplete(true);
+        // Keep the trial active so feature screens are reachable by default.
+        setPlan(false, System.currentTimeMillis());
+    }
+
+    @Test
+    public void expiredTrialShowsPaywallThenUpgradeUnlocks() {
+        setSetupComplete(true);
+        setPlan(false, System.currentTimeMillis() - 8L * DAY_MS);
+        try (ActivityScenario<MainActivity> scenario =
+                     ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(activity -> {
+                assertNotNull(activity.findViewById(R.id.screen_paywall));
+                assertNull(activity.findViewById(R.id.screen_home));
+                click(activity, R.id.plan_upgrade);
+                assertNotNull(activity.findViewById(R.id.screen_home));
+            });
+        }
     }
 
     @Test
