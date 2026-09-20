@@ -3,9 +3,11 @@ package com.pitchcode.nextmove;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.text.SpannedString;
@@ -23,6 +25,7 @@ import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -30,6 +33,34 @@ import java.util.regex.Pattern;
 
 @RunWith(AndroidJUnit4.class)
 public final class MainActivityFlowTest {
+
+    private static final String PREFS = "nextmove_local";
+    private static final String KEY_SETUP_DONE = "setup_done";
+
+    private void setSetupComplete(boolean complete) {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit().putBoolean(KEY_SETUP_DONE, complete).apply();
+    }
+
+    @Before
+    public void markSetupCompleteByDefault() {
+        setSetupComplete(true);
+    }
+
+    @Test
+    public void firstRunShowsSetupThenReachesHome() {
+        setSetupComplete(false);
+        try (ActivityScenario<MainActivity> scenario =
+                     ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(activity -> {
+                assertNotNull(activity.findViewById(R.id.screen_setup));
+                assertNull(activity.findViewById(R.id.screen_home));
+                click(activity, R.id.setup_skip);
+                assertNotNull(activity.findViewById(R.id.screen_home));
+            });
+        }
+    }
 
     @Test
     public void backNavigationAndExactSampleContext() throws Exception {

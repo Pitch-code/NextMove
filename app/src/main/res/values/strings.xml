@@ -47,6 +47,9 @@
     <string name="activity_empty">Nothing handled yet</string>
     <string name="activity_empty_body">Try a sample and mark it handled. It will appear here.</string>
     <string name="clear_history">Clear activity</string>
+    <string name="activity_alerts_label">RECENT MESSAGE ALERTS</string>
+    <string name="activity_handled_label">HANDLED</string>
+    <string name="clear_alerts">Clear alerts</string>
     <string name="settings_title">Made for your peace of mind</string>
     <string name="settings_body">Simple choices, honest limits and no surprise access.</string>
     <string name="language_label">APP LANGUAGE</string>
@@ -58,7 +61,7 @@
     <string name="privacy_point_3">Activity remains on this device</string>
     <string name="accuracy_label">ACCURACY PROMISE</string>
     <string name="accuracy_body" formatted="false">The future AI version will show evidence and ask you to confirm important details. It will never claim 100% accuracy.</string>
-    <string name="version">Prototype 0.2 · Android</string>
+    <string name="version">Prototype 0.3 · Android</string>
     <string name="import_not_live_title">Image selected safely</string>
     <string name="import_not_live_body">Cloud analysis is intentionally not connected in this free prototype. Preview a sample result to experience the flow.</string>
     <string name="preview_result">Preview sample result</string>
@@ -148,14 +151,14 @@
     <string name="microphone_reason">Used only after you tap “Start speaking”</string>
     <string name="calendar_title">Calendar</string>
     <string name="calendar_reason">No broad access—your calendar app confirms every event</string>
-    <string name="messages_title">Messages</string>
-    <string name="messages_reason">No inbox access—share only the message you want checked</string>
+    <string name="messages_title">Message alerts</string>
+    <string name="messages_reason">Scans new SMS and app message alerts on your phone for scam signs</string>
     <string name="allowed">Allowed</string>
     <string name="not_allowed">Not allowed</string>
     <string name="not_required">Not required</string>
     <string name="ask_when_used">Ask when used</string>
     <string name="manage_notifications">Enable</string>
-    <string name="permission_center_note">SMS and call-log access is deliberately excluded because it is highly sensitive and restricted by Google Play. Use Android Share to send one suspicious item safely.</string>
+    <string name="permission_center_note">Message alerts use Android’s Notification Access, not restricted SMS permissions. Scanning happens on your phone and nothing is uploaded. You can pause or turn it off anytime.</string>
     <string name="share_safely_title">Check without inbox access</string>
     <string name="share_safely_body">In Messages, WhatsApp, Gmail or Photos, tap Share and choose NextMove. You stay in control of exactly what is checked.</string>
     <string name="safety_tools_title">Safety tools for India</string>
@@ -164,4 +167,61 @@
     <string name="notification_card_title">Test notification access</string>
     <string name="notification_card_body">Receive one confirmation notification now. Scheduled NextMove reminders are not active in this prototype.</string>
     <string name="send_test_notification">Send test notification</string>
+
+    <!-- Message scanning -->
+    <string name="scan_service_label">NextMove message alerts</string>
+    <string name="alert_channel_name">Scam alerts</string>
+    <string name="alert_channel_description">Warns you when an incoming message looks like a scam</string>
+    <string name="alert_high_title">Possible scam message</string>
+    <string name="alert_review_title">Message worth reviewing</string>
+    <string name="alert_body_source">From %1$s. Tap to see why and what to do.</string>
+    <string name="alert_tap_hint">NextMove checked this on your phone. Open it for safe next steps.</string>
+    <string name="alert_eyebrow">AUTOMATIC MESSAGE CHECK</string>
+    <string name="alert_detail_title">This message shows scam warning signs</string>
+    <string name="alert_detail_body">NextMove noticed phrases often used in fraud. This is an early on-device warning, not proof. Verify independently before acting.</string>
+    <string name="alert_from_label">DETECTED IN</string>
+    <string name="alert_unknown_source">A messaging app</string>
+    <string name="alert_message_label">WHAT WAS DETECTED</string>
+    <string name="alert_signals_label">WARNING SIGNALS</string>
+    <string name="alert_signals_value" formatted="false">%1$d signals: %2$s</string>
+    <string name="scan_disclaimer_title">HOW THIS CHECK WORKS</string>
+    <string name="scan_disclaimer_body">NextMove reads message alerts on your phone and matches common scam phrases. It runs fully on-device, cannot read your full inbox, and does not connect to live internet threat data yet.</string>
+    <string name="flagged_missing">That alert is no longer available.</string>
+    <string name="scan_enabled_toast">Message protection is on.</string>
+    <string name="scan_not_enabled_toast">Message protection is not on yet. You can enable Notification Access anytime.</string>
+    <string name="scan_settings_error">Could not open Notification Access settings on this phone.</string>
+    <string name="scan_card_on_title">Message protection is on</string>
+    <string name="scan_card_on_body">NextMove quietly checks new SMS and app messages for scam signs and warns you.</string>
+    <string name="scan_card_off_title">Turn on message protection</string>
+    <string name="scan_card_off_body">Let NextMove check new SMS and app messages for scam signs and warn you in time.</string>
+    <string name="scan_manage">Manage</string>
+    <string name="scan_enable_button">Enable protection</string>
+    <string name="scan_toggle_title">Scanning</string>
+    <string name="scan_toggle_reason">Pause or resume message checks without removing access</string>
+    <string name="set_up_status">Set up</string>
+    <string name="on_status">On</string>
+    <string name="off_status">Off</string>
+    <string name="paused_status">Paused</string>
+
+    <!-- First-run setup -->
+    <string name="setup_eyebrow">WELCOME</string>
+    <string name="setup_title">Set up NextMove</string>
+    <string name="setup_body">Three quick permissions so NextMove can protect and remind you. You can change any of them later in Settings.</string>
+    <string name="setup_notifications_title">Notifications</string>
+    <string name="setup_notifications_body">To show reminders and scam alerts</string>
+    <string name="setup_mic_title">Microphone</string>
+    <string name="setup_mic_body">Optional — for the voice safety check</string>
+    <string name="setup_scan_title">Message alerts</string>
+    <string name="setup_scan_body">Notification Access, to check new messages on your phone</string>
+    <string name="setup_privacy_title">Your privacy comes first</string>
+    <string name="setup_privacy_body">Everything is checked on your phone. NextMove has no account, uploads nothing, and never reads your full inbox.</string>
+    <string name="setup_continue_button">Continue</string>
+    <string name="setup_finish_button">Finish setup</string>
+    <string name="setup_skip_button">Skip for now</string>
+    <string name="setup_listener_dialog_title">Allow message alerts</string>
+    <string name="setup_listener_dialog_body">On the next screen, find NextMove and turn on access. This lets NextMove read new message alerts on your phone to warn you about scams. It scans on-device only and never uploads anything.</string>
+    <string name="setup_open_settings">Open settings</string>
+    <string name="ready_status">Ready</string>
+    <string name="needed_status">Needed</string>
+    <string name="run_setup_again">Run setup again</string>
 </resources>

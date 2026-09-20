@@ -20,4 +20,13 @@
     <item name="voice_disclosure" type="id" />
     <item name="voice_start" type="id" />
     <item name="notification_enable" type="id" />
+    <item name="screen_setup" type="id" />
+    <item name="screen_flagged" type="id" />
+    <item name="setup_continue" type="id" />
+    <item name="setup_skip" type="id" />
+    <item name="setup_finish" type="id" />
+    <item name="setup_row_notifications" type="id" />
+    <item name="setup_row_mic" type="id" />
+    <item name="setup_row_scan" type="id" />
+    <item name="scan_toggle" type="id" />
 </resources>
