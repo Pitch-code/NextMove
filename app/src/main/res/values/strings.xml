@@ -352,5 +352,5 @@
     <string name="onboard2_title">Automatic scam protection</string>
     <string name="onboard2_body">NextMove can check new SMS and app messages for scam warning signs and alert you in time, right on your phone.</string>
     <string name="onboard3_title">Private and honest</string>
-    <string name="onboard3_body">Everything is checked on your phone. No account, nothing uploaded, and it never claims to be 100% certain. Starts with a 7-day free trial.</string>
+    <string name="onboard3_body" formatted="false">Everything is checked on your phone. No account, nothing uploaded, and it never claims to be 100% certain. Starts with a 7-day free trial.</string>
 </resources>
