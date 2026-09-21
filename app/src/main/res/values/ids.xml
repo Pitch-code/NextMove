@@ -40,4 +40,7 @@
     <item name="open_checker" type="id" />
     <item name="screen_checker_result" type="id" />
     <item name="screen_tip" type="id" />
+    <item name="screen_onboarding" type="id" />
+    <item name="onboarding_next" type="id" />
+    <item name="onboarding_skip" type="id" />
 </resources>

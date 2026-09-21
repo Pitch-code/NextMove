@@ -62,11 +62,15 @@ public final class MainActivity extends Activity {
     private static final String KEY_LANGUAGE = "language";
     private static final String KEY_NOTIFICATION_REQUESTED = "notification_requested";
     private static final String KEY_SETUP_DONE = "setup_done";
+    private static final String KEY_ONBOARDING_DONE = "onboarding_done";
+    private static final String KEY_DARK = "theme_dark";
+    private static final String KEY_HIGH_CONTRAST = "high_contrast";
+    private static final String KEY_TEXT_SCALE = "text_scale";
     private static final String CYBERCRIME_URL = "https://cybercrime.gov.in/";
 
     private enum Screen {
         HOME, PROCESSING, RESULT, ACTIVITY, SETTINGS, VOICE, VOICE_RESULT, SETUP, FLAGGED, PAYWALL,
-        PANIC, CHECKER, CHECKER_RESULT, TIP
+        PANIC, CHECKER, CHECKER_RESULT, TIP, ONBOARDING
     }
 
     private static final class ScreenState {
@@ -135,6 +139,7 @@ public final class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
+        applyTheme();
         NotificationHelper.createChannel(this);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
@@ -142,7 +147,9 @@ public final class MainActivity extends Activity {
                     this::navigateBack);
         }
         buildShell();
-        if (!isSetupComplete()) {
+        if (!isOnboardingComplete()) {
+            renderOnboarding(0);
+        } else if (!isSetupComplete()) {
             renderSetup();
         } else if (PlanState.isLocked(this)) {
             renderPaywall();
@@ -412,10 +419,10 @@ public final class MainActivity extends Activity {
         badge.setBackground(Design.rounded(Design.SAFFRON, 16, this));
         card.addView(badge, new LinearLayout.LayoutParams(Design.dp(this, 48), Design.dp(this, 48)));
         card.addView(Design.space(this, 18));
-        card.addView(Design.text(this, getString(R.string.share_title), 25, Color.WHITE, true));
+        card.addView(Design.text(this, getString(R.string.share_title), 25, Design.ON_INK, true));
         card.addView(Design.space(this, 7));
         card.addView(Design.text(this, getString(R.string.share_body), 14,
-                Color.rgb(204, 215, 210), false));
+                Design.ON_INK_MUTED, false));
         card.addView(Design.space(this, 18));
         TextView choose = Design.button(this, getString(R.string.choose_image),
                 Design.SAFFRON, Design.INK);
@@ -424,7 +431,7 @@ public final class MainActivity extends Activity {
         card.addView(choose, Design.match());
         card.addView(Design.space(this, 10));
         TextView voice = Design.button(this, "🎙  " + getString(R.string.voice_button),
-                Color.TRANSPARENT, Color.WHITE);
+                Color.TRANSPARENT, Design.ON_INK);
         voice.setId(R.id.voice_open);
         voice.setBackground(Design.outlined(Color.TRANSPARENT, Design.SAFFRON, 17, this));
         voice.setOnClickListener(view -> renderVoice());
@@ -493,7 +500,7 @@ public final class MainActivity extends Activity {
         LinearLayout card = Design.column(this);
         card.setPadding(Design.dp(this, 18), Design.dp(this, 17),
                 Design.dp(this, 18), Design.dp(this, 17));
-        card.setBackground(Design.rounded(Color.rgb(255, 241, 207), 20, this));
+        card.setBackground(Design.rounded(Design.CREAM, 20, this));
         card.addView(Design.text(this, getString(R.string.notification_card_title), 16,
                 Design.INK, true));
         card.addView(Design.space(this, 6));
@@ -517,11 +524,11 @@ public final class MainActivity extends Activity {
         card.setPadding(Design.dp(this, 18), Design.dp(this, 17),
                 Design.dp(this, 18), Design.dp(this, 17));
         card.setBackground(Design.rounded(
-                active ? Design.MINT : Color.rgb(255, 241, 207), 20, this));
+                active ? Design.MINT : Design.CREAM, 20, this));
         LinearLayout titleRow = Design.row(this);
         TextView dot = Design.text(this, "🛡", 15, Design.INK, true);
         dot.setGravity(Gravity.CENTER);
-        dot.setBackground(Design.rounded(active ? Color.rgb(198, 226, 208) : Design.CARD, 13, this));
+        dot.setBackground(Design.rounded(active ? Design.MINT_STRONG : Design.CARD, 13, this));
         titleRow.addView(dot, new LinearLayout.LayoutParams(Design.dp(this, 34), Design.dp(this, 34)));
         TextView title = Design.text(this,
                 getString(active ? R.string.scan_card_on_title : R.string.scan_card_off_title),
@@ -558,7 +565,7 @@ public final class MainActivity extends Activity {
         card.addView(Design.space(this, 14));
 
         TextView voice = Design.button(this, "🎙  " + getString(R.string.open_voice_check),
-                Design.INK, Color.WHITE);
+                Design.INK, Design.ON_INK);
         voice.setOnClickListener(view -> renderVoice());
         card.addView(voice, Design.match());
         card.addView(Design.space(this, 9));
@@ -572,7 +579,7 @@ public final class MainActivity extends Activity {
         card.addView(Design.space(this, 9));
 
         TextView panic = Design.button(this, "🆘  " + getString(R.string.open_panic),
-                Design.DANGER, Color.WHITE);
+                Design.DANGER, Design.ON_INK);
         panic.setId(R.id.open_panic);
         panic.setOnClickListener(view -> renderPanic());
         card.addView(panic, Design.match());
@@ -705,14 +712,14 @@ public final class MainActivity extends Activity {
         LinearLayout action = Design.column(this);
         action.setPadding(Design.dp(this, 18), Design.dp(this, 18),
                 Design.dp(this, 18), Design.dp(this, 18));
-        action.setBackground(Design.rounded(sample.danger ? Design.DANGER_SOFT : Color.rgb(255, 241, 207), 22, this));
+        action.setBackground(Design.rounded(sample.danger ? Design.DANGER_SOFT : Design.CREAM, 22, this));
         action.addView(Design.label(this, getString(R.string.next_move_label)));
         action.addView(Design.space(this, 8));
         action.addView(Design.text(this, getString(sample.action), 16, Design.INK, true));
         action.addView(Design.space(this, 16));
         if (sample.danger) {
             TextView helpline = Design.button(this, getString(R.string.call_1930),
-                    Design.INK, Color.WHITE);
+                    Design.INK, Design.ON_INK);
             helpline.setOnClickListener(view -> dialCyberHelpline());
             action.addView(helpline, Design.match());
             action.addView(Design.space(this, 9));
@@ -723,7 +730,7 @@ public final class MainActivity extends Activity {
             action.addView(portal, Design.match());
         } else {
             TextView calendar = Design.button(this, getString(R.string.add_reminder),
-                    Design.INK, Color.WHITE);
+                    Design.INK, Design.ON_INK);
             calendar.setOnClickListener(view -> openCalendar(sample));
             action.addView(calendar, Design.match());
         }
@@ -781,7 +788,7 @@ public final class MainActivity extends Activity {
         TextView quote = Design.text(this, getString(sample.evidence), 14, Design.INK, false);
         quote.setPadding(Design.dp(this, 12), Design.dp(this, 11),
                 Design.dp(this, 12), Design.dp(this, 11));
-        quote.setBackground(Design.rounded(Color.rgb(255, 247, 225), 12, this));
+        quote.setBackground(Design.rounded(Design.CREAM_SOFT, 12, this));
         card.addView(quote, Design.match());
         return card;
     }
@@ -943,7 +950,7 @@ public final class MainActivity extends Activity {
         card.setBackground(Design.outlined(Design.DANGER_SOFT, Design.SOFT, 19, this));
         TextView warn = Design.text(this, "⚠", 15, Design.DANGER, true);
         warn.setGravity(Gravity.CENTER);
-        warn.setBackground(Design.rounded(Color.WHITE, 15, this));
+        warn.setBackground(Design.rounded(Design.ON_INK, 15, this));
         card.addView(warn, new LinearLayout.LayoutParams(Design.dp(this, 40), Design.dp(this, 40)));
         LinearLayout copy = Design.column(this);
         copy.setPadding(Design.dp(this, 12), 0, Design.dp(this, 8), 0);
@@ -991,11 +998,11 @@ public final class MainActivity extends Activity {
         body.addView(disclosure, Design.match());
         body.addView(Design.space(this, 12));
         body.addView(infoCard(R.string.preliminary_check, R.string.voice_live_boundary,
-                Color.rgb(255, 241, 207)), Design.match());
+                Design.CREAM), Design.match());
         body.addView(Design.space(this, 20));
 
         voiceInput = new EditText(this);
-        voiceInput.setTextSize(15);
+        voiceInput.setTextSize(Design.scaled(15));
         voiceInput.setTextColor(Design.INK);
         voiceInput.setHintTextColor(Design.MUTED);
         voiceInput.setHint(R.string.voice_hint);
@@ -1025,7 +1032,7 @@ public final class MainActivity extends Activity {
         body.addView(Design.space(this, 10));
 
         TextView check = Design.button(this, getString(R.string.check_situation),
-                Design.INK, Color.WHITE);
+                Design.INK, Design.ON_INK);
         check.setId(R.id.voice_check);
         check.setOnClickListener(view -> analyzeVoiceDescription());
         body.addView(check, Design.match());
@@ -1090,7 +1097,7 @@ public final class MainActivity extends Activity {
         signals.setPadding(Design.dp(this, 17), Design.dp(this, 16),
                 Design.dp(this, 17), Design.dp(this, 16));
         signals.setBackground(Design.rounded(
-                assessment.highRisk ? Design.DANGER_SOFT : Color.rgb(255, 241, 207),
+                assessment.highRisk ? Design.DANGER_SOFT : Design.CREAM,
                 19, this));
         signals.addView(Design.text(this,
                 getString(R.string.signals_found, assessment.signalCount),
@@ -1123,7 +1130,7 @@ public final class MainActivity extends Activity {
         body.addView(Design.space(this, 14));
 
         TextView helpline = Design.button(this, getString(R.string.call_1930),
-                Design.INK, Color.WHITE);
+                Design.INK, Design.ON_INK);
         helpline.setOnClickListener(view -> dialCyberHelpline());
         body.addView(helpline, Design.match());
         body.addView(Design.space(this, 9));
@@ -1134,7 +1141,7 @@ public final class MainActivity extends Activity {
         body.addView(report, Design.match());
         body.addView(Design.space(this, 16));
         body.addView(infoCard(R.string.preliminary_check, R.string.voice_live_boundary,
-                Color.rgb(255, 241, 207)), Design.match());
+                Design.CREAM), Design.match());
 
         showScreen(scroll, 0,
                 new ScreenState(Screen.VOICE_RESULT, null, description));
@@ -1194,7 +1201,7 @@ public final class MainActivity extends Activity {
         body.addView(Design.space(this, 16));
 
         TextView helpline = Design.button(this, getString(R.string.call_1930),
-                Design.INK, Color.WHITE);
+                Design.INK, Design.ON_INK);
         helpline.setOnClickListener(view -> dialCyberHelpline());
         body.addView(helpline, Design.match());
         body.addView(Design.space(this, 9));
@@ -1237,7 +1244,7 @@ public final class MainActivity extends Activity {
         body.addView(Design.space(this, 18));
 
         checkerInput = new EditText(this);
-        checkerInput.setTextSize(15);
+        checkerInput.setTextSize(Design.scaled(15));
         checkerInput.setTextColor(Design.INK);
         checkerInput.setHintTextColor(Design.MUTED);
         checkerInput.setHint(R.string.checker_hint);
@@ -1260,7 +1267,7 @@ public final class MainActivity extends Activity {
         body.addView(check, Design.match());
         body.addView(Design.space(this, 14));
         body.addView(infoCard(R.string.checker_disclosure_title, R.string.checker_disclosure_body,
-                Color.rgb(255, 241, 207)), Design.match());
+                Design.CREAM), Design.match());
 
         showScreen(scroll, 0,
                 new ScreenState(Screen.CHECKER, null, initial == null ? "" : initial));
@@ -1306,7 +1313,7 @@ public final class MainActivity extends Activity {
         card.setPadding(Design.dp(this, 18), Design.dp(this, 16),
                 Design.dp(this, 18), Design.dp(this, 16));
         card.setBackground(Design.rounded(
-                result.highRisk ? Design.DANGER_SOFT : Color.rgb(255, 241, 207), 19, this));
+                result.highRisk ? Design.DANGER_SOFT : Design.CREAM, 19, this));
         card.addView(Design.text(this,
                 getString(R.string.checker_signals_found, result.score),
                 15, result.highRisk ? Design.DANGER : Design.INK, true));
@@ -1345,7 +1352,7 @@ public final class MainActivity extends Activity {
         body.addView(Design.space(this, 14));
 
         TextView ask = Design.button(this, "👥  " + getString(R.string.ask_trusted_button),
-                Design.INK, Color.WHITE);
+                Design.INK, Design.ON_INK);
         ask.setOnClickListener(view -> shareToTrustedPerson(
                 getString(R.string.checker_share_prefix) + " " + input));
         body.addView(ask, Design.match());
@@ -1357,7 +1364,7 @@ public final class MainActivity extends Activity {
         body.addView(helpline, Design.match());
         body.addView(Design.space(this, 16));
         body.addView(infoCard(R.string.checker_disclosure_title, R.string.checker_disclosure_body,
-                Color.rgb(255, 241, 207)), Design.match());
+                Design.CREAM), Design.match());
 
         showScreen(scroll, 0, new ScreenState(Screen.CHECKER_RESULT, null, input));
     }
@@ -1467,10 +1474,10 @@ public final class MainActivity extends Activity {
         card.setPadding(Design.dp(this, 20), Design.dp(this, 20),
                 Design.dp(this, 20), Design.dp(this, 20));
         Design.card(card, Design.INK, 24, this);
-        card.addView(Design.text(this, getString(R.string.paywall_plan_name), 20, Color.WHITE, true));
+        card.addView(Design.text(this, getString(R.string.paywall_plan_name), 20, Design.ON_INK, true));
         card.addView(Design.space(this, 4));
         card.addView(Design.text(this, getString(R.string.paywall_plan_price), 13,
-                Color.rgb(204, 215, 210), false));
+                Design.ON_INK_MUTED, false));
         card.addView(Design.space(this, 16));
         card.addView(paywallBenefit(R.string.paywall_benefit_1));
         card.addView(Design.space(this, 9));
@@ -1493,7 +1500,7 @@ public final class MainActivity extends Activity {
                     Design.MUTED, false));
         } else {
             TextView continueButton = Design.button(this, getString(R.string.paywall_continue),
-                    Design.INK, Color.WHITE);
+                    Design.INK, Design.ON_INK);
             continueButton.setOnClickListener(view -> {
                 screenHistory.clear();
                 currentScreen = null;
@@ -1514,7 +1521,7 @@ public final class MainActivity extends Activity {
         tick.setGravity(Gravity.CENTER);
         tick.setBackground(Design.rounded(Design.SAFFRON, 12, this));
         row.addView(tick, new LinearLayout.LayoutParams(Design.dp(this, 26), Design.dp(this, 26)));
-        TextView text = Design.text(this, getString(textId), 14, Color.WHITE, false);
+        TextView text = Design.text(this, getString(textId), 14, Design.ON_INK, false);
         text.setPadding(Design.dp(this, 11), 0, 0, 0);
         row.addView(text, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         return row;
@@ -1586,7 +1593,7 @@ public final class MainActivity extends Activity {
                 Design.dp(this, 15), Design.dp(this, 12));
         boolean premium = PlanState.isPremium(this);
         strip.setBackground(Design.rounded(
-                premium ? Design.MINT : Color.rgb(255, 241, 207), 16, this));
+                premium ? Design.MINT : Design.CREAM, 16, this));
         LinearLayout copy = Design.column(this);
         if (premium) {
             copy.addView(Design.text(this, getString(R.string.premium_badge), 13, Design.INK, true));
@@ -1608,7 +1615,7 @@ public final class MainActivity extends Activity {
         LinearLayout card = Design.column(this);
         card.setPadding(Design.dp(this, 16), Design.dp(this, 18),
                 Design.dp(this, 16), Design.dp(this, 18));
-        card.setBackground(Design.outlined(Color.rgb(243, 240, 232), Design.SOFT, 16, this));
+        card.setBackground(Design.outlined(Design.AD_BG, Design.SOFT, 16, this));
         card.setGravity(Gravity.CENTER);
         TextView tag = Design.text(this, getString(R.string.ad_placeholder_label), 10,
                 Design.MUTED, true);
@@ -1621,6 +1628,187 @@ public final class MainActivity extends Activity {
         body.setGravity(Gravity.CENTER);
         card.addView(body, Design.match());
         return card;
+    }
+
+    // ---------------------------------------------------------------------
+    // Theme & accessibility
+    // ---------------------------------------------------------------------
+
+    private void applyTheme() {
+        Design.apply(isDark(), isHighContrast(), textScale());
+    }
+
+    private boolean isDark() {
+        return HistoryStore.prefs(this).getBoolean(KEY_DARK, false);
+    }
+
+    private boolean isHighContrast() {
+        return HistoryStore.prefs(this).getBoolean(KEY_HIGH_CONTRAST, false);
+    }
+
+    private float textScale() {
+        String scale = HistoryStore.prefs(this).getString(KEY_TEXT_SCALE, "normal");
+        return switch (scale == null ? "normal" : scale) {
+            case "large" -> 1.15f;
+            case "xlarge" -> 1.3f;
+            default -> 1f;
+        };
+    }
+
+    private void setDark(boolean dark) {
+        HistoryStore.prefs(this).edit().putBoolean(KEY_DARK, dark).apply();
+        recreate();
+    }
+
+    private void setHighContrast(boolean on) {
+        HistoryStore.prefs(this).edit().putBoolean(KEY_HIGH_CONTRAST, on).apply();
+        recreate();
+    }
+
+    private void setTextScale(String scale) {
+        HistoryStore.prefs(this).edit().putString(KEY_TEXT_SCALE, scale).apply();
+        recreate();
+    }
+
+    private View settingsDisplayCard() {
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 17), Design.dp(this, 17),
+                Design.dp(this, 17), Design.dp(this, 17));
+        Design.card(card, Design.CARD, 21, this);
+        card.addView(Design.label(this, getString(R.string.display_label)));
+        card.addView(Design.space(this, 12));
+
+        card.addView(Design.text(this, getString(R.string.theme_label), 12, Design.MUTED, false));
+        card.addView(Design.space(this, 8));
+        LinearLayout themeRow = Design.row(this);
+        boolean dark = isDark();
+        TextView light = Design.chip(this, getString(R.string.theme_light), !dark);
+        light.setOnClickListener(view -> { if (isDark()) setDark(false); });
+        TextView darkChip = Design.chip(this, getString(R.string.theme_dark), dark);
+        darkChip.setOnClickListener(view -> { if (!isDark()) setDark(true); });
+        themeRow.addView(light, Design.weight());
+        View gap1 = new View(this);
+        themeRow.addView(gap1, new LinearLayout.LayoutParams(Design.dp(this, 10), 1));
+        themeRow.addView(darkChip, Design.weight());
+        card.addView(themeRow, Design.match());
+        card.addView(Design.space(this, 14));
+
+        card.addView(Design.text(this, getString(R.string.text_size_label), 12, Design.MUTED, false));
+        card.addView(Design.space(this, 8));
+        LinearLayout sizeRow = Design.row(this);
+        String scale = HistoryStore.prefs(this).getString(KEY_TEXT_SCALE, "normal");
+        String current = scale == null ? "normal" : scale;
+        TextView normal = Design.chip(this, getString(R.string.text_size_normal),
+                current.equals("normal"));
+        normal.setOnClickListener(view -> setTextScale("normal"));
+        TextView large = Design.chip(this, getString(R.string.text_size_large),
+                current.equals("large"));
+        large.setOnClickListener(view -> setTextScale("large"));
+        TextView xlarge = Design.chip(this, getString(R.string.text_size_xlarge),
+                current.equals("xlarge"));
+        xlarge.setOnClickListener(view -> setTextScale("xlarge"));
+        sizeRow.addView(normal, Design.weight());
+        View gap2 = new View(this);
+        sizeRow.addView(gap2, new LinearLayout.LayoutParams(Design.dp(this, 8), 1));
+        sizeRow.addView(large, Design.weight());
+        View gap3 = new View(this);
+        sizeRow.addView(gap3, new LinearLayout.LayoutParams(Design.dp(this, 8), 1));
+        sizeRow.addView(xlarge, Design.weight());
+        card.addView(sizeRow, Design.match());
+        card.addView(Design.space(this, 14));
+
+        LinearLayout contrastRow = Design.row(this);
+        LinearLayout contrastCopy = Design.column(this);
+        contrastCopy.addView(Design.text(this, getString(R.string.high_contrast_title), 13,
+                Design.INK, true));
+        contrastCopy.addView(Design.text(this, getString(R.string.high_contrast_reason), 11,
+                Design.MUTED, false));
+        contrastRow.addView(contrastCopy,
+                new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        boolean hc = isHighContrast();
+        TextView contrastToggle = Design.chip(this,
+                getString(hc ? R.string.on_status : R.string.off_status), hc);
+        contrastToggle.setOnClickListener(view -> setHighContrast(!hc));
+        contrastRow.addView(contrastToggle);
+        card.addView(contrastRow, Design.match());
+        return card;
+    }
+
+    // ---------------------------------------------------------------------
+    // Onboarding walkthrough (first launch)
+    // ---------------------------------------------------------------------
+
+    private static final int ONBOARDING_PAGES = 3;
+
+    private void renderOnboarding(int page) {
+        int clamped = Math.max(0, Math.min(page, ONBOARDING_PAGES - 1));
+        ScrollView scroll = scrollPage();
+        scroll.setId(R.id.screen_onboarding);
+        LinearLayout body = pageBody();
+        scroll.addView(body);
+
+        body.addView(Design.space(this, 20));
+        TextView mark = Design.text(this, "N↗", 26, Design.INK, true);
+        mark.setGravity(Gravity.CENTER);
+        mark.setBackground(Design.rounded(Design.SAFFRON, 20, this));
+        body.addView(mark, new LinearLayout.LayoutParams(Design.dp(this, 64), Design.dp(this, 64)));
+        body.addView(Design.space(this, 26));
+
+        int titleRes;
+        int bodyRes;
+        switch (clamped) {
+            case 1 -> { titleRes = R.string.onboard2_title; bodyRes = R.string.onboard2_body; }
+            case 2 -> { titleRes = R.string.onboard3_title; bodyRes = R.string.onboard3_body; }
+            default -> { titleRes = R.string.onboard1_title; bodyRes = R.string.onboard1_body; }
+        }
+        body.addView(Design.label(this,
+                getString(R.string.onboard_step, clamped + 1, ONBOARDING_PAGES)));
+        body.addView(Design.space(this, 10));
+        body.addView(Design.text(this, getString(titleRes), 30, Design.INK, true));
+        body.addView(Design.space(this, 12));
+        body.addView(Design.text(this, getString(bodyRes), 16, Design.MUTED, false));
+        body.addView(Design.space(this, 30));
+
+        boolean last = clamped == ONBOARDING_PAGES - 1;
+        TextView primary = Design.button(this,
+                getString(last ? R.string.onboard_get_started : R.string.onboard_next),
+                Design.SAFFRON, Design.INK);
+        primary.setId(R.id.onboarding_next);
+        primary.setOnClickListener(view -> {
+            if (last) finishOnboarding();
+            else renderOnboarding(clamped + 1);
+        });
+        body.addView(primary, Design.match());
+        body.addView(Design.space(this, 10));
+        TextView skip = Design.button(this, getString(R.string.onboard_skip),
+                Color.TRANSPARENT, Design.INK);
+        skip.setId(R.id.onboarding_skip);
+        skip.setBackground(Design.outlined(Color.TRANSPARENT, Design.INK, 17, this));
+        skip.setOnClickListener(view -> finishOnboarding());
+        body.addView(skip, Design.match());
+
+        showScreen(scroll, 0, new ScreenState(Screen.ONBOARDING, null, null, clamped));
+    }
+
+    private void finishOnboarding() {
+        markOnboardingComplete();
+        screenHistory.clear();
+        currentScreen = null;
+        if (!isSetupComplete()) {
+            renderSetup();
+        } else if (PlanState.isLocked(this)) {
+            renderPaywall();
+        } else {
+            renderHome();
+        }
+    }
+
+    private boolean isOnboardingComplete() {
+        return HistoryStore.prefs(this).getBoolean(KEY_ONBOARDING_DONE, false);
+    }
+
+    private void markOnboardingComplete() {
+        HistoryStore.prefs(this).edit().putBoolean(KEY_ONBOARDING_DONE, true).apply();
     }
 
     // ---------------------------------------------------------------------
@@ -1670,7 +1858,7 @@ public final class MainActivity extends Activity {
 
         if (allReady) {
             TextView finish = Design.button(this, getString(R.string.setup_finish_button),
-                    Design.INK, Color.WHITE);
+                    Design.INK, Design.ON_INK);
             finish.setId(R.id.setup_finish);
             finish.setOnClickListener(view -> finishSetup());
             body.addView(finish, Design.match());
@@ -1878,7 +2066,7 @@ public final class MainActivity extends Activity {
         TextView quote = Design.text(this, item.snippet, 14, Design.INK, false);
         quote.setPadding(Design.dp(this, 12), Design.dp(this, 11),
                 Design.dp(this, 12), Design.dp(this, 11));
-        quote.setBackground(Design.rounded(Color.rgb(255, 247, 225), 12, this));
+        quote.setBackground(Design.rounded(Design.CREAM_SOFT, 12, this));
         messageCard.addView(quote, Design.match());
         if (item.matched != null && !item.matched.isEmpty()) {
             messageCard.addView(Design.space(this, 12));
@@ -1906,7 +2094,7 @@ public final class MainActivity extends Activity {
         body.addView(Design.space(this, 14));
 
         TextView helpline = Design.button(this, getString(R.string.call_1930),
-                Design.INK, Color.WHITE);
+                Design.INK, Design.ON_INK);
         helpline.setOnClickListener(view -> dialCyberHelpline());
         body.addView(helpline, Design.match());
         body.addView(Design.space(this, 9));
@@ -1917,7 +2105,7 @@ public final class MainActivity extends Activity {
         body.addView(report, Design.match());
         body.addView(Design.space(this, 16));
         body.addView(infoCard(R.string.scan_disclaimer_title, R.string.scan_disclaimer_body,
-                Color.rgb(255, 241, 207)), Design.match());
+                Design.CREAM), Design.match());
 
         showScreen(scroll, 0, ScreenState.flagged(id));
     }
@@ -1937,6 +2125,8 @@ public final class MainActivity extends Activity {
         body.addView(settingsPlanCard(), Design.match());
         body.addView(Design.space(this, 14));
         body.addView(settingsLanguageCard(), Design.match());
+        body.addView(Design.space(this, 14));
+        body.addView(settingsDisplayCard(), Design.match());
         body.addView(Design.space(this, 14));
         body.addView(settingsPermissionsCard(), Design.match());
         body.addView(Design.space(this, 14));
@@ -2120,7 +2310,7 @@ public final class MainActivity extends Activity {
         LinearLayout card = Design.column(this);
         card.setPadding(Design.dp(this, 17), Design.dp(this, 17),
                 Design.dp(this, 17), Design.dp(this, 17));
-        card.setBackground(Design.rounded(Color.rgb(255, 241, 207), 21, this));
+        card.setBackground(Design.rounded(Design.CREAM, 21, this));
         card.addView(Design.text(this, getString(R.string.share_safely_title), 16,
                 Design.INK, true));
         card.addView(Design.space(this, 7));
@@ -2350,6 +2540,7 @@ public final class MainActivity extends Activity {
             case ACTIVITY -> renderActivity();
             case SETTINGS -> renderSettings();
             case SETUP -> renderSetup();
+            case ONBOARDING -> renderOnboarding((int) state.flaggedId);
             case PAYWALL -> renderPaywall();
             case PANIC -> renderPanic();
             case CHECKER -> renderChecker(state.voiceDescription);

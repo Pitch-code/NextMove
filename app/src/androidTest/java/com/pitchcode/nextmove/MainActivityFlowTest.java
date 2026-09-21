@@ -39,7 +39,14 @@ public final class MainActivityFlowTest {
 
     private static final String KEY_PREMIUM = "premium";
     private static final String KEY_TRIAL_START = "trial_start";
+    private static final String KEY_ONBOARDING_DONE = "onboarding_done";
     private static final long DAY_MS = 24L * 60L * 60L * 1000L;
+
+    private void setOnboardingComplete(boolean complete) {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit().putBoolean(KEY_ONBOARDING_DONE, complete).apply();
+    }
 
     private void setSetupComplete(boolean complete) {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -57,9 +64,26 @@ public final class MainActivityFlowTest {
 
     @Before
     public void markSetupCompleteByDefault() {
+        setOnboardingComplete(true);
         setSetupComplete(true);
         // Keep the trial active so feature screens are reachable by default.
         setPlan(false, System.currentTimeMillis());
+    }
+
+    @Test
+    public void firstLaunchShowsOnboardingThenReachesHome() {
+        setOnboardingComplete(false);
+        setSetupComplete(true);
+        setPlan(false, System.currentTimeMillis());
+        try (ActivityScenario<MainActivity> scenario =
+                     ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(activity -> {
+                assertNotNull(activity.findViewById(R.id.screen_onboarding));
+                assertNull(activity.findViewById(R.id.screen_home));
+                click(activity, R.id.onboarding_skip);
+                assertNotNull(activity.findViewById(R.id.screen_home));
+            });
+        }
     }
 
     @Test
