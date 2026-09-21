@@ -61,7 +61,7 @@
     <string name="privacy_point_3">एक्टिविटी इसी डिवाइस पर रहती है</string>
     <string name="accuracy_label">सटीकता का वादा</string>
     <string name="accuracy_body" formatted="false">भविष्य का AI वर्ज़न सबूत दिखाएगा और ज़रूरी जानकारी की पुष्टि माँगेगा। यह कभी 100% सटीकता का दावा नहीं करेगा।</string>
-    <string name="version">प्रोटोटाइप 0.5.0 · Android</string>
+    <string name="version">प्रोटोटाइप 0.6.0 · Android</string>
     <string name="import_not_live_title">इमेज सुरक्षित रूप से चुनी गई</string>
     <string name="import_not_live_body">इस मुफ़्त प्रोटोटाइप में क्लाउड विश्लेषण जानबूझकर नहीं जोड़ा गया है। अनुभव देखने के लिए नमूना नतीजा खोलें।</string>
     <string name="preview_result">नमूना नतीजा देखें</string>
@@ -329,4 +329,28 @@
     <string name="tip_electricity_body">“आज रात बिजली कटेगी जब तक कॉल/भुगतान न करें” वाले मैसेज स्कैम हैं। अपना बिल आधिकारिक बोर्ड के ऐप या वेबसाइट पर जाँचें, मैसेज से नहीं।</string>
     <string name="tip_lottery_title">लॉटरी और इनाम जीत</string>
     <string name="tip_lottery_body">अगर आपने लॉटरी में भाग नहीं लिया, तो जीते भी नहीं। इनाम छुड़ाने के लिए “फ़ीस” या “टैक्स” देना सिर्फ़ स्कैमर को पैसे भेजता है। अनदेखा करें और ब्लॉक करें।</string>
+
+    <!-- डिस्प्ले और सुलभता -->
+    <string name="display_label">डिस्प्ले और सुलभता</string>
+    <string name="theme_label">थीम</string>
+    <string name="theme_light">लाइट</string>
+    <string name="theme_dark">डार्क</string>
+    <string name="text_size_label">टेक्स्ट का आकार</string>
+    <string name="text_size_normal">सामान्य</string>
+    <string name="text_size_large">बड़ा</string>
+    <string name="text_size_xlarge">और बड़ा</string>
+    <string name="high_contrast_title">हाई कंट्रास्ट</string>
+    <string name="high_contrast_reason">आसान पढ़ने के लिए गहरे रंग और बॉर्डर</string>
+
+    <!-- ऑनबोर्डिंग -->
+    <string name="onboard_step">चरण %1$d / %2$d</string>
+    <string name="onboard_next">आगे</string>
+    <string name="onboard_get_started">शुरू करें</string>
+    <string name="onboard_skip">छोड़ें</string>
+    <string name="onboard1_title">चिंता को एक साफ़ कदम में बदलें</string>
+    <string name="onboard1_body">स्क्रीनशॉट शेयर करें या स्थिति बताएँ, और NextMove आपको एक साफ़, सुरक्षित अगला कदम शांति से दिखाता है।</string>
+    <string name="onboard2_title">स्वचालित स्कैम सुरक्षा</string>
+    <string name="onboard2_body">NextMove नए SMS और ऐप मैसेज को स्कैम संकेतों के लिए जाँचकर समय रहते चेतावनी दे सकता है — आपके फ़ोन पर ही।</string>
+    <string name="onboard3_title">निजी और ईमानदार</string>
+    <string name="onboard3_body" formatted="false">सब कुछ आपके फ़ोन पर जाँचा जाता है। कोई अकाउंट नहीं, कुछ अपलोड नहीं, और यह कभी 100% निश्चितता का दावा नहीं करता। 7-दिन के फ्री ट्रायल से शुरुआत।</string>
 </resources>
