@@ -61,7 +61,7 @@
     <string name="privacy_point_3">एक्टिविटी इसी डिवाइस पर रहती है</string>
     <string name="accuracy_label">सटीकता का वादा</string>
     <string name="accuracy_body" formatted="false">भविष्य का AI वर्ज़न सबूत दिखाएगा और ज़रूरी जानकारी की पुष्टि माँगेगा। यह कभी 100% सटीकता का दावा नहीं करेगा।</string>
-    <string name="version">प्रोटोटाइप 0.4.0 · Android</string>
+    <string name="version">प्रोटोटाइप 0.5.0 · Android</string>
     <string name="import_not_live_title">इमेज सुरक्षित रूप से चुनी गई</string>
     <string name="import_not_live_body">इस मुफ़्त प्रोटोटाइप में क्लाउड विश्लेषण जानबूझकर नहीं जोड़ा गया है। अनुभव देखने के लिए नमूना नतीजा खोलें।</string>
     <string name="preview_result">नमूना नतीजा देखें</string>
@@ -258,4 +258,75 @@
     <string name="demo_expire_trial">ट्रायल खत्म सिम्युलेट करें</string>
     <string name="trial_reset_toast">ट्रायल 7 दिन पर रीसेट (डेमो)।</string>
     <string name="trial_expired_toast">ट्रायल खत्म के रूप में चिह्नित (डेमो)।</string>
+
+    <!-- सुरक्षा पैक -->
+    <string name="open_checker">नंबर या लिंक जाँचें</string>
+    <string name="open_panic">मेरे साथ स्कैम हुआ है</string>
+    <string name="ask_trusted_button">किसी भरोसेमंद व्यक्ति से पूछें</string>
+    <string name="ask_trusted_chooser">भरोसेमंद व्यक्ति के साथ शेयर करें</string>
+
+    <string name="panic_eyebrow">आपातकालीन मदद</string>
+    <string name="panic_title">जल्दी और सुरक्षित तरीके से कदम उठाएँ</string>
+    <string name="panic_body">अभी ये कदम उठाएँ। शांत रहकर जल्दी कार्रवाई करने से नुकसान कम होता है।</string>
+    <string name="panic_steps_label">अभी यह करें</string>
+    <string name="panic_step_1">हर संपर्क रोकें। और पैसे न दें, OTP न बताएँ, और उनके कहे कोई ऐप इंस्टॉल न करें।</string>
+    <string name="panic_step_2">पैसे भेज दिए हों तो तुरंत बैंक को कॉल करें और कार्ड या UPI ब्लॉक करें।</string>
+    <string name="panic_step_3">रिपोर्ट करने और ट्रांसफर रुकवाने के लिए भारत की साइबर हेल्पलाइन 1930 पर कॉल करें।</string>
+    <string name="panic_step_4">सभी जानकारी और स्क्रीनशॉट के साथ cybercrime.gov.in पर शिकायत दर्ज करें।</string>
+    <string name="panic_step_5">कोई पासवर्ड या UPI PIN बताया हो तो बदलें, और किसी भरोसेमंद व्यक्ति को बताएँ।</string>
+    <string name="panic_share_text">मुझे लगता है मेरे साथ स्कैम हो रहा है। क्या आप इसे जाँचने और आगे क्या करना है, तय करने में मदद करेंगे?</string>
+
+    <string name="checker_eyebrow">नंबर और लिंक जाँच</string>
+    <string name="checker_title">संदिग्ध नंबर या लिंक जाँचें</string>
+    <string name="checker_body">एक फ़ोन नंबर या लिंक पेस्ट करें। NextMove इसे आपके फ़ोन पर आम स्कैम पैटर्न के लिए जाँचता है।</string>
+    <string name="checker_hint">नंबर या लिंक पेस्ट करें…</string>
+    <string name="checker_check">जाँचें</string>
+    <string name="checker_empty">पहले एक नंबर या लिंक पेस्ट करें।</string>
+    <string name="checker_disclosure_title">यह जाँच कैसे काम करती है</string>
+    <string name="checker_disclosure_body">यह फ़ोन पर पैटर्न जाँच है, कोई लाइव डेटाबेस नहीं। “कम जोखिम” नतीजा गारंटी नहीं है — हमेशा आधिकारिक स्रोत से पुष्टि करें।</string>
+    <string name="checker_result_eyebrow">जाँच नतीजा</string>
+    <string name="checker_high_title">यह जोखिम भरा लगता है</string>
+    <string name="checker_low_title">कोई मज़बूत खतरे के संकेत नहीं मिले</string>
+    <string name="checker_high_body">यह अक्सर स्कैम में इस्तेमाल होने वाले पैटर्न से मेल खाता है। स्वतंत्र रूप से पुष्टि किए बिना क्लिक न करें, भुगतान न करें और जानकारी न दें।</string>
+    <string name="checker_low_body">NextMove को आम स्कैम पैटर्न नहीं मिले। यह सुरक्षित होने का प्रमाण नहीं है — आधिकारिक वेबसाइट, ऐप या नंबर से पुष्टि करें।</string>
+    <string name="checker_signals_found">%1$d चेतावनी संकेत मिले</string>
+    <string name="checker_you_entered">आपने दर्ज किया</string>
+    <string name="checker_share_prefix">क्या यह सुरक्षित है? मुझे इसके बारे में यकीन नहीं:</string>
+
+    <string name="reason_no_https">असुरक्षित http:// लिंक इस्तेमाल करता है</string>
+    <string name="reason_shortener">छोटा किया गया लिंक जो असली पता छिपाता है</string>
+    <string name="reason_risky_tld">स्कैम में अक्सर दिखने वाला असामान्य वेबसाइट अंत</string>
+    <string name="reason_lookalike_brand">किसी जानी-मानी कंपनी जैसा दिखता है पर उसकी आधिकारिक वेबसाइट नहीं</string>
+    <string name="reason_raw_ip">सामान्य वेबसाइट के बजाय सीधे IP पते पर जाता है</string>
+    <string name="reason_at_symbol">@ है जो असली गंतव्य छिपा सकता है</string>
+    <string name="reason_long_url">असामान्य रूप से लंबा वेब पता</string>
+    <string name="reason_too_long">नंबर में बहुत ज़्यादा अंक हैं</string>
+    <string name="reason_too_short">नंबर में बहुत कम अंक हैं</string>
+    <string name="reason_foreign_number">अंतरराष्ट्रीय नंबर — स्थानीय संपर्कों के लिए असामान्य</string>
+    <string name="reason_unusual_prefix">असामान्य नंबर प्रीफ़िक्स</string>
+    <string name="reason_scam_phrases">स्कैम में आम तौर पर इस्तेमाल होने वाले शब्द हैं</string>
+    <string name="reason_generic">एक संदिग्ध पैटर्न से मेल खाता है</string>
+
+    <string name="tip_of_week_label">इस हफ़्ते का स्कैम</string>
+    <string name="tip_read_more">और पढ़ें</string>
+    <string name="tip_show_another">एक और टिप देखें</string>
+    <string name="tip_footer_title">एक कदम आगे रहें</string>
+    <string name="tip_footer_body">हर हफ़्ते नई टिप आती है। शक हो तो आधिकारिक चैनल से पुष्टि करें और OTP या PIN कभी न बताएँ।</string>
+
+    <string name="tip_digital_arrest_title">“डिजिटल अरेस्ट” कॉल नकली होती हैं</string>
+    <string name="tip_digital_arrest_body">कोई असली पुलिस, CBI या अदालत आपको “गिरफ़्तार” करने या नाम साफ़ करने के लिए पैसे माँगने वीडियो कॉल नहीं करती। कॉल काटें और 1930 पर रिपोर्ट करें। अधिकारी कभी कॉल पर भुगतान नहीं माँगते।</string>
+    <string name="tip_kyc_title">नकली KYC-अपडेट मैसेज</string>
+    <string name="tip_kyc_body">“KYC अपडेट करें वरना खाता/सिम बंद होगा” कहने वाले लिंक स्कैम हैं। बैंक और टेलीकॉम कभी लिंक या OTP से KYC नहीं माँगते। केवल आधिकारिक ऐप इस्तेमाल करें।</string>
+    <string name="tip_refund_title">वह “रिफ़ंड” जो पैसे चुराता है</string>
+    <string name="tip_refund_body">कोई कहे कि रिफ़ंड मिलेगा पर पहले ऐप इंस्टॉल करें या रिक्वेस्ट मंज़ूर करें, तो रुकें। रिफ़ंड के लिए UPI PIN कभी नहीं डालना होता — PIN डालने से पैसे बाहर जाते हैं, अंदर नहीं।</string>
+    <string name="tip_upi_request_title">“कलेक्ट” रिक्वेस्ट पैसे ले लेती है</string>
+    <string name="tip_upi_request_body">पैसे पाने के लिए UPI PIN कभी नहीं डालते। PIN माँगने वाली पेमेंट “रिक्वेस्ट” आपके खाते से पैसे काटेगी। रिक्वेस्ट केवल तब मंज़ूर करें जब आप भुगतान कर रहे हों।</string>
+    <string name="tip_job_title">वर्क-फ़्रॉम-होम और टास्क स्कैम</string>
+    <string name="tip_job_body">“लाइक करो और कमाओ” या टास्क जॉब जो पहले पैसे जमा करने को कहें, स्कैम हैं। नौकरी पाने के लिए कभी पैसे न दें, और Telegram/WhatsApp जॉब ऑफ़र से सावधान रहें।</string>
+    <string name="tip_otp_title">OTP कभी न बताएँ</string>
+    <string name="tip_otp_body">OTP आपके खाते की चाबी है। किसी बैंक, डिलीवरी एजेंट या “अधिकारी” के पास इसे माँगने का असली कारण नहीं होता। कोई माँगे तो यह स्कैम है — बातचीत बंद करें।</string>
+    <string name="tip_electricity_title">बिजली “कटौती” वाले मैसेज</string>
+    <string name="tip_electricity_body">“आज रात बिजली कटेगी जब तक कॉल/भुगतान न करें” वाले मैसेज स्कैम हैं। अपना बिल आधिकारिक बोर्ड के ऐप या वेबसाइट पर जाँचें, मैसेज से नहीं।</string>
+    <string name="tip_lottery_title">लॉटरी और इनाम जीत</string>
+    <string name="tip_lottery_body">अगर आपने लॉटरी में भाग नहीं लिया, तो जीते भी नहीं। इनाम छुड़ाने के लिए “फ़ीस” या “टैक्स” देना सिर्फ़ स्कैमर को पैसे भेजता है। अनदेखा करें और ब्लॉक करें।</string>
 </resources>

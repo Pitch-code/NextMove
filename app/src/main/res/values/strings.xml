@@ -61,7 +61,7 @@
     <string name="privacy_point_3">Activity remains on this device</string>
     <string name="accuracy_label">ACCURACY PROMISE</string>
     <string name="accuracy_body" formatted="false">The future AI version will show evidence and ask you to confirm important details. It will never claim 100% accuracy.</string>
-    <string name="version">Prototype 0.4.0 · Android</string>
+    <string name="version">Prototype 0.5.0 · Android</string>
     <string name="import_not_live_title">Image selected safely</string>
     <string name="import_not_live_body">Cloud analysis is intentionally not connected in this free prototype. Preview a sample result to experience the flow.</string>
     <string name="preview_result">Preview sample result</string>
@@ -258,4 +258,75 @@
     <string name="demo_expire_trial">Simulate trial ended</string>
     <string name="trial_reset_toast">Trial reset to 7 days (demo).</string>
     <string name="trial_expired_toast">Trial marked as ended (demo).</string>
+
+    <!-- Safety pack -->
+    <string name="open_checker">Check a number or link</string>
+    <string name="open_panic">I\'ve been scammed</string>
+    <string name="ask_trusted_button">Ask a trusted person</string>
+    <string name="ask_trusted_chooser">Share with a trusted person</string>
+
+    <string name="panic_eyebrow">EMERGENCY HELP</string>
+    <string name="panic_title">Let\'s act fast and safely</string>
+    <string name="panic_body">Follow these steps now. Acting quickly and calmly limits the damage.</string>
+    <string name="panic_steps_label">DO THIS NOW</string>
+    <string name="panic_step_1">Stop all contact. Do not pay more, share an OTP, or install any app they ask for.</string>
+    <string name="panic_step_2">If money was sent, call your bank immediately and block the card or UPI.</string>
+    <string name="panic_step_3">Call India\'s cyber-fraud helpline 1930 to report and try to freeze the transfer.</string>
+    <string name="panic_step_4">File a complaint at cybercrime.gov.in with all details and screenshots.</string>
+    <string name="panic_step_5">Change passwords and UPI PIN if you shared any, and tell a trusted person.</string>
+    <string name="panic_share_text">I think I am being scammed. Can you help me check this and decide what to do?</string>
+
+    <string name="checker_eyebrow">NUMBER &amp; LINK CHECK</string>
+    <string name="checker_title">Check a suspicious number or link</string>
+    <string name="checker_body">Paste a phone number or a link. NextMove checks it on your phone for common scam patterns.</string>
+    <string name="checker_hint">Paste a number or link…</string>
+    <string name="checker_check">Check it</string>
+    <string name="checker_empty">Please paste a number or link first.</string>
+    <string name="checker_disclosure_title">HOW THIS CHECK WORKS</string>
+    <string name="checker_disclosure_body">This is an on-device pattern check, not a live database. A “low risk” result is not a guarantee — always verify through an official source.</string>
+    <string name="checker_result_eyebrow">CHECK RESULT</string>
+    <string name="checker_high_title">This looks risky</string>
+    <string name="checker_low_title">No strong red flags found</string>
+    <string name="checker_high_body">It matches patterns often used in scams. Do not click, pay or share details until you verify independently.</string>
+    <string name="checker_low_body">NextMove did not spot common scam patterns. That is not proof it is safe — verify through the official website, app or number.</string>
+    <string name="checker_signals_found">%1$d warning signals found</string>
+    <string name="checker_you_entered">YOU ENTERED</string>
+    <string name="checker_share_prefix">Is this safe? I am not sure about this:</string>
+
+    <string name="reason_no_https">Uses an insecure http:// link</string>
+    <string name="reason_shortener">Uses a shortened link that hides the real address</string>
+    <string name="reason_risky_tld">Uses an unusual website ending often seen in scams</string>
+    <string name="reason_lookalike_brand">Looks like a known brand but not its official website</string>
+    <string name="reason_raw_ip">Points to a raw IP address instead of a normal website</string>
+    <string name="reason_at_symbol">Contains an @ that can hide the real destination</string>
+    <string name="reason_long_url">Unusually long web address</string>
+    <string name="reason_too_long">Number has too many digits</string>
+    <string name="reason_too_short">Number has too few digits</string>
+    <string name="reason_foreign_number">International number — unusual for local contacts</string>
+    <string name="reason_unusual_prefix">Unusual number prefix</string>
+    <string name="reason_scam_phrases">Contains wording commonly used in scams</string>
+    <string name="reason_generic">Matches a suspicious pattern</string>
+
+    <string name="tip_of_week_label">SCAM OF THE WEEK</string>
+    <string name="tip_read_more">Read more</string>
+    <string name="tip_show_another">Show another tip</string>
+    <string name="tip_footer_title">Stay a step ahead</string>
+    <string name="tip_footer_body">A new tip appears each week. When in doubt, verify through official channels and never share an OTP or PIN.</string>
+
+    <string name="tip_digital_arrest_title">“Digital arrest” calls are fake</string>
+    <string name="tip_digital_arrest_body">No real police, CBI or court will video-call to “arrest” you or ask for money to clear your name. Cut the call and report on 1930. Officials never demand payment over a call.</string>
+    <string name="tip_kyc_title">Fake KYC-update messages</string>
+    <string name="tip_kyc_body">Messages saying your account or SIM will be blocked unless you “update KYC” via a link are scams. Banks and telecoms never ask for KYC through a link or OTP. Use only the official app.</string>
+    <string name="tip_refund_title">The “refund” that steals money</string>
+    <string name="tip_refund_body">If someone says you’ll get a refund but must install an app or approve a request, stop. Refunds never need you to enter a UPI PIN — entering a PIN sends money out, not in.</string>
+    <string name="tip_upi_request_title">“Collect” requests take money</string>
+    <string name="tip_upi_request_body">You never enter your UPI PIN to receive money. A payment “request” asking for your PIN will debit you. Approve requests only when you are the one paying.</string>
+    <string name="tip_job_title">Work-from-home &amp; task scams</string>
+    <string name="tip_job_body">Easy-money “like and earn” or task jobs that ask you to deposit money first are scams. Never pay to get a job, and be wary of Telegram or WhatsApp job offers.</string>
+    <string name="tip_otp_title">Never share an OTP</string>
+    <string name="tip_otp_body">An OTP is a key to your account. No bank, delivery agent or “executive” has a genuine reason to ask for it. If someone asks, it is a scam — end the conversation.</string>
+    <string name="tip_electricity_title">Electricity “disconnection” texts</string>
+    <string name="tip_electricity_body">Messages threatening tonight’s power cut unless you call a number or pay are scams. Check your bill in the official board’s app or website, not through the message.</string>
+    <string name="tip_lottery_title">Lottery &amp; prize wins</string>
+    <string name="tip_lottery_body">If you did not enter a lottery, you did not win one. Paying a “fee” or “tax” to release a prize only sends your money to the scammer. Ignore and block.</string>
 </resources>
