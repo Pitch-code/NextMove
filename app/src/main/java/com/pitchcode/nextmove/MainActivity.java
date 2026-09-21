@@ -39,6 +39,8 @@ import com.pitchcode.nextmove.data.HistoryStore;
 import com.pitchcode.nextmove.data.PlanState;
 import com.pitchcode.nextmove.data.SampleAnalysis;
 import com.pitchcode.nextmove.notifications.NotificationHelper;
+import com.pitchcode.nextmove.data.ScamTips;
+import com.pitchcode.nextmove.safety.LinkNumberCheck;
 import com.pitchcode.nextmove.safety.VoiceRiskAssessment;
 import com.pitchcode.nextmove.scan.MessageScanService;
 import com.pitchcode.nextmove.ui.Design;
@@ -63,7 +65,8 @@ public final class MainActivity extends Activity {
     private static final String CYBERCRIME_URL = "https://cybercrime.gov.in/";
 
     private enum Screen {
-        HOME, PROCESSING, RESULT, ACTIVITY, SETTINGS, VOICE, VOICE_RESULT, SETUP, FLAGGED, PAYWALL
+        HOME, PROCESSING, RESULT, ACTIVITY, SETTINGS, VOICE, VOICE_RESULT, SETUP, FLAGGED, PAYWALL,
+        PANIC, CHECKER, CHECKER_RESULT, TIP
     }
 
     private static final class ScreenState {
@@ -103,6 +106,7 @@ public final class MainActivity extends Activity {
     private Runnable pendingAnalysis;
     private SpeechRecognizer speechRecognizer;
     private EditText voiceInput;
+    private EditText checkerInput;
     private TextView voiceStatus;
     private boolean startListeningAfterPermission;
     private boolean returningFromNotificationSettings;
@@ -297,6 +301,13 @@ public final class MainActivity extends Activity {
                     Screen.VOICE, null, voiceInput.getText().toString());
         }
         if (currentScreen != null
+                && currentScreen.screen == Screen.CHECKER
+                && next.screen != Screen.CHECKER
+                && checkerInput != null) {
+            currentScreen = new ScreenState(
+                    Screen.CHECKER, null, checkerInput.getText().toString());
+        }
+        if (currentScreen != null
                 && currentScreen.screen == Screen.PROCESSING
                 && next.screen != Screen.RESULT) {
             cancelPendingAnalysis();
@@ -375,6 +386,8 @@ public final class MainActivity extends Activity {
         body.addView(buildTodayCard(), Design.match());
         body.addView(Design.space(this, 14));
         body.addView(buildPrivacyStrip(), Design.match());
+        body.addView(Design.space(this, 14));
+        body.addView(buildTipCard(), Design.match());
         body.addView(Design.space(this, 14));
         body.addView(buildScanStatusCard(), Design.match());
         body.addView(Design.space(this, 14));
@@ -542,10 +555,48 @@ public final class MainActivity extends Activity {
         card.addView(Design.space(this, 6));
         card.addView(Design.text(this, getString(R.string.safety_tools_body), 13,
                 Design.MUTED, false));
-        card.addView(Design.space(this, 13));
-        TextView open = Design.chip(this, "🎙  " + getString(R.string.open_voice_check), true);
-        open.setOnClickListener(view -> renderVoice());
-        card.addView(open, new LinearLayout.LayoutParams(
+        card.addView(Design.space(this, 14));
+
+        TextView voice = Design.button(this, "🎙  " + getString(R.string.open_voice_check),
+                Design.INK, Color.WHITE);
+        voice.setOnClickListener(view -> renderVoice());
+        card.addView(voice, Design.match());
+        card.addView(Design.space(this, 9));
+
+        TextView checker = Design.button(this, "🔍  " + getString(R.string.open_checker),
+                Color.TRANSPARENT, Design.INK);
+        checker.setId(R.id.open_checker);
+        checker.setBackground(Design.outlined(Color.TRANSPARENT, Design.INK, 17, this));
+        checker.setOnClickListener(view -> renderChecker(""));
+        card.addView(checker, Design.match());
+        card.addView(Design.space(this, 9));
+
+        TextView panic = Design.button(this, "🆘  " + getString(R.string.open_panic),
+                Design.DANGER, Color.WHITE);
+        panic.setId(R.id.open_panic);
+        panic.setOnClickListener(view -> renderPanic());
+        card.addView(panic, Design.match());
+        return card;
+    }
+
+    private View buildTipCard() {
+        ScamTips.Tip tip = ScamTips.current();
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 18), Design.dp(this, 17),
+                Design.dp(this, 18), Design.dp(this, 17));
+        card.setBackground(Design.rounded(Design.MINT, 20, this));
+        card.addView(Design.label(this, getString(R.string.tip_of_week_label)));
+        card.addView(Design.space(this, 7));
+        card.addView(Design.text(this, getString(tip.titleRes), 16, Design.INK, true));
+        card.addView(Design.space(this, 5));
+        TextView preview = Design.text(this, getString(tip.bodyRes), 12, Design.INK, false);
+        preview.setMaxLines(2);
+        preview.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        card.addView(preview, Design.match());
+        card.addView(Design.space(this, 12));
+        TextView more = Design.chip(this, getString(R.string.tip_read_more), true);
+        more.setOnClickListener(view -> renderTip(ScamTips.currentIndex()));
+        card.addView(more, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         return card;
     }
@@ -1099,6 +1150,293 @@ public final class MainActivity extends Activity {
         text.setPadding(Design.dp(this, 11), 0, 0, 0);
         row.addView(text, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         return row;
+    }
+
+    // ---------------------------------------------------------------------
+    // Safety pack: panic flow, number/link checker, scam-of-week tip
+    // ---------------------------------------------------------------------
+
+    private void renderPanic() {
+        if (PlanState.isLocked(this)) { renderPaywall(); return; }
+        ScrollView scroll = scrollPage();
+        scroll.setId(R.id.screen_panic);
+        LinearLayout body = pageBody();
+        scroll.addView(body);
+
+        TextView back = Design.chip(this, "‹ " + getString(R.string.back), false);
+        back.setOnClickListener(view -> navigateBack());
+        body.addView(back, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        body.addView(Design.space(this, 20));
+        body.addView(Design.label(this, getString(R.string.panic_eyebrow)));
+        body.addView(Design.space(this, 8));
+        body.addView(Design.text(this, getString(R.string.panic_title), 29, Design.INK, true));
+        body.addView(Design.space(this, 10));
+        body.addView(Design.text(this, getString(R.string.panic_body), 14, Design.MUTED, false));
+        body.addView(Design.space(this, 18));
+
+        LinearLayout steps = Design.column(this);
+        steps.setPadding(Design.dp(this, 18), Design.dp(this, 17),
+                Design.dp(this, 18), Design.dp(this, 17));
+        steps.setBackground(Design.rounded(Design.DANGER_SOFT, 20, this));
+        steps.addView(Design.label(this, getString(R.string.panic_steps_label)));
+        steps.addView(Design.space(this, 12));
+        steps.addView(safetyStep("1", R.string.panic_step_1));
+        steps.addView(Design.space(this, 11));
+        steps.addView(safetyStep("2", R.string.panic_step_2));
+        steps.addView(Design.space(this, 11));
+        steps.addView(safetyStep("3", R.string.panic_step_3));
+        steps.addView(Design.space(this, 11));
+        steps.addView(safetyStep("4", R.string.panic_step_4));
+        steps.addView(Design.space(this, 11));
+        steps.addView(safetyStep("5", R.string.panic_step_5));
+        body.addView(steps, Design.match());
+        body.addView(Design.space(this, 16));
+
+        TextView helpline = Design.button(this, getString(R.string.call_1930),
+                Design.INK, Color.WHITE);
+        helpline.setOnClickListener(view -> dialCyberHelpline());
+        body.addView(helpline, Design.match());
+        body.addView(Design.space(this, 9));
+        TextView portal = Design.button(this, getString(R.string.report_cybercrime),
+                Color.TRANSPARENT, Design.INK);
+        portal.setBackground(Design.outlined(Color.TRANSPARENT, Design.INK, 17, this));
+        portal.setOnClickListener(view -> openCybercrimePortal());
+        body.addView(portal, Design.match());
+        body.addView(Design.space(this, 9));
+        TextView ask = Design.button(this, "👥  " + getString(R.string.ask_trusted_button),
+                Color.TRANSPARENT, Design.INK);
+        ask.setBackground(Design.outlined(Color.TRANSPARENT, Design.INK, 17, this));
+        ask.setOnClickListener(view -> shareToTrustedPerson(getString(R.string.panic_share_text)));
+        body.addView(ask, Design.match());
+        body.addView(Design.space(this, 16));
+        body.addView(buildOfficialIndiaCard(), Design.match());
+
+        showScreen(scroll, 0, ScreenState.of(Screen.PANIC));
+    }
+
+    private void renderChecker(String initial) {
+        if (PlanState.isLocked(this)) { renderPaywall(); return; }
+        ScrollView scroll = scrollPage();
+        scroll.setId(R.id.screen_checker);
+        LinearLayout body = pageBody();
+        body.setFocusableInTouchMode(true);
+        body.requestFocus();
+        scroll.addView(body);
+
+        TextView back = Design.chip(this, "‹ " + getString(R.string.back), false);
+        back.setOnClickListener(view -> navigateBack());
+        body.addView(back, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        body.addView(Design.space(this, 22));
+        body.addView(Design.label(this, getString(R.string.checker_eyebrow)));
+        body.addView(Design.space(this, 8));
+        body.addView(Design.text(this, getString(R.string.checker_title), 30, Design.INK, true));
+        body.addView(Design.space(this, 10));
+        body.addView(Design.text(this, getString(R.string.checker_body), 14, Design.MUTED, false));
+        body.addView(Design.space(this, 18));
+
+        checkerInput = new EditText(this);
+        checkerInput.setTextSize(15);
+        checkerInput.setTextColor(Design.INK);
+        checkerInput.setHintTextColor(Design.MUTED);
+        checkerInput.setHint(R.string.checker_hint);
+        checkerInput.setSingleLine(true);
+        checkerInput.setPadding(Design.dp(this, 16), Design.dp(this, 15),
+                Design.dp(this, 16), Design.dp(this, 15));
+        checkerInput.setBackground(Design.outlined(Design.CARD, Design.SOFT, 18, this));
+        checkerInput.setId(R.id.checker_input);
+        if (initial != null && !initial.isEmpty()) {
+            checkerInput.setText(initial);
+            checkerInput.setSelection(checkerInput.length());
+        }
+        body.addView(checkerInput, Design.match());
+        body.addView(Design.space(this, 12));
+
+        TextView check = Design.button(this, getString(R.string.checker_check),
+                Design.SAFFRON, Design.INK);
+        check.setId(R.id.checker_check);
+        check.setOnClickListener(view -> analyzeLinkNumber());
+        body.addView(check, Design.match());
+        body.addView(Design.space(this, 14));
+        body.addView(infoCard(R.string.checker_disclosure_title, R.string.checker_disclosure_body,
+                Color.rgb(255, 241, 207)), Design.match());
+
+        showScreen(scroll, 0,
+                new ScreenState(Screen.CHECKER, null, initial == null ? "" : initial));
+    }
+
+    private void analyzeLinkNumber() {
+        String input = checkerInput == null ? "" : checkerInput.getText().toString().trim();
+        if (input.isEmpty()) {
+            Toast.makeText(this, R.string.checker_empty, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        InputMethodManager inputMethod = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        if (inputMethod != null && checkerInput != null) {
+            inputMethod.hideSoftInputFromWindow(checkerInput.getWindowToken(), 0);
+        }
+        currentScreen = new ScreenState(Screen.CHECKER, null, input);
+        renderCheckerResult(input);
+    }
+
+    private void renderCheckerResult(String input) {
+        if (PlanState.isLocked(this)) { renderPaywall(); return; }
+        LinkNumberCheck result = LinkNumberCheck.evaluate(input);
+        ScrollView scroll = scrollPage();
+        scroll.setId(R.id.screen_checker_result);
+        LinearLayout body = pageBody();
+        scroll.addView(body);
+
+        TextView back = Design.chip(this, "‹ " + getString(R.string.back), false);
+        back.setOnClickListener(view -> navigateBack());
+        body.addView(back, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        body.addView(Design.space(this, 22));
+        body.addView(Design.label(this, getString(R.string.checker_result_eyebrow)));
+        body.addView(Design.space(this, 8));
+        body.addView(Design.text(this, getString(result.highRisk
+                ? R.string.checker_high_title : R.string.checker_low_title), 28, Design.INK, true));
+        body.addView(Design.space(this, 10));
+        body.addView(Design.text(this, getString(result.highRisk
+                ? R.string.checker_high_body : R.string.checker_low_body), 14, Design.MUTED, false));
+        body.addView(Design.space(this, 16));
+
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 18), Design.dp(this, 16),
+                Design.dp(this, 18), Design.dp(this, 16));
+        card.setBackground(Design.rounded(
+                result.highRisk ? Design.DANGER_SOFT : Color.rgb(255, 241, 207), 19, this));
+        card.addView(Design.text(this,
+                getString(R.string.checker_signals_found, result.score),
+                15, result.highRisk ? Design.DANGER : Design.INK, true));
+        if (!result.reasons.isEmpty()) {
+            card.addView(Design.space(this, 10));
+            for (String reason : result.reasons) {
+                card.addView(checkerReasonRow(reason));
+                card.addView(Design.space(this, 6));
+            }
+        }
+        body.addView(card, Design.match());
+        body.addView(Design.space(this, 12));
+
+        LinearLayout echo = Design.column(this);
+        echo.setPadding(Design.dp(this, 18), Design.dp(this, 16),
+                Design.dp(this, 18), Design.dp(this, 16));
+        Design.card(echo, Design.CARD, 20, this);
+        echo.addView(Design.label(this, getString(R.string.checker_you_entered)));
+        echo.addView(Design.space(this, 8));
+        echo.addView(Design.text(this, input, 14, Design.INK, false));
+        body.addView(echo, Design.match());
+        body.addView(Design.space(this, 14));
+
+        LinearLayout steps = Design.column(this);
+        steps.setPadding(Design.dp(this, 17), Design.dp(this, 16),
+                Design.dp(this, 17), Design.dp(this, 16));
+        Design.card(steps, Design.CARD, 20, this);
+        steps.addView(Design.label(this, getString(R.string.safe_next_steps)));
+        steps.addView(Design.space(this, 11));
+        steps.addView(safetyStep("1", R.string.safe_step_1));
+        steps.addView(Design.space(this, 10));
+        steps.addView(safetyStep("2", R.string.safe_step_2));
+        steps.addView(Design.space(this, 10));
+        steps.addView(safetyStep("3", R.string.safe_step_3));
+        body.addView(steps, Design.match());
+        body.addView(Design.space(this, 14));
+
+        TextView ask = Design.button(this, "👥  " + getString(R.string.ask_trusted_button),
+                Design.INK, Color.WHITE);
+        ask.setOnClickListener(view -> shareToTrustedPerson(
+                getString(R.string.checker_share_prefix) + " " + input));
+        body.addView(ask, Design.match());
+        body.addView(Design.space(this, 9));
+        TextView helpline = Design.button(this, getString(R.string.call_1930),
+                Color.TRANSPARENT, Design.INK);
+        helpline.setBackground(Design.outlined(Color.TRANSPARENT, Design.INK, 17, this));
+        helpline.setOnClickListener(view -> dialCyberHelpline());
+        body.addView(helpline, Design.match());
+        body.addView(Design.space(this, 16));
+        body.addView(infoCard(R.string.checker_disclosure_title, R.string.checker_disclosure_body,
+                Color.rgb(255, 241, 207)), Design.match());
+
+        showScreen(scroll, 0, new ScreenState(Screen.CHECKER_RESULT, null, input));
+    }
+
+    private View checkerReasonRow(String reason) {
+        LinearLayout row = Design.row(this);
+        TextView dot = Design.text(this, "•", 15, Design.DANGER, true);
+        dot.setGravity(Gravity.CENTER);
+        row.addView(dot, new LinearLayout.LayoutParams(Design.dp(this, 18), Design.dp(this, 22)));
+        TextView text = Design.text(this, checkerReasonText(reason), 13, Design.INK, false);
+        row.addView(text, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        return row;
+    }
+
+    private String checkerReasonText(String reason) {
+        int id = switch (reason) {
+            case "no_https" -> R.string.reason_no_https;
+            case "shortener" -> R.string.reason_shortener;
+            case "risky_tld" -> R.string.reason_risky_tld;
+            case "lookalike_brand" -> R.string.reason_lookalike_brand;
+            case "raw_ip" -> R.string.reason_raw_ip;
+            case "at_symbol" -> R.string.reason_at_symbol;
+            case "long_url" -> R.string.reason_long_url;
+            case "too_long" -> R.string.reason_too_long;
+            case "too_short" -> R.string.reason_too_short;
+            case "foreign_number" -> R.string.reason_foreign_number;
+            case "unusual_prefix" -> R.string.reason_unusual_prefix;
+            case "scam_phrases" -> R.string.reason_scam_phrases;
+            default -> R.string.reason_generic;
+        };
+        return getString(id);
+    }
+
+    private void renderTip(int index) {
+        if (PlanState.isLocked(this)) { renderPaywall(); return; }
+        ScamTips.Tip tip = ScamTips.at(index);
+        ScrollView scroll = scrollPage();
+        scroll.setId(R.id.screen_tip);
+        LinearLayout body = pageBody();
+        scroll.addView(body);
+
+        TextView back = Design.chip(this, "‹ " + getString(R.string.back), false);
+        back.setOnClickListener(view -> navigateBack());
+        body.addView(back, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        body.addView(Design.space(this, 22));
+        body.addView(Design.label(this, getString(R.string.tip_of_week_label)));
+        body.addView(Design.space(this, 8));
+        body.addView(Design.text(this, getString(tip.titleRes), 28, Design.INK, true));
+        body.addView(Design.space(this, 12));
+
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 18), Design.dp(this, 18),
+                Design.dp(this, 18), Design.dp(this, 18));
+        Design.card(card, Design.CARD, 20, this);
+        card.addView(Design.text(this, getString(tip.bodyRes), 15, Design.INK, false));
+        body.addView(card, Design.match());
+        body.addView(Design.space(this, 14));
+
+        TextView another = Design.chip(this, getString(R.string.tip_show_another), true);
+        another.setOnClickListener(view -> renderTip(index + 1));
+        body.addView(another, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        body.addView(Design.space(this, 16));
+        body.addView(infoCard(R.string.tip_footer_title, R.string.tip_footer_body,
+                Design.MINT), Design.match());
+
+        showScreen(scroll, 0, new ScreenState(Screen.TIP, null, null, index));
+    }
+
+    private void shareToTrustedPerson(String text) {
+        Intent share = new Intent(Intent.ACTION_SEND)
+                .setType("text/plain")
+                .putExtra(Intent.EXTRA_TEXT, text);
+        try {
+            startActivity(Intent.createChooser(share, getString(R.string.ask_trusted_chooser)));
+        } catch (RuntimeException error) {
+            Toast.makeText(this, R.string.open_link_error, Toast.LENGTH_SHORT).show();
+        }
     }
 
     // ---------------------------------------------------------------------
@@ -2013,6 +2351,11 @@ public final class MainActivity extends Activity {
             case SETTINGS -> renderSettings();
             case SETUP -> renderSetup();
             case PAYWALL -> renderPaywall();
+            case PANIC -> renderPanic();
+            case CHECKER -> renderChecker(state.voiceDescription);
+            case CHECKER_RESULT -> renderCheckerResult(
+                    state.voiceDescription == null ? "" : state.voiceDescription);
+            case TIP -> renderTip((int) state.flaggedId);
             case FLAGGED -> renderFlaggedDetail(state.flaggedId);
             case VOICE -> renderVoice(state.voiceDescription);
             case RESULT -> renderResult(SampleAnalysis.of(state.sampleKind));

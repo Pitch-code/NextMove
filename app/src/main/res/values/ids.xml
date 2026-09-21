@@ -32,4 +32,12 @@
     <item name="screen_paywall" type="id" />
     <item name="plan_upgrade" type="id" />
     <item name="plan_demo_premium" type="id" />
+    <item name="screen_panic" type="id" />
+    <item name="open_panic" type="id" />
+    <item name="screen_checker" type="id" />
+    <item name="checker_input" type="id" />
+    <item name="checker_check" type="id" />
+    <item name="open_checker" type="id" />
+    <item name="screen_checker_result" type="id" />
+    <item name="screen_tip" type="id" />
 </resources>
