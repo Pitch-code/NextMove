@@ -13,6 +13,7 @@ import android.text.TextUtils;
 import com.pitchcode.nextmove.data.FlaggedStore;
 import com.pitchcode.nextmove.data.HistoryStore;
 import com.pitchcode.nextmove.data.PlanState;
+import com.pitchcode.nextmove.data.SummaryStore;
 import com.pitchcode.nextmove.notifications.NotificationHelper;
 import com.pitchcode.nextmove.safety.VoiceRiskAssessment;
 
@@ -120,13 +121,17 @@ public final class MessageScanService extends NotificationListenerService {
 
         String combined = (sender + " " + body).trim();
         VoiceRiskAssessment assessment = VoiceRiskAssessment.evaluate(combined);
-        if (!assessment.highRisk) return;
 
         String dedupKey = pkg + "|" + sender + "|" + body.hashCode();
         long now = System.currentTimeMillis();
         Long last = recentlyHandled.get(dedupKey);
         if (last != null && now - last < DEDUP_WINDOW_MS) return;
         recentlyHandled.put(dedupKey, now);
+
+        // Count every distinct message we actually scan for the weekly summary.
+        SummaryStore.recordChecked(this);
+        if (!assessment.highRisk) return;
+        SummaryStore.recordFlagged(this);
 
         String source = appLabel(pkg, sender);
         String matched = TextUtils.join(", ", assessment.matchedTerms);

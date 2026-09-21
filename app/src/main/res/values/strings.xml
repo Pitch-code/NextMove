@@ -61,7 +61,7 @@
     <string name="privacy_point_3">Activity remains on this device</string>
     <string name="accuracy_label">ACCURACY PROMISE</string>
     <string name="accuracy_body" formatted="false">The future AI version will show evidence and ask you to confirm important details. It will never claim 100% accuracy.</string>
-    <string name="version">Prototype 0.6.0 · Android</string>
+    <string name="version">Prototype 0.7.0 · Android</string>
     <string name="import_not_live_title">Image selected safely</string>
     <string name="import_not_live_body">Cloud analysis is intentionally not connected in this free prototype. Preview a sample result to experience the flow.</string>
     <string name="preview_result">Preview sample result</string>
@@ -353,4 +353,23 @@
     <string name="onboard2_body">NextMove can check new SMS and app messages for scam warning signs and alert you in time, right on your phone.</string>
     <string name="onboard3_title">Private and honest</string>
     <string name="onboard3_body" formatted="false">Everything is checked on your phone. No account, nothing uploaded, and it never claims to be 100% certain. Starts with a 7-day free trial.</string>
+
+    <!-- Weekly summary -->
+    <string name="summary_label">THIS WEEK</string>
+    <string name="summary_checked">messages checked</string>
+    <string name="summary_flagged">flagged as risky</string>
+    <string name="summary_body_idle">Message protection has not checked anything yet this week. Turn it on to start watching new messages.</string>
+    <string name="summary_body_active">NextMove checked these on your phone this week. Counts reset every week.</string>
+
+    <!-- Family plan -->
+    <string name="family_plan_body">Premium covers up to 5 family phones. Invite a parent or relative to protect them too.</string>
+    <string name="family_invite_button">Invite family</string>
+    <string name="family_invite_message">I\'m using NextMove to catch scam messages and want to add you to my family plan. Install it and enter this family code: %1$s</string>
+    <string name="family_redeem_button">Have a family code?</string>
+    <string name="family_redeem_title">Join a family plan</string>
+    <string name="family_redeem_message">Enter the family code someone shared with you to unlock Premium on this phone.</string>
+    <string name="family_redeem_confirm">Join</string>
+    <string name="family_code_hint">Family code (e.g. NM-1234)</string>
+    <string name="family_code_empty">Please enter the family code.</string>
+    <string name="family_joined_toast">Joined the family plan — Premium unlocked (demo).</string>
 </resources>

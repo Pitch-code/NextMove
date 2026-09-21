@@ -61,7 +61,7 @@
     <string name="privacy_point_3">एक्टिविटी इसी डिवाइस पर रहती है</string>
     <string name="accuracy_label">सटीकता का वादा</string>
     <string name="accuracy_body" formatted="false">भविष्य का AI वर्ज़न सबूत दिखाएगा और ज़रूरी जानकारी की पुष्टि माँगेगा। यह कभी 100% सटीकता का दावा नहीं करेगा।</string>
-    <string name="version">प्रोटोटाइप 0.6.0 · Android</string>
+    <string name="version">प्रोटोटाइप 0.7.0 · Android</string>
     <string name="import_not_live_title">इमेज सुरक्षित रूप से चुनी गई</string>
     <string name="import_not_live_body">इस मुफ़्त प्रोटोटाइप में क्लाउड विश्लेषण जानबूझकर नहीं जोड़ा गया है। अनुभव देखने के लिए नमूना नतीजा खोलें।</string>
     <string name="preview_result">नमूना नतीजा देखें</string>
@@ -353,4 +353,23 @@
     <string name="onboard2_body">NextMove नए SMS और ऐप मैसेज को स्कैम संकेतों के लिए जाँचकर समय रहते चेतावनी दे सकता है — आपके फ़ोन पर ही।</string>
     <string name="onboard3_title">निजी और ईमानदार</string>
     <string name="onboard3_body" formatted="false">सब कुछ आपके फ़ोन पर जाँचा जाता है। कोई अकाउंट नहीं, कुछ अपलोड नहीं, और यह कभी 100% निश्चितता का दावा नहीं करता। 7-दिन के फ्री ट्रायल से शुरुआत।</string>
+
+    <!-- साप्ताहिक सारांश -->
+    <string name="summary_label">इस हफ़्ते</string>
+    <string name="summary_checked">मैसेज जाँचे</string>
+    <string name="summary_flagged">जोखिम भरे मिले</string>
+    <string name="summary_body_idle">इस हफ़्ते मैसेज सुरक्षा ने अभी कुछ नहीं जाँचा। नए मैसेज देखना शुरू करने के लिए इसे चालू करें।</string>
+    <string name="summary_body_active">NextMove ने इस हफ़्ते इन्हें आपके फ़ोन पर जाँचा। गिनती हर हफ़्ते रीसेट होती है।</string>
+
+    <!-- फ़ैमिली प्लान -->
+    <string name="family_plan_body">प्रीमियम 5 फ़ैमिली फ़ोन तक कवर करता है। माता-पिता या रिश्तेदार को भी सुरक्षित रखने के लिए आमंत्रित करें।</string>
+    <string name="family_invite_button">फ़ैमिली को आमंत्रित करें</string>
+    <string name="family_invite_message">मैं स्कैम मैसेज पकड़ने के लिए NextMove इस्तेमाल कर रहा/रही हूँ और आपको अपने फ़ैमिली प्लान में जोड़ना चाहता/चाहती हूँ। इसे इंस्टॉल करें और यह फ़ैमिली कोड डालें: %1$s</string>
+    <string name="family_redeem_button">फ़ैमिली कोड है?</string>
+    <string name="family_redeem_title">फ़ैमिली प्लान से जुड़ें</string>
+    <string name="family_redeem_message">इस फ़ोन पर प्रीमियम अनलॉक करने के लिए किसी ने जो फ़ैमिली कोड शेयर किया है, वह डालें।</string>
+    <string name="family_redeem_confirm">जुड़ें</string>
+    <string name="family_code_hint">फ़ैमिली कोड (जैसे NM-1234)</string>
+    <string name="family_code_empty">कृपया फ़ैमिली कोड डालें।</string>
+    <string name="family_joined_toast">फ़ैमिली प्लान से जुड़ गए — प्रीमियम अनलॉक (डेमो)।</string>
 </resources>
