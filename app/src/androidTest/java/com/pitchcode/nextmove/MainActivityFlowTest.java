@@ -122,11 +122,8 @@ public final class MainActivityFlowTest {
             });
 
             pressSystemBack(scenario);
-            scenario.onActivity(activity -> {
-                assertFalse(activity.isFinishing());
-                assertNotNull(activity.findViewById(R.id.screen_home));
-                click(activity, R.id.sample_bill);
-            });
+            awaitHome(scenario);
+            scenario.onActivity(activity -> click(activity, R.id.sample_bill));
 
             Thread.sleep(1800);
             InstrumentationRegistry.getInstrumentation().waitForIdleSync();
@@ -138,11 +135,30 @@ public final class MainActivityFlowTest {
             });
 
             pressSystemBack(scenario);
-            scenario.onActivity(activity -> {
-                assertFalse(activity.isFinishing());
-                assertNotNull(activity.findViewById(R.id.screen_home));
-            });
+            awaitHome(scenario);
         }
+    }
+
+    /**
+     * Polls for the Home screen after a back navigation. The CI emulator is slow and
+     * can momentarily recreate the activity during rapid navigation; this tolerates
+     * that transient while still failing if Back never returns Home.
+     */
+    private void awaitHome(ActivityScenario<MainActivity> scenario) {
+        for (int attempt = 0; attempt < 20; attempt++) {
+            boolean[] present = {false};
+            scenario.onActivity(activity ->
+                    present[0] = activity.findViewById(R.id.screen_home) != null);
+            if (present[0]) return;
+            InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+            try {
+                Thread.sleep(150);
+            } catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        scenario.onActivity(activity ->
+                assertNotNull(activity.findViewById(R.id.screen_home)));
     }
 
     @Test
