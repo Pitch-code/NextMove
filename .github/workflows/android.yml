@@ -78,6 +78,7 @@ jobs:
           path: |
             startup-launch.txt
             startup-logcat.txt
+            connected-logcat.txt
             app/build/reports/androidTests/connected/**
           if-no-files-found: warn
 

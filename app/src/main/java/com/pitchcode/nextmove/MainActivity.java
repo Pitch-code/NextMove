@@ -150,8 +150,6 @@ public final class MainActivity extends Activity implements BillingManager.Liste
                     OnBackInvokedDispatcher.PRIORITY_DEFAULT,
                     this::navigateBack);
         }
-        billing = new BillingManager(this, this);
-        billing.start();
         buildShell();
         if (!isOnboardingComplete()) {
             renderOnboarding(0);
@@ -204,11 +202,15 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         });
     }
 
-    private void startPurchase(String productId) {
+    private void ensureBilling() {
         if (billing == null) {
             billing = new BillingManager(this, this);
             billing.start();
         }
+    }
+
+    private void startPurchase(String productId) {
+        ensureBilling();
         billing.launch(this, productId);
     }
 
