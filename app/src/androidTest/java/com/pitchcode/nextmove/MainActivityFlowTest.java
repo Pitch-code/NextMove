@@ -20,12 +20,14 @@ import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SdkSuppress;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.GrantPermissionRule;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -33,6 +35,12 @@ import java.util.regex.Pattern;
 
 @RunWith(AndroidJUnit4.class)
 public final class MainActivityFlowTest {
+
+    // Pre-grant the microphone so the launch-time permission request does not pop a
+    // system dialog that would interfere with UI assertions.
+    @Rule
+    public GrantPermissionRule micPermission =
+            GrantPermissionRule.grant(Manifest.permission.RECORD_AUDIO);
 
     private static final String PREFS = "nextmove_local";
     private static final String KEY_SETUP_DONE = "setup_done";
