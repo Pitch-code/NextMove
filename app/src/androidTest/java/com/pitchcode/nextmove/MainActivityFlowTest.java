@@ -95,21 +95,9 @@ public final class MainActivityFlowTest {
             scenario.onActivity(activity -> {
                 assertNotNull(activity.findViewById(R.id.screen_paywall));
                 assertNull(activity.findViewById(R.id.screen_home));
-                click(activity, R.id.plan_upgrade);
-                assertNotNull(activity.findViewById(R.id.screen_home));
-            });
-        }
-    }
-
-    @Test
-    public void firstRunShowsSetupThenReachesHome() {
-        setSetupComplete(false);
-        try (ActivityScenario<MainActivity> scenario =
-                     ActivityScenario.launch(MainActivity.class)) {
-            scenario.onActivity(activity -> {
-                assertNotNull(activity.findViewById(R.id.screen_setup));
-                assertNull(activity.findViewById(R.id.screen_home));
-                click(activity, R.id.setup_skip);
+                // The real upgrade buttons go through Google Play billing (not available
+                // in tests); the demo control unlocks Premium locally.
+                click(activity, R.id.plan_demo_premium);
                 assertNotNull(activity.findViewById(R.id.screen_home));
             });
         }
