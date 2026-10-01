@@ -34,6 +34,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.pitchcode.nextmove.billing.BillingManager;
 import com.pitchcode.nextmove.data.FlaggedStore;
 import com.pitchcode.nextmove.data.HistoryStore;
 import com.pitchcode.nextmove.data.PlanState;
@@ -52,7 +53,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
-public final class MainActivity extends Activity {
+public final class MainActivity extends Activity implements BillingManager.Listener {
     public static final String EXTRA_FLAGGED_ID = "com.pitchcode.nextmove.FLAGGED_ID";
 
     private static final int REQUEST_IMAGE = 200;
@@ -116,6 +117,8 @@ public final class MainActivity extends Activity {
     private boolean startListeningAfterPermission;
     private boolean returningFromNotificationSettings;
     private boolean returningFromListenerSettings;
+    private boolean launchPermissionsAsked;
+    private BillingManager billing;
 
     @Override
     protected void attachBaseContext(Context newBase) {
@@ -150,8 +153,6 @@ public final class MainActivity extends Activity {
         buildShell();
         if (!isOnboardingComplete()) {
             renderOnboarding(0);
-        } else if (!isSetupComplete()) {
-            renderSetup();
         } else if (PlanState.isLocked(this)) {
             renderPaywall();
         } else if (isSharedText(getIntent())) {
@@ -160,6 +161,7 @@ public final class MainActivity extends Activity {
             renderFlaggedDetail(flaggedExtra(getIntent()));
         } else {
             renderHome();
+            requestPendingPermissions();
             if (isSharedImage(getIntent())) {
                 handler.postDelayed(this::showImageSelectedDialog, 350);
             }
@@ -170,7 +172,67 @@ public final class MainActivity extends Activity {
     protected void onDestroy() {
         handler.removeCallbacksAndMessages(null);
         destroySpeechRecognizer();
+        if (billing != null) billing.end();
         super.onDestroy();
+    }
+
+    // --- Billing callbacks ---------------------------------------------------
+
+    @Override
+    public void onBillingState(String state) {
+        runOnUiThread(() -> {
+            int message;
+            switch (state) {
+                case "cancelled" -> message = R.string.billing_cancelled;
+                case "purchased" -> message = R.string.billing_purchased;
+                case "ready" -> message = 0;
+                case "error" -> message = R.string.billing_error;
+                default -> message = R.string.billing_unavailable;
+            }
+            if (message != 0) Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        });
+    }
+
+    @Override
+    public void onPremiumChanged() {
+        runOnUiThread(() -> {
+            screenHistory.clear();
+            currentScreen = null;
+            renderHome();
+        });
+    }
+
+    private void ensureBilling() {
+        if (billing == null) {
+            billing = new BillingManager(this, this);
+            billing.start();
+        }
+    }
+
+    private void startPurchase(String productId) {
+        ensureBilling();
+        billing.launch(this, productId);
+    }
+
+    private void requestPendingPermissions() {
+        if (launchPermissionsAsked) return;
+        launchPermissionsAsked = true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                    REQUEST_SETUP_NOTIFICATIONS);
+            return;
+        }
+        requestMicIfPending();
+    }
+
+    private void requestMicIfPending() {
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_SETUP_MIC);
+        }
     }
 
     @Override
@@ -399,8 +461,6 @@ public final class MainActivity extends Activity {
         body.addView(Design.space(this, 14));
         body.addView(buildScanStatusCard(), Design.match());
         body.addView(Design.space(this, 14));
-        body.addView(buildNotificationSetupCard(), Design.match());
-        body.addView(Design.space(this, 14));
         body.addView(buildSafetyToolsCard(), Design.match());
         if (!PlanState.isPremium(this)) {
             body.addView(Design.space(this, 14));
@@ -446,27 +506,42 @@ public final class MainActivity extends Activity {
         scroll.setClipToPadding(false);
         LinearLayout row = Design.row(this);
         row.setPadding(0, 0, Design.dp(this, 12), 0);
-        addSampleChip(row, SampleAnalysis.Kind.BILL);
-        addSampleChip(row, SampleAnalysis.Kind.VISIT);
-        addSampleChip(row, SampleAnalysis.Kind.RETURN);
-        addSampleChip(row, SampleAnalysis.Kind.SCAM);
+        addSampleChip(row, SampleAnalysis.Kind.BILL, 0);
+        addSampleChip(row, SampleAnalysis.Kind.VISIT, 1);
+        addSampleChip(row, SampleAnalysis.Kind.RETURN, 2);
+        addSampleChip(row, SampleAnalysis.Kind.SCAM, 3);
         scroll.addView(row);
         return scroll;
     }
 
-    private void addSampleChip(LinearLayout row, SampleAnalysis.Kind kind) {
+    private void addSampleChip(LinearLayout row, SampleAnalysis.Kind kind, int index) {
         SampleAnalysis sample = SampleAnalysis.of(kind);
-        TextView chip = Design.chip(this, getString(sample.chip), kind == SampleAnalysis.Kind.BILL);
+        // All sample chips share the same (unselected) style for a consistent look.
+        TextView chip = Design.chip(this, getString(sample.chip), false);
         chip.setId(switch (kind) {
             case BILL -> R.id.sample_bill;
             case VISIT -> R.id.sample_visit;
             case RETURN -> R.id.sample_return;
             case SCAM -> R.id.sample_scam;
         });
-        chip.setOnClickListener(view -> simulateAnalysis(kind));
+        chip.setOnClickListener(view -> {
+            // Cosmetic tap flourish; the analysis starts immediately so navigation
+            // is not delayed.
+            view.animate().scaleX(0.96f).scaleY(0.96f).setDuration(70)
+                    .withEndAction(() ->
+                            view.animate().scaleX(1f).scaleY(1f).setDuration(110).start())
+                    .start();
+            simulateAnalysis(kind);
+        });
         LinearLayout.LayoutParams params = Design.match();
         params.setMarginEnd(Design.dp(this, 9));
         row.addView(chip, params);
+
+        // Staggered entrance animation.
+        chip.setAlpha(0f);
+        chip.setTranslationY(Design.dp(this, 10));
+        chip.animate().alpha(1f).translationY(0f)
+                .setStartDelay(index * 70L).setDuration(280).start();
     }
 
     private View buildTodayCard() {
@@ -1530,11 +1605,16 @@ public final class MainActivity extends Activity {
         body.addView(Design.space(this, 16));
 
         if (!premium) {
-            TextView upgrade = Design.button(this, getString(R.string.paywall_upgrade_button),
+            TextView monthly = Design.button(this, getString(R.string.premium_price_monthly),
                     Design.SAFFRON, Design.INK);
-            upgrade.setId(R.id.plan_upgrade);
-            upgrade.setOnClickListener(view -> simulateUpgrade());
-            body.addView(upgrade, Design.match());
+            monthly.setId(R.id.plan_upgrade);
+            monthly.setOnClickListener(view -> startPurchase(BillingManager.MONTHLY));
+            body.addView(monthly, Design.match());
+            body.addView(Design.space(this, 9));
+            TextView yearly = Design.button(this, getString(R.string.premium_price_yearly),
+                    Design.INK, Design.ON_INK);
+            yearly.setOnClickListener(view -> startPurchase(BillingManager.YEARLY));
+            body.addView(yearly, Design.match());
             body.addView(Design.space(this, 10));
             TextView redeem = Design.button(this, getString(R.string.family_redeem_button),
                     Color.TRANSPARENT, Design.INK);
@@ -1542,7 +1622,7 @@ public final class MainActivity extends Activity {
             redeem.setOnClickListener(view -> redeemFamily());
             body.addView(redeem, Design.match());
             body.addView(Design.space(this, 10));
-            body.addView(Design.text(this, getString(R.string.paywall_note), 11,
+            body.addView(Design.text(this, getString(R.string.paywall_billing_note), 11,
                     Design.MUTED, false));
         } else {
             TextView continueButton = Design.button(this, getString(R.string.paywall_continue),
@@ -1840,12 +1920,11 @@ public final class MainActivity extends Activity {
         markOnboardingComplete();
         screenHistory.clear();
         currentScreen = null;
-        if (!isSetupComplete()) {
-            renderSetup();
-        } else if (PlanState.isLocked(this)) {
+        if (PlanState.isLocked(this)) {
             renderPaywall();
         } else {
             renderHome();
+            requestPendingPermissions();
         }
     }
 
@@ -2325,8 +2404,11 @@ public final class MainActivity extends Activity {
         card.addView(Design.text(this, getString(R.string.permission_center_note), 12,
                 Design.MUTED, false));
         card.addView(Design.space(this, 12));
-        TextView runSetup = Design.chip(this, getString(R.string.run_setup_again), false);
-        runSetup.setOnClickListener(view -> renderSetup());
+        TextView runSetup = Design.chip(this, getString(R.string.recheck_permissions), false);
+        runSetup.setOnClickListener(view -> {
+            launchPermissionsAsked = false;
+            requestPendingPermissions();
+        });
         card.addView(runSetup, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         return card;
@@ -2525,9 +2607,10 @@ public final class MainActivity extends Activity {
             }
             if (currentScreen != null && currentScreen.screen == Screen.SETTINGS) renderSettings();
         } else if (requestCode == REQUEST_SETUP_NOTIFICATIONS) {
-            setupStepMicrophone();
+            requestMicIfPending();
         } else if (requestCode == REQUEST_SETUP_MIC) {
-            setupStepListener();
+            // Runtime permission chain complete; message-alert access is enabled
+            // separately from the Home card because it needs a settings visit.
         }
     }
 

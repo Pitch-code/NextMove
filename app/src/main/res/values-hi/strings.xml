@@ -61,7 +61,7 @@
     <string name="privacy_point_3">एक्टिविटी इसी डिवाइस पर रहती है</string>
     <string name="accuracy_label">सटीकता का वादा</string>
     <string name="accuracy_body" formatted="false">भविष्य का AI वर्ज़न सबूत दिखाएगा और ज़रूरी जानकारी की पुष्टि माँगेगा। यह कभी 100% सटीकता का दावा नहीं करेगा।</string>
-    <string name="version">प्रोटोटाइप 0.7.0 · Android</string>
+    <string name="version">प्रोटोटाइप 0.8.0 · Android</string>
     <string name="import_not_live_title">इमेज सुरक्षित रूप से चुनी गई</string>
     <string name="import_not_live_body">इस मुफ़्त प्रोटोटाइप में क्लाउड विश्लेषण जानबूझकर नहीं जोड़ा गया है। अनुभव देखने के लिए नमूना नतीजा खोलें।</string>
     <string name="preview_result">नमूना नतीजा देखें</string>
@@ -372,4 +372,14 @@
     <string name="family_code_hint">फ़ैमिली कोड (जैसे NM-1234)</string>
     <string name="family_code_empty">कृपया फ़ैमिली कोड डालें।</string>
     <string name="family_joined_toast">फ़ैमिली प्लान से जुड़ गए — प्रीमियम अनलॉक (डेमो)।</string>
+
+    <!-- बिलिंग / मूल्य -->
+    <string name="premium_price_monthly">सब्सक्राइब करें · ₹59 / माह</string>
+    <string name="premium_price_yearly">सालाना · ₹499 · सबसे अच्छा मूल्य</string>
+    <string name="paywall_billing_note">भुगतान Google Play के ज़रिए सुरक्षित रूप से होता है। असली खरीद स्क्रीन तब दिखेगी जब NextMove Play Store पर पब्लिश होगा — यह प्रोटोटाइप अभी भुगतान नहीं ले सकता।</string>
+    <string name="billing_cancelled">खरीद रद्द की गई।</string>
+    <string name="billing_purchased">प्रीमियम अनलॉक हो गया। धन्यवाद!</string>
+    <string name="billing_error">Google Play बिलिंग में कुछ गड़बड़ी हुई। कृपया फिर से कोशिश करें।</string>
+    <string name="billing_unavailable">प्रीमियम अभी खरीद के लिए उपलब्ध नहीं है। यह तब सक्रिय होगा जब NextMove सब्सक्रिप्शन के साथ Play Store पर पब्लिश होगा।</string>
+    <string name="recheck_permissions">अनुमतियाँ फिर जाँचें</string>
 </resources>

@@ -10,8 +10,8 @@ android {
         applicationId "com.pitchcode.nextmove"
         minSdk 26
         targetSdk 36
-        versionCode 9
-        versionName "0.7.0"
+        versionCode 10
+        versionName "0.8.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -36,7 +36,10 @@ android {
 }
 
 dependencies {
+    implementation "com.android.billingclient:billing:7.1.1"
+
     androidTestImplementation "androidx.test:core:1.6.1"
+    androidTestImplementation "androidx.test:rules:1.6.1"
     androidTestImplementation "androidx.test:runner:1.6.2"
     androidTestImplementation "androidx.test.ext:junit:1.2.1"
     androidTestImplementation "androidx.test.uiautomator:uiautomator:2.3.0"
