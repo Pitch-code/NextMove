@@ -524,7 +524,15 @@ public final class MainActivity extends Activity implements BillingManager.Liste
             case RETURN -> R.id.sample_return;
             case SCAM -> R.id.sample_scam;
         });
-        chip.setOnClickListener(view -> animateSampleTap(view, () -> simulateAnalysis(kind)));
+        chip.setOnClickListener(view -> {
+            // Cosmetic tap flourish; the analysis starts immediately so navigation
+            // is not delayed.
+            view.animate().scaleX(0.96f).scaleY(0.96f).setDuration(70)
+                    .withEndAction(() ->
+                            view.animate().scaleX(1f).scaleY(1f).setDuration(110).start())
+                    .start();
+            simulateAnalysis(kind);
+        });
         LinearLayout.LayoutParams params = Design.match();
         params.setMarginEnd(Design.dp(this, 9));
         row.addView(chip, params);
@@ -534,14 +542,6 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         chip.setTranslationY(Design.dp(this, 10));
         chip.animate().alpha(1f).translationY(0f)
                 .setStartDelay(index * 70L).setDuration(280).start();
-    }
-
-    private void animateSampleTap(View view, Runnable action) {
-        view.animate().scaleX(0.93f).scaleY(0.93f).setDuration(90)
-                .withEndAction(() -> {
-                    view.animate().scaleX(1f).scaleY(1f).setDuration(120).start();
-                    action.run();
-                }).start();
     }
 
     private View buildTodayCard() {

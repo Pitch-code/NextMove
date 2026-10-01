@@ -1,7 +1,6 @@
 package com.pitchcode.nextmove;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -122,33 +121,28 @@ public final class MainActivityFlowTest {
             });
 
             pressSystemBack(scenario);
-            awaitHome(scenario);
+            awaitScreen(scenario, R.id.screen_home);
             scenario.onActivity(activity -> click(activity, R.id.sample_bill));
 
-            Thread.sleep(1800);
-            InstrumentationRegistry.getInstrumentation().waitForIdleSync();
-
-            scenario.onActivity(activity -> {
-                View result = activity.findViewById(R.id.screen_result);
-                assertNotNull(result);
-                assertTrue(containsText(result, "SAMPLE · Electricity bill"));
-            });
+            awaitScreen(scenario, R.id.screen_result);
+            scenario.onActivity(activity -> assertTrue(containsText(
+                    activity.findViewById(R.id.screen_result), "SAMPLE · Electricity bill")));
 
             pressSystemBack(scenario);
-            awaitHome(scenario);
+            awaitScreen(scenario, R.id.screen_home);
         }
     }
 
     /**
-     * Polls for the Home screen after a back navigation. The CI emulator is slow and
-     * can momentarily recreate the activity during rapid navigation; this tolerates
-     * that transient while still failing if Back never returns Home.
+     * Polls for a screen to appear. The CI emulator is slow and can momentarily
+     * recreate the activity during rapid navigation; this tolerates that transient
+     * while still failing if the screen never appears.
      */
-    private void awaitHome(ActivityScenario<MainActivity> scenario) {
-        for (int attempt = 0; attempt < 20; attempt++) {
+    private void awaitScreen(ActivityScenario<MainActivity> scenario, int screenId) {
+        for (int attempt = 0; attempt < 25; attempt++) {
             boolean[] present = {false};
             scenario.onActivity(activity ->
-                    present[0] = activity.findViewById(R.id.screen_home) != null);
+                    present[0] = activity.findViewById(screenId) != null);
             if (present[0]) return;
             InstrumentationRegistry.getInstrumentation().waitForIdleSync();
             try {
@@ -157,8 +151,7 @@ public final class MainActivityFlowTest {
                 Thread.currentThread().interrupt();
             }
         }
-        scenario.onActivity(activity ->
-                assertNotNull(activity.findViewById(R.id.screen_home)));
+        scenario.onActivity(activity -> assertNotNull(activity.findViewById(screenId)));
     }
 
     @Test
