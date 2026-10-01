@@ -21,6 +21,7 @@ import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -238,6 +239,9 @@ public final class MainActivity extends Activity implements BillingManager.Liste
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d("NMDBG", "onResume current=" + (currentScreen == null ? "null" : currentScreen.screen)
+                + " fromListener=" + returningFromListenerSettings
+                + " fromNotif=" + returningFromNotificationSettings);
         if (content == null || currentScreen == null) return;
         if (returningFromListenerSettings) {
             returningFromListenerSettings = false;
@@ -390,6 +394,8 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         if (!restoringPreviousScreen && currentScreen != null && !sameScreen(currentScreen, next)) {
             if (!replaceCurrent) screenHistory.push(currentScreen);
         }
+        Log.d("NMDBG", "showScreen next=" + next.screen + " histSize=" + screenHistory.size()
+                + " restoring=" + restoringPreviousScreen);
         currentScreen = next;
         selectedTab = tab;
         buildNavigation();
@@ -432,6 +438,8 @@ public final class MainActivity extends Activity implements BillingManager.Liste
     }
 
     private void renderHome() {
+        Log.d("NMDBG", "renderHome locked=" + PlanState.isLocked(this)
+                + " premium=" + PlanState.isPremium(this) + " days=" + PlanState.daysLeft(this));
         if (PlanState.isLocked(this)) { renderPaywall(); return; }
         ScrollView scroll = scrollPage();
         scroll.setId(R.id.screen_home);
@@ -2701,11 +2709,14 @@ public final class MainActivity extends Activity implements BillingManager.Liste
     private void navigateBack() {
         cancelPendingAnalysis();
         destroySpeechRecognizer();
+        Log.d("NMDBG", "navigateBack histSize=" + screenHistory.size()
+                + " current=" + (currentScreen == null ? "null" : currentScreen.screen));
         if (screenHistory.isEmpty()) {
             finish();
             return;
         }
         ScreenState previous = screenHistory.pop();
+        Log.d("NMDBG", "navigateBack -> " + previous.screen);
         restoringPreviousScreen = true;
         renderState(previous);
         restoringPreviousScreen = false;
