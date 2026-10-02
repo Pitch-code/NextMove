@@ -44,8 +44,10 @@ import com.pitchcode.nextmove.data.HistoryStore;
 import com.pitchcode.nextmove.data.PlanState;
 import com.pitchcode.nextmove.data.SampleAnalysis;
 import com.pitchcode.nextmove.notifications.NotificationHelper;
+import com.pitchcode.nextmove.data.ScamDatabase;
 import com.pitchcode.nextmove.data.ScamTips;
 import com.pitchcode.nextmove.data.SummaryStore;
+import com.pitchcode.nextmove.data.TrustedContact;
 import com.pitchcode.nextmove.safety.LinkNumberCheck;
 import com.pitchcode.nextmove.safety.VoiceRiskAssessment;
 import com.pitchcode.nextmove.scan.MessageScanService;
@@ -1341,10 +1343,9 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         portal.setOnClickListener(view -> openCybercrimePortal());
         body.addView(portal, Design.match());
         body.addView(Design.space(this, 9));
-        TextView ask = Design.button(this, "👥  " + getString(R.string.ask_trusted_button),
+        TextView ask = trustedAlertButton(getString(R.string.panic_share_text),
                 Color.TRANSPARENT, Design.INK);
         ask.setBackground(Design.outlined(Color.TRANSPARENT, Design.INK, 17, this));
-        ask.setOnClickListener(view -> shareToTrustedPerson(getString(R.string.panic_share_text)));
         body.addView(ask, Design.match());
         body.addView(Design.space(this, 16));
         body.addView(buildOfficialIndiaCard(), Design.match());
@@ -1420,6 +1421,8 @@ public final class MainActivity extends Activity implements BillingManager.Liste
     private void renderCheckerResult(String input) {
         if (PlanState.isLocked(this)) { renderPaywall(); return; }
         LinkNumberCheck result = LinkNumberCheck.evaluate(input);
+        int reports = ScamDatabase.reports(this, input);
+        boolean high = result.highRisk || reports > 0;
         ScrollView scroll = scrollPage();
         scroll.setId(R.id.screen_checker_result);
         LinearLayout body = pageBody();
@@ -1432,21 +1435,34 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         body.addView(Design.space(this, 22));
         body.addView(Design.label(this, getString(R.string.checker_result_eyebrow)));
         body.addView(Design.space(this, 8));
-        body.addView(Design.text(this, getString(result.highRisk
+        body.addView(Design.text(this, getString(high
                 ? R.string.checker_high_title : R.string.checker_low_title), 28, Design.INK, true));
         body.addView(Design.space(this, 10));
-        body.addView(Design.text(this, getString(result.highRisk
+        body.addView(Design.text(this, getString(high
                 ? R.string.checker_high_body : R.string.checker_low_body), 14, Design.MUTED, false));
         body.addView(Design.space(this, 16));
+
+        if (reports > 0) {
+            LinearLayout rep = Design.column(this);
+            rep.setPadding(Design.dp(this, 18), Design.dp(this, 15),
+                    Design.dp(this, 18), Design.dp(this, 15));
+            rep.setBackground(Design.rounded(Design.DANGER_SOFT, 19, this));
+            rep.addView(Design.text(this, getString(R.string.reputation_reported, reports),
+                    15, Design.DANGER, true));
+            rep.addView(Design.space(this, 4));
+            rep.addView(Design.text(this, getString(R.string.reputation_body), 12,
+                    Design.INK, false));
+            body.addView(rep, Design.match());
+            body.addView(Design.space(this, 12));
+        }
 
         LinearLayout card = Design.column(this);
         card.setPadding(Design.dp(this, 18), Design.dp(this, 16),
                 Design.dp(this, 18), Design.dp(this, 16));
-        card.setBackground(Design.rounded(
-                result.highRisk ? Design.DANGER_SOFT : Design.CREAM, 19, this));
+        card.setBackground(Design.rounded(high ? Design.DANGER_SOFT : Design.CREAM, 19, this));
         card.addView(Design.text(this,
                 getString(R.string.checker_signals_found, result.score),
-                15, result.highRisk ? Design.DANGER : Design.INK, true));
+                15, high ? Design.DANGER : Design.INK, true));
         if (!result.reasons.isEmpty()) {
             card.addView(Design.space(this, 10));
             for (String reason : result.reasons) {
@@ -1481,11 +1497,19 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         body.addView(steps, Design.match());
         body.addView(Design.space(this, 14));
 
-        TextView ask = Design.button(this, "👥  " + getString(R.string.ask_trusted_button),
-                Design.INK, Design.ON_INK);
-        ask.setOnClickListener(view -> shareToTrustedPerson(
-                getString(R.string.checker_share_prefix) + " " + input));
-        body.addView(ask, Design.match());
+        body.addView(trustedAlertButton(
+                getString(R.string.checker_share_prefix) + " " + input,
+                Design.INK, Design.ON_INK), Design.match());
+        body.addView(Design.space(this, 9));
+        TextView reportIt = Design.button(this, getString(R.string.report_scam_button),
+                Color.TRANSPARENT, Design.DANGER);
+        reportIt.setBackground(Design.outlined(Color.TRANSPARENT, Design.DANGER, 17, this));
+        reportIt.setOnClickListener(view -> {
+            ScamDatabase.report(this, input);
+            Toast.makeText(this, R.string.report_scam_toast, Toast.LENGTH_SHORT).show();
+            renderCheckerResult(input);
+        });
+        body.addView(reportIt, Design.match());
         body.addView(Design.space(this, 9));
         TextView helpline = Design.button(this, getString(R.string.call_1930),
                 Color.TRANSPARENT, Design.INK);
@@ -1574,6 +1598,36 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         } catch (RuntimeException error) {
             Toast.makeText(this, R.string.open_link_error, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /**
+     * Alerts the saved trusted contact. If one is set, opens the SMS app pre-filled
+     * (the user taps Send — no SMS permission needed); otherwise falls back to the
+     * system share sheet.
+     */
+    private void alertTrustedContact(String message) {
+        if (!TrustedContact.isSet(this)) {
+            shareToTrustedPerson(message);
+            return;
+        }
+        String number = TrustedContact.getNumber(this);
+        Intent sms = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:" + number))
+                .putExtra("sms_body", message);
+        try {
+            startActivity(sms);
+        } catch (RuntimeException error) {
+            shareToTrustedPerson(message);
+        }
+    }
+
+    /** A button that adapts to whether a trusted contact is saved. */
+    private TextView trustedAlertButton(String message, int background, int foreground) {
+        String label = TrustedContact.isSet(this)
+                ? getString(R.string.alert_trusted_named, TrustedContact.getName(this))
+                : getString(R.string.ask_trusted_button);
+        TextView button = Design.button(this, "👥  " + label, background, foreground);
+        button.setOnClickListener(view -> alertTrustedContact(message));
+        return button;
     }
 
     // ---------------------------------------------------------------------
@@ -2237,8 +2291,13 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         body.addView(steps, Design.match());
         body.addView(Design.space(this, 14));
 
+        body.addView(trustedAlertButton(
+                getString(R.string.flagged_alert_prefix) + " " + item.source,
+                Design.INK, Design.ON_INK), Design.match());
+        body.addView(Design.space(this, 9));
         TextView helpline = Design.button(this, getString(R.string.call_1930),
-                Design.INK, Design.ON_INK);
+                Color.TRANSPARENT, Design.INK);
+        helpline.setBackground(Design.outlined(Color.TRANSPARENT, Design.INK, 17, this));
         helpline.setOnClickListener(view -> dialCyberHelpline());
         body.addView(helpline, Design.match());
         body.addView(Design.space(this, 9));
@@ -2247,6 +2306,15 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         report.setBackground(Design.outlined(Color.TRANSPARENT, Design.INK, 17, this));
         report.setOnClickListener(view -> openCybercrimePortal());
         body.addView(report, Design.match());
+        body.addView(Design.space(this, 9));
+        TextView reportSender = Design.button(this, getString(R.string.report_scam_button),
+                Color.TRANSPARENT, Design.DANGER);
+        reportSender.setBackground(Design.outlined(Color.TRANSPARENT, Design.DANGER, 17, this));
+        reportSender.setOnClickListener(view -> {
+            ScamDatabase.report(this, item.source);
+            Toast.makeText(this, R.string.report_scam_toast, Toast.LENGTH_SHORT).show();
+        });
+        body.addView(reportSender, Design.match());
         body.addView(Design.space(this, 16));
         body.addView(infoCard(R.string.scan_disclaimer_title, R.string.scan_disclaimer_body,
                 Design.CREAM), Design.match());
@@ -2273,6 +2341,8 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         body.addView(settingsDisplayCard(), Design.match());
         body.addView(Design.space(this, 14));
         body.addView(settingsPermissionsCard(), Design.match());
+        body.addView(Design.space(this, 14));
+        body.addView(settingsTrustedContactCard(), Design.match());
         body.addView(Design.space(this, 14));
         body.addView(settingsShareSafelyCard(), Design.match());
         body.addView(Design.space(this, 14));
@@ -2499,6 +2569,95 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         if (action != null) status.setOnClickListener(view -> action.run());
         row.addView(status);
         return row;
+    }
+
+    private View settingsTrustedContactCard() {
+        LinearLayout card = Design.column(this);
+        card.setPadding(Design.dp(this, 17), Design.dp(this, 17),
+                Design.dp(this, 17), Design.dp(this, 17));
+        Design.card(card, Design.CARD, 21, this);
+        card.addView(Design.label(this, getString(R.string.trusted_label)));
+        card.addView(Design.space(this, 8));
+        card.addView(Design.text(this, getString(R.string.trusted_body), 13, Design.MUTED, false));
+        card.addView(Design.space(this, 12));
+
+        if (TrustedContact.isSet(this)) {
+            card.addView(Design.text(this, TrustedContact.getName(this), 15, Design.INK, true));
+            card.addView(Design.text(this, TrustedContact.getNumber(this), 12, Design.MUTED, false));
+            card.addView(Design.space(this, 12));
+            LinearLayout row = Design.row(this);
+            TextView edit = Design.chip(this, getString(R.string.trusted_edit), true);
+            edit.setOnClickListener(view -> showTrustedContactDialog());
+            row.addView(edit);
+            View gap = new View(this);
+            row.addView(gap, new LinearLayout.LayoutParams(Design.dp(this, 10),
+                    ViewGroup.LayoutParams.WRAP_CONTENT));
+            TextView remove = Design.chip(this, getString(R.string.trusted_remove), false);
+            remove.setOnClickListener(view -> {
+                TrustedContact.clear(this);
+                renderSettings();
+            });
+            row.addView(remove);
+            card.addView(row, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            card.addView(Design.space(this, 14));
+            LinearLayout toggleRow = Design.row(this);
+            TextView toggleLabel = Design.text(this, getString(R.string.trusted_alert_toggle), 13,
+                    Design.INK, true);
+            toggleRow.addView(toggleLabel,
+                    new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+            boolean on = TrustedContact.isAlertEnabled(this);
+            TextView toggle = Design.chip(this,
+                    getString(on ? R.string.on_status : R.string.off_status), on);
+            toggle.setOnClickListener(view -> {
+                TrustedContact.setAlertEnabled(this, !on);
+                renderSettings();
+            });
+            toggleRow.addView(toggle);
+            card.addView(toggleRow, Design.match());
+        } else {
+            TextView add = Design.chip(this, getString(R.string.trusted_add), true);
+            add.setOnClickListener(view -> showTrustedContactDialog());
+            card.addView(add, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        }
+        return card;
+    }
+
+    private void showTrustedContactDialog() {
+        LinearLayout box = Design.column(this);
+        int pad = Design.dp(this, 20);
+        box.setPadding(pad, Design.dp(this, 8), pad, 0);
+        EditText nameField = new EditText(this);
+        nameField.setHint(R.string.trusted_name_hint);
+        nameField.setSingleLine(true);
+        nameField.setText(TrustedContact.getName(this));
+        box.addView(nameField, Design.match());
+        EditText numberField = new EditText(this);
+        numberField.setHint(R.string.trusted_number_hint);
+        numberField.setSingleLine(true);
+        numberField.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
+        numberField.setText(TrustedContact.getNumber(this));
+        box.addView(numberField, Design.match());
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.trusted_dialog_title)
+                .setView(box)
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.trusted_save, (dialog, which) -> {
+                    String name = nameField.getText() == null ? "" : nameField.getText().toString().trim();
+                    String number = numberField.getText() == null
+                            ? "" : numberField.getText().toString().trim();
+                    if (number.isEmpty()) {
+                        Toast.makeText(this, R.string.trusted_number_required, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (name.isEmpty()) name = getString(R.string.trusted_default_name);
+                    TrustedContact.set(this, name, number);
+                    Toast.makeText(this, R.string.trusted_saved, Toast.LENGTH_SHORT).show();
+                    renderSettings();
+                })
+                .show();
     }
 
     private View settingsShareSafelyCard() {
