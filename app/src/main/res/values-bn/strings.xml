@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tagline">"পরে" থেকে "সম্পন্ন" পর্যন্ত।</string>
+    <string name="home_eyebrow">আপনার শান্ত কর্মস্থল</string>
+    <string name="home_title">আপনার মনে কী আটকে আছে?</string>
+    <string name="home_body">একটি স্ক্রিনশট শেয়ার করুন। গুরুত্বপূর্ণ অংশগুলো NextMove একটি স্পষ্ট, নিরাপদ পদক্ষেপে পরিণত করে।</string>
+    <string name="share_title">একটি স্ক্রিনশট শেয়ার করুন</string>
+    <string name="share_body">বিল, অ্যাপয়েন্টমেন্ট, রিটার্ন বা সন্দেহজনক বার্তা।</string>
+    <string name="choose_image">ফোন থেকে বেছে নিন</string>
+    <string name="try_sample">অথবা একটি নমুনা দেখুন</string>
+    <string name="privacy_short">শুরু থেকেই গোপনীয়তা</string>
+    <string name="privacy_short_body">স্ক্রিনশট আপনার ফোনেই থাকে। ভয়েস আপনার ফোনের স্পিচ পরিষেবা ব্যবহার করে।</string>
+    <string name="today_label">আজ</string>
+    <string name="today_title">জরুরি কিছু নেই। নিশ্চিন্ত থাকুন।</string>
+    <string name="today_body">কিছু এলে, মনে বয়ে বেড়ানোর বদলে এখানে শেয়ার করুন।</string>
+    <string name="sample_bill">বিদ্যুৎ বিল</string>
+    <string name="sample_visit">অ্যাপয়েন্টমেন্ট</string>
+    <string name="sample_return">রিটার্নের সময়সীমা</string>
+    <string name="sample_scam">সন্দেহজনক বার্তা</string>
+    <string name="processing_title">আপনার পরবর্তী পদক্ষেপ খুঁজছি…</string>
+    <string name="result_ready">আপনার পরবর্তী পদক্ষেপ প্রস্তুত</string>
+    <string name="result_summary_label">এর অর্থ</string>
+    <string name="next_move_label">প্রস্তাবিত পরবর্তী পদক্ষেপ</string>
+    <string name="add_reminder">ক্যালেন্ডারে যোগ করুন</string>
+    <string name="mark_handled">সম্পন্ন হিসেবে চিহ্নিত করুন</string>
+    <string name="home_nav">হোম</string>
+    <string name="activity_nav">অ্যাক্টিভিটি</string>
+    <string name="settings_nav">সেটিংস</string>
+    <string name="activity_title">সম্পন্ন তালিকা</string>
+    <string name="settings_title">আপনার মানসিক শান্তির জন্য</string>
+    <string name="settings_body">সহজ পছন্দ, সৎ সীমা এবং কোনো আকস্মিক অ্যাক্সেস নেই।</string>
+    <string name="language_label">অ্যাপের ভাষা</string>
+    <string name="back">পিছনে</string>
+    <string name="cancel">এখন নয়</string>
+
+    <string name="voice_button">কণ্ঠে বলুন</string>
+    <string name="voice_title">কী ঘটেছে বলুন</string>
+    <string name="voice_body">নিজের ভাষায় বলুন বা টাইপ করুন। তারা কী করতে বলেছে, কীভাবে যোগাযোগ করেছে এবং টাকা পাঠানো হয়েছে কিনা তা উল্লেখ করুন।</string>
+    <string name="start_listening">বলা শুরু করুন</string>
+    <string name="check_situation">এই পরিস্থিতি যাচাই করুন</string>
+    <string name="safe_next_steps">নিরাপদ পরবর্তী ধাপ</string>
+    <string name="safe_step_1">যোগাযোগ বন্ধ করুন; লিঙ্কে ট্যাপ করবেন না বা OTP, CVV, UPI PIN বা পাসওয়ার্ড শেয়ার করবেন না।</string>
+    <string name="safe_step_2">প্রতিষ্ঠানের অফিসিয়াল ওয়েবসাইট, অ্যাপ বা নম্বর দিয়ে যাচাই করুন — বার্তার তথ্য নয়।</string>
+    <string name="safe_step_3">টাকা পাঠানো হলে, সঙ্গে সঙ্গে ব্যাংকে যোগাযোগ করুন এবং ভারতের সাইবার জালিয়াতি হেল্পলাইন 1930-এ কল করুন।</string>
+    <string name="call_1930">1930 সাইবার হেল্পলাইনে কল করুন</string>
+    <string name="report_cybercrime">অফিসিয়াল অভিযোগ পোর্টাল খুলুন</string>
+
+    <string name="permissions_label">অনুমতি &amp; অ্যাক্সেস</string>
+    <string name="notifications_title">নোটিফিকেশন</string>
+    <string name="microphone_title">মাইক্রোফোন</string>
+    <string name="calendar_title">ক্যালেন্ডার</string>
+    <string name="messages_title">বার্তা সতর্কতা</string>
+    <string name="allowed">অনুমোদিত</string>
+    <string name="not_required">প্রয়োজন নেই</string>
+    <string name="on_status">চালু</string>
+    <string name="off_status">বন্ধ</string>
+
+    <string name="safety_tools_title">ভারতের জন্য নিরাপত্তা সরঞ্জাম</string>
+    <string name="safety_tools_body">সন্দেহজনক পরিস্থিতি কণ্ঠে বলুন বা টাইপ করুন, সতর্কতা চিহ্ন দেখুন এবং অফিসিয়াল অভিযোগের পথে দ্রুত পৌঁছান।</string>
+    <string name="open_voice_check">একটি পরিস্থিতি বর্ণনা করুন</string>
+    <string name="open_checker">নম্বর বা লিঙ্ক যাচাই করুন</string>
+    <string name="open_panic">আমি প্রতারিত হয়েছি</string>
+    <string name="ask_trusted_button">বিশ্বস্ত কাউকে জিজ্ঞাসা করুন</string>
+
+    <string name="panic_eyebrow">জরুরি সাহায্য</string>
+    <string name="panic_title">দ্রুত ও নিরাপদে পদক্ষেপ নিই</string>
+    <string name="panic_body">এখনই এই ধাপগুলো অনুসরণ করুন। শান্তভাবে দ্রুত পদক্ষেপ ক্ষতি কমায়।</string>
+    <string name="panic_steps_label">এখনই এটি করুন</string>
+    <string name="panic_step_1">সব যোগাযোগ বন্ধ করুন। আর টাকা দেবেন না, OTP শেয়ার করবেন না, তাদের বলা কোনো অ্যাপ ইনস্টল করবেন না।</string>
+    <string name="panic_step_2">টাকা পাঠানো হলে, সঙ্গে সঙ্গে ব্যাংকে কল করুন এবং কার্ড বা UPI ব্লক করুন।</string>
+    <string name="panic_step_3">অভিযোগ জানাতে ভারতের সাইবার জালিয়াতি হেল্পলাইন 1930-এ কল করুন।</string>
+    <string name="panic_step_4">সমস্ত তথ্যসহ cybercrime.gov.in-এ অভিযোগ নথিভুক্ত করুন।</string>
+    <string name="panic_step_5">কোনো পাসওয়ার্ড বা UPI PIN শেয়ার করলে তা বদলান এবং বিশ্বস্ত কাউকে জানান।</string>
+
+    <string name="checker_eyebrow">নম্বর &amp; লিঙ্ক যাচাই</string>
+    <string name="checker_title">সন্দেহজনক নম্বর বা লিঙ্ক যাচাই করুন</string>
+    <string name="checker_body">একটি ফোন নম্বর বা লিঙ্ক পেস্ট করুন। NextMove এটি আপনার ফোনে সাধারণ প্রতারণার ধরনের জন্য যাচাই করে।</string>
+    <string name="checker_hint">নম্বর বা লিঙ্ক পেস্ট করুন…</string>
+    <string name="checker_check">যাচাই করুন</string>
+    <string name="checker_high_title">এটি ঝুঁকিপূর্ণ মনে হচ্ছে</string>
+    <string name="checker_low_title">জোরালো বিপদ-চিহ্ন পাওয়া যায়নি</string>
+    <string name="report_scam_button">এটিকে প্রতারণা হিসেবে রিপোর্ট করুন</string>
+
+    <string name="tip_of_week_label">এই সপ্তাহের প্রতারণা</string>
+    <string name="tip_read_more">আরও পড়ুন</string>
+    <string name="tip_show_another">আরেকটি টিপ দেখান</string>
+
+    <string name="scan_card_on_title">বার্তা সুরক্ষা চালু আছে</string>
+    <string name="scan_card_off_title">বার্তা সুরক্ষা চালু করুন</string>
+    <string name="scan_enable_button">সুরক্ষা চালু করুন</string>
+    <string name="scan_manage">পরিচালনা করুন</string>
+
+    <string name="setup_title">NextMove সেট আপ করুন</string>
+    <string name="setup_body">NextMove আপনাকে সুরক্ষিত রাখতে ও মনে করিয়ে দিতে তিনটি দ্রুত অনুমতি। এগুলো পরে সেটিংসে বদলানো যায়।</string>
+    <string name="setup_continue_button">চালিয়ে যান</string>
+    <string name="setup_skip_button">আপাতত এড়িয়ে যান</string>
+
+    <string name="trial_banner_upgrade">আপগ্রেড</string>
+    <string name="premium_badge">প্রিমিয়াম · সব ফিচার আনলক</string>
+    <string name="plan_label">আপনার প্ল্যান</string>
+    <string name="plan_trial_status">ফ্রি ট্রায়াল — %1$d দিন বাকি</string>
+    <string name="plan_premium_status">প্রিমিয়াম — সব ফিচার আনলক</string>
+    <string name="paywall_eyebrow">ফ্রি ট্রায়াল শেষ</string>
+    <string name="paywall_title">NextMove ব্যবহার চালিয়ে যেতে আপগ্রেড করুন</string>
+    <string name="paywall_body">আপনার 7-দিনের ফ্রি ট্রায়াল শেষ হয়েছে। প্রতারণা সুরক্ষা ও সব ফিচার আবার চালু করতে প্রিমিয়ামে আপগ্রেড করুন।</string>
+    <string name="premium_price_onetime">প্রিমিয়াম আনলক · ₹499 · একবারে</string>
+    <string name="ad_label">বিজ্ঞাপন</string>
+
+    <string name="trusted_label">বিশ্বস্ত পরিচিতি</string>
+    <string name="trusted_body">একজন বিশ্বস্ত ব্যক্তিকে যোগ করুন। কিছু প্রতারণা মনে হলে, এক ট্যাপে তাদের জানান।</string>
+    <string name="trusted_add">বিশ্বস্ত পরিচিতি যোগ করুন</string>
+    <string name="alert_trusted_named">%1$s-কে জানান</string>
+
+    <string name="onboard_next">পরবর্তী</string>
+    <string name="onboard_get_started">শুরু করুন</string>
+    <string name="onboard_skip">এড়িয়ে যান</string>
+    <string name="onboard1_title">দুশ্চিন্তাকে একটি স্পষ্ট পদক্ষেপে পরিণত করুন</string>
+    <string name="onboard2_title">স্বয়ংক্রিয় প্রতারণা সুরক্ষা</string>
+    <string name="onboard3_title">ব্যক্তিগত এবং সৎ</string>
+
+    <string name="version">প্রোটোটাইপ 0.11.0 · Android</string>
+</resources>

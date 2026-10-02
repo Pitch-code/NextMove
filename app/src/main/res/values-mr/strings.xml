@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tagline">"नंतर" पासून "झाले" पर्यंत.</string>
+    <string name="home_eyebrow">तुमची शांत कृती जागा</string>
+    <string name="home_title">तुमच्या मनात काय अडकले आहे?</string>
+    <string name="home_body">एक स्क्रीनशॉट शेअर करा. महत्त्वाचे भाग NextMove एका स्पष्ट, सुरक्षित कृतीत बदलते.</string>
+    <string name="share_title">एक स्क्रीनशॉट शेअर करा</string>
+    <string name="share_body">बिले, अपॉइंटमेंट, रिटर्न किंवा संशयास्पद संदेश.</string>
+    <string name="choose_image">फोनमधून निवडा</string>
+    <string name="try_sample">किंवा एक नमुना पाहा</string>
+    <string name="privacy_short">आधीपासूनच गोपनीयता</string>
+    <string name="privacy_short_body">स्क्रीनशॉट तुमच्या फोनवरच राहतात. आवाजासाठी फोनची स्पीच सेवा वापरली जाते.</string>
+    <string name="today_label">आज</string>
+    <string name="today_title">काही तातडीचे नाही. निवांत राहा.</string>
+    <string name="today_body">काही आले तर ते मनात ठेवण्याऐवजी इथे शेअर करा.</string>
+    <string name="sample_bill">वीज बिल</string>
+    <string name="sample_visit">अपॉइंटमेंट</string>
+    <string name="sample_return">रिटर्नची मुदत</string>
+    <string name="sample_scam">संशयास्पद संदेश</string>
+    <string name="processing_title">तुमची पुढील कृती शोधत आहोत…</string>
+    <string name="result_ready">तुमची पुढील कृती तयार आहे</string>
+    <string name="result_summary_label">याचा अर्थ</string>
+    <string name="next_move_label">शिफारस केलेली पुढील कृती</string>
+    <string name="add_reminder">कॅलेंडरमध्ये जोडा</string>
+    <string name="mark_handled">पूर्ण झाले म्हणून चिन्हांकित करा</string>
+    <string name="home_nav">होम</string>
+    <string name="activity_nav">अ‍ॅक्टिव्हिटी</string>
+    <string name="settings_nav">सेटिंग्ज</string>
+    <string name="activity_title">पूर्ण केलेली यादी</string>
+    <string name="settings_title">तुमच्या मनःशांतीसाठी</string>
+    <string name="settings_body">सोपे पर्याय, प्रामाणिक मर्यादा आणि अचानक प्रवेश नाही.</string>
+    <string name="language_label">अ‍ॅप भाषा</string>
+    <string name="back">मागे</string>
+    <string name="cancel">आता नको</string>
+
+    <string name="voice_button">आवाजाने सांगा</string>
+    <string name="voice_title">काय झाले ते सांगा</string>
+    <string name="voice_body">तुमच्या स्वतःच्या शब्दांत बोला किंवा टाइप करा. त्यांनी काय करायला सांगितले, कसे संपर्क केला आणि पैसे पाठवले का ते सांगा.</string>
+    <string name="start_listening">बोलायला सुरुवात करा</string>
+    <string name="check_situation">ही परिस्थिती तपासा</string>
+    <string name="safe_next_steps">सुरक्षित पुढील पावले</string>
+    <string name="safe_step_1">संपर्क थांबवा; लिंकवर टॅप करू नका किंवा OTP, CVV, UPI PIN किंवा पासवर्ड शेअर करू नका.</string>
+    <string name="safe_step_2">संस्थेच्या अधिकृत वेबसाइट, अ‍ॅप किंवा क्रमांकाद्वारे पडताळणी करा — संदेशातील तपशील नव्हे.</string>
+    <string name="safe_step_3">पैसे पाठवले असल्यास, लगेच बँकेशी संपर्क साधा आणि भारताच्या सायबर फसवणूक हेल्पलाइन 1930 वर कॉल करा.</string>
+    <string name="call_1930">1930 सायबर हेल्पलाइनवर कॉल करा</string>
+    <string name="report_cybercrime">अधिकृत तक्रार पोर्टल उघडा</string>
+
+    <string name="permissions_label">परवानग्या &amp; प्रवेश</string>
+    <string name="notifications_title">सूचना</string>
+    <string name="microphone_title">मायक्रोफोन</string>
+    <string name="calendar_title">कॅलेंडर</string>
+    <string name="messages_title">संदेश सूचना</string>
+    <string name="allowed">परवानगी आहे</string>
+    <string name="not_required">आवश्यक नाही</string>
+    <string name="on_status">चालू</string>
+    <string name="off_status">बंद</string>
+
+    <string name="safety_tools_title">भारतासाठी सुरक्षा साधने</string>
+    <string name="safety_tools_body">संशयास्पद परिस्थिती आवाजाने सांगा किंवा टाइप करा, इशाऱ्याची चिन्हे पाहा आणि अधिकृत तक्रार मार्गांवर लवकर पोहोचा.</string>
+    <string name="open_voice_check">परिस्थिती वर्णन करा</string>
+    <string name="open_checker">क्रमांक किंवा लिंक तपासा</string>
+    <string name="open_panic">माझी फसवणूक झाली आहे</string>
+    <string name="ask_trusted_button">विश्वासू व्यक्तीला विचारा</string>
+
+    <string name="panic_eyebrow">आणीबाणी मदत</string>
+    <string name="panic_title">लवकर आणि सुरक्षितपणे कृती करूया</string>
+    <string name="panic_body">आताच ही पावले उचला. शांतपणे लवकर कृती केल्याने नुकसान कमी होते.</string>
+    <string name="panic_steps_label">आताच हे करा</string>
+    <string name="panic_step_1">सर्व संपर्क थांबवा. आणखी पैसे देऊ नका, OTP शेअर करू नका, त्यांनी सांगितलेले कोणतेही अ‍ॅप इंस्टॉल करू नका.</string>
+    <string name="panic_step_2">पैसे पाठवले असल्यास, लगेच बँकेला कॉल करा आणि कार्ड किंवा UPI ब्लॉक करा.</string>
+    <string name="panic_step_3">तक्रार करण्यासाठी भारताच्या सायबर फसवणूक हेल्पलाइन 1930 वर कॉल करा.</string>
+    <string name="panic_step_4">सर्व तपशीलांसह cybercrime.gov.in वर तक्रार नोंदवा.</string>
+    <string name="panic_step_5">कोणताही पासवर्ड किंवा UPI PIN शेअर केला असल्यास बदला आणि विश्वासू व्यक्तीला सांगा.</string>
+
+    <string name="checker_eyebrow">क्रमांक &amp; लिंक तपासणी</string>
+    <string name="checker_title">संशयास्पद क्रमांक किंवा लिंक तपासा</string>
+    <string name="checker_body">फोन क्रमांक किंवा लिंक पेस्ट करा. NextMove ते तुमच्या फोनवर सामान्य फसवणूक नमुन्यांसाठी तपासते.</string>
+    <string name="checker_hint">क्रमांक किंवा लिंक पेस्ट करा…</string>
+    <string name="checker_check">तपासा</string>
+    <string name="checker_high_title">हे धोकादायक दिसते</string>
+    <string name="checker_low_title">ठळक धोक्याची चिन्हे आढळली नाहीत</string>
+    <string name="report_scam_button">याची फसवणूक म्हणून तक्रार करा</string>
+
+    <string name="tip_of_week_label">या आठवड्याची फसवणूक</string>
+    <string name="tip_read_more">अधिक वाचा</string>
+    <string name="tip_show_another">आणखी एक टिप दाखवा</string>
+
+    <string name="scan_card_on_title">संदेश सुरक्षा चालू आहे</string>
+    <string name="scan_card_off_title">संदेश सुरक्षा चालू करा</string>
+    <string name="scan_enable_button">सुरक्षा चालू करा</string>
+    <string name="scan_manage">व्यवस्थापित करा</string>
+
+    <string name="setup_title">NextMove सेट करा</string>
+    <string name="setup_body">NextMove तुमचे संरक्षण आणि आठवण करून देण्यासाठी तीन झटपट परवानग्या. या नंतर सेटिंग्जमध्ये बदलता येतात.</string>
+    <string name="setup_continue_button">सुरू ठेवा</string>
+    <string name="setup_skip_button">आता वगळा</string>
+
+    <string name="trial_banner_upgrade">अपग्रेड</string>
+    <string name="premium_badge">प्रीमियम · सर्व वैशिष्ट्ये अनलॉक</string>
+    <string name="plan_label">तुमचा प्लॅन</string>
+    <string name="plan_trial_status">मोफत ट्रायल — %1$d दिवस बाकी</string>
+    <string name="plan_premium_status">प्रीमियम — सर्व वैशिष्ट्ये अनलॉक</string>
+    <string name="paywall_eyebrow">मोफत ट्रायल संपली</string>
+    <string name="paywall_title">NextMove वापरणे सुरू ठेवण्यासाठी अपग्रेड करा</string>
+    <string name="paywall_body">तुमची 7-दिवसांची मोफत ट्रायल संपली. फसवणूक संरक्षण आणि सर्व वैशिष्ट्ये पुन्हा चालू करण्यासाठी प्रीमियमवर अपग्रेड करा.</string>
+    <string name="premium_price_onetime">प्रीमियम अनलॉक · ₹499 · एकदाच</string>
+    <string name="ad_label">जाहिरात</string>
+
+    <string name="trusted_label">विश्वासू संपर्क</string>
+    <string name="trusted_body">एक विश्वासू व्यक्ती जोडा. काही फसवणूक वाटल्यास, एका टॅपमध्ये त्यांना कळवा.</string>
+    <string name="trusted_add">विश्वासू संपर्क जोडा</string>
+    <string name="alert_trusted_named">%1$s ला कळवा</string>
+
+    <string name="onboard_next">पुढे</string>
+    <string name="onboard_get_started">सुरू करा</string>
+    <string name="onboard_skip">वगळा</string>
+    <string name="onboard1_title">काळजीचे एका स्पष्ट पावलात रूपांतर करा</string>
+    <string name="onboard2_title">स्वयंचलित फसवणूक संरक्षण</string>
+    <string name="onboard3_title">खाजगी आणि प्रामाणिक</string>
+
+    <string name="version">प्रोटोटाइप 0.11.0 · Android</string>
+</resources>
