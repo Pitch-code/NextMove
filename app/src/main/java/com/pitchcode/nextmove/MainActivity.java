@@ -34,6 +34,10 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 import com.pitchcode.nextmove.billing.BillingManager;
 import com.pitchcode.nextmove.data.FlaggedStore;
 import com.pitchcode.nextmove.data.HistoryStore;
@@ -119,6 +123,8 @@ public final class MainActivity extends Activity implements BillingManager.Liste
     private boolean returningFromListenerSettings;
     private boolean launchPermissionsAsked;
     private BillingManager billing;
+    private AdView adView;
+    private static final String TEST_BANNER_UNIT = "ca-app-pub-3940256099942544/6300978111";
 
     @Override
     protected void attachBaseContext(Context newBase) {
@@ -144,6 +150,11 @@ public final class MainActivity extends Activity implements BillingManager.Liste
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         applyTheme();
+        try {
+            MobileAds.initialize(this, status -> { });
+        } catch (Throwable adsInitFailure) {
+            // Never let the ads SDK stop the app from launching.
+        }
         NotificationHelper.createChannel(this);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
@@ -173,6 +184,10 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         handler.removeCallbacksAndMessages(null);
         destroySpeechRecognizer();
         if (billing != null) billing.end();
+        if (adView != null) {
+            adView.destroy();
+            adView = null;
+        }
         super.onDestroy();
     }
 
@@ -464,7 +479,7 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         body.addView(buildSafetyToolsCard(), Design.match());
         if (!PlanState.isPremium(this)) {
             body.addView(Design.space(this, 14));
-            body.addView(buildAdPlaceholder(), Design.match());
+            body.addView(buildAdBanner(), Design.match());
         }
         showScreen(scroll, 0, ScreenState.of(Screen.HOME));
     }
@@ -1605,16 +1620,11 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         body.addView(Design.space(this, 16));
 
         if (!premium) {
-            TextView monthly = Design.button(this, getString(R.string.premium_price_monthly),
+            TextView buy = Design.button(this, getString(R.string.premium_price_onetime),
                     Design.SAFFRON, Design.INK);
-            monthly.setId(R.id.plan_upgrade);
-            monthly.setOnClickListener(view -> startPurchase(BillingManager.MONTHLY));
-            body.addView(monthly, Design.match());
-            body.addView(Design.space(this, 9));
-            TextView yearly = Design.button(this, getString(R.string.premium_price_yearly),
-                    Design.INK, Design.ON_INK);
-            yearly.setOnClickListener(view -> startPurchase(BillingManager.YEARLY));
-            body.addView(yearly, Design.match());
+            buy.setId(R.id.plan_upgrade);
+            buy.setOnClickListener(view -> startPurchase(BillingManager.PREMIUM));
+            body.addView(buy, Design.match());
             body.addView(Design.space(this, 10));
             TextView redeem = Design.button(this, getString(R.string.family_redeem_button),
                     Color.TRANSPARENT, Design.INK);
@@ -1737,22 +1747,31 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         return strip;
     }
 
-    private View buildAdPlaceholder() {
+    private View buildAdBanner() {
         LinearLayout card = Design.column(this);
-        card.setPadding(Design.dp(this, 16), Design.dp(this, 18),
-                Design.dp(this, 16), Design.dp(this, 18));
+        card.setPadding(Design.dp(this, 12), Design.dp(this, 12),
+                Design.dp(this, 12), Design.dp(this, 12));
         card.setBackground(Design.outlined(Design.AD_BG, Design.SOFT, 16, this));
         card.setGravity(Gravity.CENTER);
-        TextView tag = Design.text(this, getString(R.string.ad_placeholder_label), 10,
-                Design.MUTED, true);
+        TextView tag = Design.text(this, getString(R.string.ad_label), 10, Design.MUTED, true);
         tag.setLetterSpacing(0.12f);
         tag.setGravity(Gravity.CENTER);
         card.addView(tag, Design.match());
-        card.addView(Design.space(this, 4));
-        TextView body = Design.text(this, getString(R.string.ad_placeholder_body), 12,
-                Design.MUTED, false);
-        body.setGravity(Gravity.CENTER);
-        card.addView(body, Design.match());
+        card.addView(Design.space(this, 6));
+        try {
+            if (adView != null) adView.destroy();
+            adView = new AdView(this);
+            adView.setAdUnitId(TEST_BANNER_UNIT);
+            adView.setAdSize(AdSize.BANNER);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            params.gravity = Gravity.CENTER;
+            card.addView(adView, params);
+            adView.loadAd(new AdRequest.Builder().build());
+        } catch (Throwable adFailure) {
+            card.addView(Design.text(this, getString(R.string.ad_placeholder_body), 12,
+                    Design.MUTED, false));
+        }
         return card;
     }
 

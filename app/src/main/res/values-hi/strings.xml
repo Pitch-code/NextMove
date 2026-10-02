@@ -61,7 +61,7 @@
     <string name="privacy_point_3">एक्टिविटी इसी डिवाइस पर रहती है</string>
     <string name="accuracy_label">सटीकता का वादा</string>
     <string name="accuracy_body" formatted="false">भविष्य का AI वर्ज़न सबूत दिखाएगा और ज़रूरी जानकारी की पुष्टि माँगेगा। यह कभी 100% सटीकता का दावा नहीं करेगा।</string>
-    <string name="version">प्रोटोटाइप 0.8.0 · Android</string>
+    <string name="version">प्रोटोटाइप 0.9.0 · Android</string>
     <string name="import_not_live_title">इमेज सुरक्षित रूप से चुनी गई</string>
     <string name="import_not_live_body">इस मुफ़्त प्रोटोटाइप में क्लाउड विश्लेषण जानबूझकर नहीं जोड़ा गया है। अनुभव देखने के लिए नमूना नतीजा खोलें।</string>
     <string name="preview_result">नमूना नतीजा देखें</string>
@@ -241,7 +241,7 @@
     <string name="paywall_premium_title">आप प्रीमियम पर हैं</string>
     <string name="paywall_premium_body">सभी फ़ीचर अनलॉक हैं और विज्ञापन बंद हैं। NextMove का साथ देने के लिए धन्यवाद।</string>
     <string name="paywall_plan_name">NextMove प्रीमियम</string>
-    <string name="paywall_plan_price">प्रोटोटाइप — इस डेमो बिल्ड में कोई असली शुल्क नहीं</string>
+    <string name="paywall_plan_price">₹499 · एक बार का भुगतान · 5 फ़ैमिली फ़ोन तक</string>
     <string name="paywall_benefit_1">स्कैम मैसेज स्कैनिंग चालू रहती है</string>
     <string name="paywall_benefit_2">आवाज़ और टेक्स्ट सुरक्षा जाँच</string>
     <string name="paywall_benefit_3">कोई विज्ञापन नहीं</string>
@@ -374,12 +374,12 @@
     <string name="family_joined_toast">फ़ैमिली प्लान से जुड़ गए — प्रीमियम अनलॉक (डेमो)।</string>
 
     <!-- बिलिंग / मूल्य -->
-    <string name="premium_price_monthly">सब्सक्राइब करें · ₹59 / माह</string>
-    <string name="premium_price_yearly">सालाना · ₹499 · सबसे अच्छा मूल्य</string>
-    <string name="paywall_billing_note">भुगतान Google Play के ज़रिए सुरक्षित रूप से होता है। असली खरीद स्क्रीन तब दिखेगी जब NextMove Play Store पर पब्लिश होगा — यह प्रोटोटाइप अभी भुगतान नहीं ले सकता।</string>
+    <string name="premium_price_onetime">प्रीमियम अनलॉक करें · ₹499 · एक बार</string>
+    <string name="ad_label">विज्ञापन</string>
+    <string name="paywall_billing_note">भुगतान Google Play के ज़रिए एक बार के भुगतान के रूप में सुरक्षित रूप से होता है। असली खरीद स्क्रीन तब दिखेगी जब NextMove Play Store पर पब्लिश होगा — यह प्रोटोटाइप अभी भुगतान नहीं ले सकता।</string>
     <string name="billing_cancelled">खरीद रद्द की गई।</string>
     <string name="billing_purchased">प्रीमियम अनलॉक हो गया। धन्यवाद!</string>
     <string name="billing_error">Google Play बिलिंग में कुछ गड़बड़ी हुई। कृपया फिर से कोशिश करें।</string>
-    <string name="billing_unavailable">प्रीमियम अभी खरीद के लिए उपलब्ध नहीं है। यह तब सक्रिय होगा जब NextMove सब्सक्रिप्शन के साथ Play Store पर पब्लिश होगा।</string>
+    <string name="billing_unavailable">प्रीमियम अभी खरीद के लिए उपलब्ध नहीं है। यह तब सक्रिय होगा जब NextMove एक बार के प्रोडक्ट के साथ Play Store पर पब्लिश होगा।</string>
     <string name="recheck_permissions">अनुमतियाँ फिर जाँचें</string>
 </resources>

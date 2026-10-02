@@ -17,23 +17,21 @@ import com.android.billingclient.api.QueryPurchasesParams;
 
 import com.pitchcode.nextmove.data.PlanState;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Wraps the Google Play Billing client for the Premium subscription.
+ * Wraps Google Play Billing for a single one-time (lifetime) Premium purchase.
  *
- * The subscription products must be created in the Play Console with the IDs
- * below, and the app must be distributed through Google Play for a real purchase
- * dialog to appear. In a sideloaded or unpublished build the client connects but
- * reports the products as unavailable, which {@link Listener} surfaces to the UI.
+ * The in-app product must be created in the Play Console with the ID below, and
+ * the app must be distributed through Google Play for a real purchase dialog to
+ * appear. In a sideloaded or unpublished build the client connects but reports
+ * the product as unavailable, which {@link Listener} surfaces to the UI.
  */
 public final class BillingManager {
-    public static final String MONTHLY = "nextmove_premium_monthly";
-    public static final String YEARLY = "nextmove_premium_yearly";
+    public static final String PREMIUM = "nextmove_premium_lifetime";
 
     public interface Listener {
         void onBillingState(String state);
@@ -93,11 +91,13 @@ public final class BillingManager {
     }
 
     private void queryProducts() {
-        List<QueryProductDetailsParams.Product> list = new ArrayList<>();
-        list.add(productOf(MONTHLY));
-        list.add(productOf(YEARLY));
+        QueryProductDetailsParams.Product product = QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(PREMIUM)
+                .setProductType(BillingClient.ProductType.INAPP)
+                .build();
         client.queryProductDetailsAsync(
-                QueryProductDetailsParams.newBuilder().setProductList(list).build(),
+                QueryProductDetailsParams.newBuilder()
+                        .setProductList(Collections.singletonList(product)).build(),
                 (result, details) -> {
                     products.clear();
                     if (details != null) {
@@ -109,14 +109,7 @@ public final class BillingManager {
                 });
     }
 
-    private QueryProductDetailsParams.Product productOf(String id) {
-        return QueryProductDetailsParams.Product.newBuilder()
-                .setProductId(id)
-                .setProductType(BillingClient.ProductType.SUBS)
-                .build();
-    }
-
-    /** Launches the Play purchase flow. Returns false if billing is not ready. */
+    /** Launches the Play purchase flow for the one-time product. */
     public boolean launch(Activity activity, String productId) {
         if (client == null || !connected) {
             start();
@@ -124,22 +117,14 @@ public final class BillingManager {
             return false;
         }
         ProductDetails details = products.get(productId);
-        if (details == null) {
+        if (details == null || details.getOneTimePurchaseOfferDetails() == null) {
             notifyState("unavailable");
             return false;
         }
-        List<ProductDetails.SubscriptionOfferDetails> offers =
-                details.getSubscriptionOfferDetails();
-        if (offers == null || offers.isEmpty()) {
-            notifyState("unavailable");
-            return false;
-        }
-        String offerToken = offers.get(0).getOfferToken();
         BillingFlowParams params = BillingFlowParams.newBuilder()
                 .setProductDetailsParamsList(Collections.singletonList(
                         BillingFlowParams.ProductDetailsParams.newBuilder()
                                 .setProductDetails(details)
-                                .setOfferToken(offerToken)
                                 .build()))
                 .build();
         client.launchBillingFlow(activity, params);
@@ -149,7 +134,7 @@ public final class BillingManager {
     private void queryExistingPurchases() {
         client.queryPurchasesAsync(
                 QueryPurchasesParams.newBuilder()
-                        .setProductType(BillingClient.ProductType.SUBS).build(),
+                        .setProductType(BillingClient.ProductType.INAPP).build(),
                 (result, purchases) -> {
                     if (purchases != null) {
                         for (Purchase purchase : purchases) handlePurchase(purchase);

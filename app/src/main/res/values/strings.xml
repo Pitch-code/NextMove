@@ -61,7 +61,7 @@
     <string name="privacy_point_3">Activity remains on this device</string>
     <string name="accuracy_label">ACCURACY PROMISE</string>
     <string name="accuracy_body" formatted="false">The future AI version will show evidence and ask you to confirm important details. It will never claim 100% accuracy.</string>
-    <string name="version">Prototype 0.8.0 · Android</string>
+    <string name="version">Prototype 0.9.0 · Android</string>
     <string name="import_not_live_title">Image selected safely</string>
     <string name="import_not_live_body">Cloud analysis is intentionally not connected in this free prototype. Preview a sample result to experience the flow.</string>
     <string name="preview_result">Preview sample result</string>
@@ -241,7 +241,7 @@
     <string name="paywall_premium_title">You’re on Premium</string>
     <string name="paywall_premium_body">All features are unlocked and ads are off. Thank you for supporting NextMove.</string>
     <string name="paywall_plan_name">NextMove Premium</string>
-    <string name="paywall_plan_price">Prototype — no real charge in this demo build</string>
+    <string name="paywall_plan_price">₹499 · one-time payment · covers up to 5 family phones</string>
     <string name="paywall_benefit_1">Scam message scanning stays on</string>
     <string name="paywall_benefit_2">Voice and text safety checks</string>
     <string name="paywall_benefit_3">No ads</string>
@@ -374,12 +374,12 @@
     <string name="family_joined_toast">Joined the family plan — Premium unlocked (demo).</string>
 
     <!-- Billing / pricing -->
-    <string name="premium_price_monthly">Subscribe · ₹59 / month</string>
-    <string name="premium_price_yearly">Yearly · ₹499 · best value</string>
-    <string name="paywall_billing_note">Billed securely through Google Play. The real purchase screen appears once NextMove is published on the Play Store — this prototype cannot take payments yet.</string>
+    <string name="premium_price_onetime">Unlock Premium · ₹499 · one-time</string>
+    <string name="ad_label">SPONSORED</string>
+    <string name="paywall_billing_note">Billed securely through Google Play as a single one-time payment. The real purchase screen appears once NextMove is published on the Play Store — this prototype cannot take payments yet.</string>
     <string name="billing_cancelled">Purchase cancelled.</string>
     <string name="billing_purchased">Premium unlocked. Thank you!</string>
     <string name="billing_error">Something went wrong with Google Play billing. Please try again.</string>
-    <string name="billing_unavailable">Premium is not available for purchase yet. It activates once NextMove is published on the Play Store with the subscription set up.</string>
+    <string name="billing_unavailable">Premium is not available for purchase yet. It activates once NextMove is published on the Play Store with the one-time product set up.</string>
     <string name="recheck_permissions">Re-check permissions</string>
 </resources>
