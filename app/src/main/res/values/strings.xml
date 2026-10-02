@@ -61,7 +61,7 @@
     <string name="privacy_point_3">Activity remains on this device</string>
     <string name="accuracy_label">ACCURACY PROMISE</string>
     <string name="accuracy_body" formatted="false">The future AI version will show evidence and ask you to confirm important details. It will never claim 100% accuracy.</string>
-    <string name="version">Prototype 0.9.0 · Android</string>
+    <string name="version">Prototype 0.10.0 · Android</string>
     <string name="import_not_live_title">Image selected safely</string>
     <string name="import_not_live_body">Cloud analysis is intentionally not connected in this free prototype. Preview a sample result to experience the flow.</string>
     <string name="preview_result">Preview sample result</string>
@@ -372,6 +372,27 @@
     <string name="family_code_hint">Family code (e.g. NM-1234)</string>
     <string name="family_code_empty">Please enter the family code.</string>
     <string name="family_joined_toast">Joined the family plan — Premium unlocked (demo).</string>
+
+    <!-- Scam reputation &amp; trusted contact -->
+    <string name="alert_trusted_named">Alert %1$s</string>
+    <string name="reputation_reported">⚠ Reported %1$d times</string>
+    <string name="reputation_body">This number or link appears in NextMove\'s offline scam list and community reports.</string>
+    <string name="report_scam_button">Report this as a scam</string>
+    <string name="report_scam_toast">Thanks — reported. This helps warn others.</string>
+    <string name="flagged_alert_prefix">A message on my phone looks like a scam. It came from:</string>
+    <string name="trusted_label">TRUSTED CONTACT</string>
+    <string name="trusted_body">Add one trusted person. When something looks like a scam, alert them in one tap.</string>
+    <string name="trusted_add">Add trusted contact</string>
+    <string name="trusted_edit">Edit</string>
+    <string name="trusted_remove">Remove</string>
+    <string name="trusted_alert_toggle">Alert about scam messages</string>
+    <string name="trusted_dialog_title">Trusted contact</string>
+    <string name="trusted_name_hint">Name (e.g. Son, Daughter)</string>
+    <string name="trusted_number_hint">Phone number</string>
+    <string name="trusted_number_required">Please enter a phone number.</string>
+    <string name="trusted_default_name">Trusted contact</string>
+    <string name="trusted_save">Save</string>
+    <string name="trusted_saved">Trusted contact saved.</string>
 
     <!-- Billing / pricing -->
     <string name="premium_price_onetime">Unlock Premium · ₹499 · one-time</string>

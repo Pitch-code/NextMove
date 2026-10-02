@@ -61,7 +61,7 @@
     <string name="privacy_point_3">एक्टिविटी इसी डिवाइस पर रहती है</string>
     <string name="accuracy_label">सटीकता का वादा</string>
     <string name="accuracy_body" formatted="false">भविष्य का AI वर्ज़न सबूत दिखाएगा और ज़रूरी जानकारी की पुष्टि माँगेगा। यह कभी 100% सटीकता का दावा नहीं करेगा।</string>
-    <string name="version">प्रोटोटाइप 0.9.0 · Android</string>
+    <string name="version">प्रोटोटाइप 0.10.0 · Android</string>
     <string name="import_not_live_title">इमेज सुरक्षित रूप से चुनी गई</string>
     <string name="import_not_live_body">इस मुफ़्त प्रोटोटाइप में क्लाउड विश्लेषण जानबूझकर नहीं जोड़ा गया है। अनुभव देखने के लिए नमूना नतीजा खोलें।</string>
     <string name="preview_result">नमूना नतीजा देखें</string>
@@ -372,6 +372,27 @@
     <string name="family_code_hint">फ़ैमिली कोड (जैसे NM-1234)</string>
     <string name="family_code_empty">कृपया फ़ैमिली कोड डालें।</string>
     <string name="family_joined_toast">फ़ैमिली प्लान से जुड़ गए — प्रीमियम अनलॉक (डेमो)।</string>
+
+    <!-- स्कैम प्रतिष्ठा और भरोसेमंद संपर्क -->
+    <string name="alert_trusted_named">%1$s को सूचित करें</string>
+    <string name="reputation_reported">⚠ %1$d बार रिपोर्ट किया गया</string>
+    <string name="reputation_body">यह नंबर या लिंक NextMove की ऑफ़लाइन स्कैम सूची और कम्युनिटी रिपोर्ट में मौजूद है।</string>
+    <string name="report_scam_button">इसे स्कैम के रूप में रिपोर्ट करें</string>
+    <string name="report_scam_toast">धन्यवाद — रिपोर्ट किया गया। इससे दूसरों को चेतावनी मिलती है।</string>
+    <string name="flagged_alert_prefix">मेरे फ़ोन पर एक मैसेज स्कैम जैसा लगता है। यह यहाँ से आया:</string>
+    <string name="trusted_label">भरोसेमंद संपर्क</string>
+    <string name="trusted_body">एक भरोसेमंद व्यक्ति जोड़ें। कुछ स्कैम जैसा लगे तो एक टैप में उन्हें सूचित करें।</string>
+    <string name="trusted_add">भरोसेमंद संपर्क जोड़ें</string>
+    <string name="trusted_edit">बदलें</string>
+    <string name="trusted_remove">हटाएँ</string>
+    <string name="trusted_alert_toggle">स्कैम मैसेज के बारे में सूचित करें</string>
+    <string name="trusted_dialog_title">भरोसेमंद संपर्क</string>
+    <string name="trusted_name_hint">नाम (जैसे बेटा, बेटी)</string>
+    <string name="trusted_number_hint">फ़ोन नंबर</string>
+    <string name="trusted_number_required">कृपया एक फ़ोन नंबर डालें।</string>
+    <string name="trusted_default_name">भरोसेमंद संपर्क</string>
+    <string name="trusted_save">सेव करें</string>
+    <string name="trusted_saved">भरोसेमंद संपर्क सेव हो गया।</string>
 
     <!-- बिलिंग / मूल्य -->
     <string name="premium_price_onetime">प्रीमियम अनलॉक करें · ₹499 · एक बार</string>
