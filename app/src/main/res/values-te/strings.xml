@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tagline">"తర్వాత" నుండి "పూర్తయింది" వరకు.</string>
+    <string name="home_eyebrow">మీ ప్రశాంత చర్య స్థలం</string>
+    <string name="home_title">మీ మనసులో ఏమి ఉంది?</string>
+    <string name="home_body">ఒక స్క్రీన్‌షాట్‌ను షేర్ చేయండి. ముఖ్యమైన దాన్ని NextMove ఒక స్పష్టమైన, సురక్షిత చర్యగా మారుస్తుంది.</string>
+    <string name="share_title">ఒక స్క్రీన్‌షాట్‌ను షేర్ చేయండి</string>
+    <string name="share_body">బిల్లులు, అపాయింట్‌మెంట్లు, రిటర్న్‌లు లేదా అనుమానాస్పద సందేశాలు.</string>
+    <string name="choose_image">ఫోన్ నుండి ఎంచుకోండి</string>
+    <string name="try_sample">లేదా ఒక నమూనాను ప్రయత్నించండి</string>
+    <string name="privacy_short">ముందుగానే గోప్యత</string>
+    <string name="privacy_short_body">స్క్రీన్‌షాట్‌లు మీ ఫోన్‌లోనే ఉంటాయి. వాయిస్ మీ ఫోన్ స్పీచ్ సేవను వాడుతుంది.</string>
+    <string name="today_label">ఈ రోజు</string>
+    <string name="today_title">అత్యవసరం ఏమీ లేదు. ప్రశాంతంగా ఉండండి.</string>
+    <string name="today_body">ఏదైనా వచ్చినప్పుడు, మనసులో మోయడానికి బదులు ఇక్కడ షేర్ చేయండి.</string>
+    <string name="sample_bill">విద్యుత్ బిల్లు</string>
+    <string name="sample_visit">అపాయింట్‌మెంట్</string>
+    <string name="sample_return">రిటర్న్ గడువు</string>
+    <string name="sample_scam">అనుమానాస్పద సందేశం</string>
+    <string name="processing_title">మీ తదుపరి చర్యను కనుగొంటున్నాం…</string>
+    <string name="result_ready">మీ తదుపరి చర్య సిద్ధం</string>
+    <string name="result_summary_label">దీని అర్థం</string>
+    <string name="next_move_label">సిఫార్సు చేసిన తదుపరి చర్య</string>
+    <string name="add_reminder">క్యాలెండర్‌లో జోడించండి</string>
+    <string name="mark_handled">పూర్తయినట్లు గుర్తించండి</string>
+    <string name="home_nav">హోమ్</string>
+    <string name="activity_nav">యాక్టివిటీ</string>
+    <string name="settings_nav">సెట్టింగ్‌లు</string>
+    <string name="activity_title">పూర్తి చేసిన జాబితా</string>
+    <string name="settings_title">మీ మనశ్శాంతి కోసం</string>
+    <string name="settings_body">సులభమైన ఎంపికలు, నిజాయితీ పరిమితులు, ఆకస్మిక యాక్సెస్ లేదు.</string>
+    <string name="language_label">యాప్ భాష</string>
+    <string name="back">వెనుకకు</string>
+    <string name="cancel">ఇప్పుడు కాదు</string>
+
+    <string name="voice_button">వాయిస్‌తో చెప్పండి</string>
+    <string name="voice_title">ఏమి జరిగిందో చెప్పండి</string>
+    <string name="voice_body">మీ స్వంత మాటలలో మాట్లాడండి లేదా టైప్ చేయండి. వారు ఏమి చేయమన్నారు, ఎలా సంప్రదించారు, డబ్బు పంపారా అనేది చెప్పండి.</string>
+    <string name="start_listening">మాట్లాడటం ప్రారంభించండి</string>
+    <string name="check_situation">ఈ పరిస్థితిని తనిఖీ చేయండి</string>
+    <string name="safe_next_steps">సురక్షిత తదుపరి దశలు</string>
+    <string name="safe_step_1">సంప్రదింపు ఆపండి; లింక్‌ను నొక్కవద్దు, OTP, CVV, UPI PIN లేదా పాస్‌వర్డ్‌ను పంచవద్దు.</string>
+    <string name="safe_step_2">సంస్థ అధికారిక వెబ్‌సైట్, యాప్ లేదా నంబర్ ద్వారా ధృవీకరించండి — సందేశంలోని వివరాలను నమ్మవద్దు.</string>
+    <string name="safe_step_3">డబ్బు పంపి ఉంటే, వెంటనే బ్యాంకును సంప్రదించి భారత సైబర్ మోసం హెల్ప్‌లైన్ 1930కి కాల్ చేయండి.</string>
+    <string name="call_1930">1930 సైబర్ హెల్ప్‌లైన్‌కు కాల్ చేయండి</string>
+    <string name="report_cybercrime">అధికారిక ఫిర్యాదు పోర్టల్‌ను తెరవండి</string>
+
+    <string name="permissions_label">అనుమతులు &amp; యాక్సెస్</string>
+    <string name="notifications_title">నోటిఫికేషన్‌లు</string>
+    <string name="microphone_title">మైక్రోఫోన్</string>
+    <string name="calendar_title">క్యాలెండర్</string>
+    <string name="messages_title">సందేశ హెచ్చరికలు</string>
+    <string name="allowed">అనుమతించబడింది</string>
+    <string name="not_required">అవసరం లేదు</string>
+    <string name="on_status">ఆన్</string>
+    <string name="off_status">ఆఫ్</string>
+
+    <string name="safety_tools_title">భారతదేశం కోసం భద్రతా సాధనాలు</string>
+    <string name="safety_tools_body">అనుమానాస్పద పరిస్థితిని వాయిస్‌తో చెప్పండి లేదా టైప్ చేయండి, హెచ్చరిక సంకేతాలను చూడండి, అధికారిక ఫిర్యాదు మార్గాలను వేగంగా చేరుకోండి.</string>
+    <string name="open_voice_check">ఒక పరిస్థితిని వివరించండి</string>
+    <string name="open_checker">నంబర్ లేదా లింక్‌ను తనిఖీ చేయండి</string>
+    <string name="open_panic">నేను మోసానికి గురయ్యాను</string>
+    <string name="ask_trusted_button">నమ్మకమైన వ్యక్తిని అడగండి</string>
+
+    <string name="panic_eyebrow">అత్యవసర సహాయం</string>
+    <string name="panic_title">వేగంగా, సురక్షితంగా చర్య తీసుకుందాం</string>
+    <string name="panic_body">ఇప్పుడే ఈ దశలను అనుసరించండి. ప్రశాంతంగా వేగంగా చర్య తీసుకోవడం నష్టాన్ని తగ్గిస్తుంది.</string>
+    <string name="panic_steps_label">ఇప్పుడే ఇది చేయండి</string>
+    <string name="panic_step_1">అన్ని సంప్రదింపులను ఆపండి. మరింత డబ్బు ఇవ్వవద్దు, OTP పంచవద్దు, వారు చెప్పే ఏ యాప్‌ను ఇన్‌స్టాల్ చేయవద్దు.</string>
+    <string name="panic_step_2">డబ్బు పంపి ఉంటే, వెంటనే బ్యాంకుకు కాల్ చేసి కార్డు లేదా UPIని బ్లాక్ చేయండి.</string>
+    <string name="panic_step_3">ఫిర్యాదు చేయడానికి భారత సైబర్ మోసం హెల్ప్‌లైన్ 1930కి కాల్ చేయండి.</string>
+    <string name="panic_step_4">అన్ని వివరాలతో cybercrime.gov.in లో ఫిర్యాదు నమోదు చేయండి.</string>
+    <string name="panic_step_5">ఏదైనా పాస్‌వర్డ్ లేదా UPI PIN పంచి ఉంటే మార్చండి, నమ్మకమైన వ్యక్తికి చెప్పండి.</string>
+
+    <string name="checker_eyebrow">నంబర్ &amp; లింక్ తనిఖీ</string>
+    <string name="checker_title">అనుమానాస్పద నంబర్ లేదా లింక్‌ను తనిఖీ చేయండి</string>
+    <string name="checker_body">ఫోన్ నంబర్ లేదా లింక్‌ను పేస్ట్ చేయండి. NextMove దాన్ని మీ ఫోన్‌లో సాధారణ మోసం నమూనాల కోసం తనిఖీ చేస్తుంది.</string>
+    <string name="checker_hint">నంబర్ లేదా లింక్‌ను పేస్ట్ చేయండి…</string>
+    <string name="checker_check">తనిఖీ చేయండి</string>
+    <string name="checker_high_title">ఇది ప్రమాదకరంగా కనిపిస్తోంది</string>
+    <string name="checker_low_title">బలమైన ప్రమాద సంకేతాలు కనిపించలేదు</string>
+    <string name="report_scam_button">దీన్ని మోసంగా ఫిర్యాదు చేయండి</string>
+
+    <string name="tip_of_week_label">ఈ వారం మోసం</string>
+    <string name="tip_read_more">మరింత చదవండి</string>
+    <string name="tip_show_another">మరో చిట్కాను చూపించండి</string>
+
+    <string name="scan_card_on_title">సందేశ భద్రత ఆన్‌లో ఉంది</string>
+    <string name="scan_card_off_title">సందేశ భద్రతను ఆన్ చేయండి</string>
+    <string name="scan_enable_button">భద్రతను ఆన్ చేయండి</string>
+    <string name="scan_manage">నిర్వహించండి</string>
+
+    <string name="setup_title">NextMoveను సెటప్ చేయండి</string>
+    <string name="setup_body">NextMove మిమ్మల్ని రక్షించడానికి, గుర్తు చేయడానికి మూడు త్వరిత అనుమతులు. వీటిని తర్వాత సెట్టింగ్‌లలో మార్చవచ్చు.</string>
+    <string name="setup_continue_button">కొనసాగించండి</string>
+    <string name="setup_skip_button">ప్రస్తుతానికి దాటవేయండి</string>
+
+    <string name="trial_banner_upgrade">అప్‌గ్రేడ్</string>
+    <string name="premium_badge">ప్రీమియం · అన్ని ఫీచర్లు అన్‌లాక్</string>
+    <string name="plan_label">మీ ప్లాన్</string>
+    <string name="plan_trial_status">ఉచిత ట్రయల్ — %1$d రోజులు మిగిలి ఉన్నాయి</string>
+    <string name="plan_premium_status">ప్రీమియం — అన్ని ఫీచర్లు అన్‌లాక్</string>
+    <string name="paywall_eyebrow">ఉచిత ట్రయల్ ముగిసింది</string>
+    <string name="paywall_title">NextMoveను కొనసాగించడానికి అప్‌గ్రేడ్ చేయండి</string>
+    <string name="paywall_body">మీ 7-రోజుల ఉచిత ట్రయల్ ముగిసింది. మోసం రక్షణ, అన్ని ఫీచర్లను తిరిగి ఆన్ చేయడానికి ప్రీమియంకు అప్‌గ్రేడ్ చేయండి.</string>
+    <string name="premium_price_onetime">ప్రీమియం అన్‌లాక్ · ₹499 · ఒకేసారి</string>
+    <string name="ad_label">ప్రకటన</string>
+
+    <string name="trusted_label">నమ్మకమైన సంప్రదింపు</string>
+    <string name="trusted_body">ఒక నమ్మకమైన వ్యక్తిని జోడించండి. ఏదైనా మోసంలా కనిపిస్తే, ఒకే ట్యాప్‌తో వారికి తెలియజేయండి.</string>
+    <string name="trusted_add">నమ్మకమైన సంప్రదింపును జోడించండి</string>
+    <string name="alert_trusted_named">%1$sకు తెలియజేయండి</string>
+
+    <string name="onboard_next">తదుపరి</string>
+    <string name="onboard_get_started">ప్రారంభించండి</string>
+    <string name="onboard_skip">దాటవేయండి</string>
+    <string name="onboard1_title">ఆందోళనను ఒక స్పష్టమైన దశగా మార్చండి</string>
+    <string name="onboard2_title">ఆటోమేటిక్ మోసం రక్షణ</string>
+    <string name="onboard3_title">వ్యక్తిగతం మరియు నిజాయితీ</string>
+
+    <string name="version">ప్రోటోటైప్ 0.11.0 · Android</string>
+</resources>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tagline">"பின்பு" என்பதிலிருந்து "முடிந்தது" வரை.</string>
+    <string name="home_eyebrow">உங்கள் அமைதியான செயல் இடம்</string>
+    <string name="home_title">உங்கள் மனதில் என்ன நிற்கிறது?</string>
+    <string name="home_body">ஒரு ஸ்கிரீன்ஷாட்டைப் பகிரவும். முக்கியமானதை NextMove ஒரு தெளிவான, பாதுகாப்பான செயலாக மாற்றும்.</string>
+    <string name="share_title">ஒரு ஸ்கிரீன்ஷாட்டைப் பகிரவும்</string>
+    <string name="share_body">பில்கள், அப்பாயிண்ட்மென்ட், ரிட்டர்ன் அல்லது சந்தேகமான செய்திகள்.</string>
+    <string name="choose_image">போனிலிருந்து தேர்வு செய்யவும்</string>
+    <string name="try_sample">அல்லது ஒரு மாதிரியை முயலவும்</string>
+    <string name="privacy_short">முன்பே பாதுகாப்பு</string>
+    <string name="privacy_short_body">ஸ்கிரீன்ஷாட்கள் உங்கள் போனில் இருக்கும். குரல் உங்கள் போனின் பேச்சு சேவையைப் பயன்படுத்தும்.</string>
+    <string name="today_label">இன்று</string>
+    <string name="today_title">அவசரம் எதுவும் இல்லை. நிம்மதியாக இருங்கள்.</string>
+    <string name="today_body">ஏதேனும் வந்தால், அதை மனதில் சுமப்பதற்குப் பதிலாக இங்கே பகிரவும்.</string>
+    <string name="sample_bill">மின்சார பில்</string>
+    <string name="sample_visit">அப்பாயிண்ட்மென்ட்</string>
+    <string name="sample_return">ரிட்டர்ன் கெடு</string>
+    <string name="sample_scam">சந்தேகமான செய்தி</string>
+    <string name="processing_title">உங்கள் அடுத்த நடவடிக்கையைக் கண்டறிகிறோம்…</string>
+    <string name="result_ready">உங்கள் அடுத்த நடவடிக்கை தயார்</string>
+    <string name="result_summary_label">இதன் அர்த்தம்</string>
+    <string name="next_move_label">பரிந்துரைக்கப்படும் அடுத்த நடவடிக்கை</string>
+    <string name="add_reminder">கேலெண்டரில் சேர்க்கவும்</string>
+    <string name="mark_handled">முடிந்தது எனக் குறிக்கவும்</string>
+    <string name="home_nav">முகப்பு</string>
+    <string name="activity_nav">செயல்பாடு</string>
+    <string name="settings_nav">அமைப்புகள்</string>
+    <string name="activity_title">முடித்த பட்டியல்</string>
+    <string name="settings_title">உங்கள் மன அமைதிக்காக</string>
+    <string name="settings_body">எளிய தேர்வுகள், நேர்மையான வரம்புகள், திடீர் அணுகல் இல்லை.</string>
+    <string name="language_label">செயலி மொழி</string>
+    <string name="back">பின்</string>
+    <string name="cancel">இப்போது வேண்டாம்</string>
+
+    <string name="voice_button">குரலில் சொல்லுங்கள்</string>
+    <string name="voice_title">என்ன நடந்தது சொல்லுங்கள்</string>
+    <string name="voice_body">உங்கள் சொந்த வார்த்தைகளில் பேசுங்கள் அல்லது தட்டச்சு செய்யுங்கள். அவர்கள் என்ன செய்யச் சொன்னார்கள், எப்படி தொடர்பு கொண்டார்கள், பணம் அனுப்பப்பட்டதா என்பதைக் குறிப்பிடுங்கள்.</string>
+    <string name="start_listening">பேசத் தொடங்குங்கள்</string>
+    <string name="check_situation">இந்த சூழ்நிலையைச் சரிபார்க்கவும்</string>
+    <string name="safe_next_steps">பாதுகாப்பான அடுத்த படிகள்</string>
+    <string name="safe_step_1">தொடர்பை நிறுத்துங்கள்; லிங்க்கைத் தட்டவோ, OTP, CVV, UPI PIN அல்லது கடவுச்சொல்லைப் பகிரவோ வேண்டாம்.</string>
+    <string name="safe_step_2">நிறுவனத்தின் அதிகாரப்பூர்வ வலைதளம், ஆப் அல்லது எண் மூலம் சரிபார்க்கவும் — செய்தியில் உள்ளதை நம்பாதீர்கள்.</string>
+    <string name="safe_step_3">பணம் அனுப்பியிருந்தால், உடனே வங்கியைத் தொடர்பு கொண்டு இந்தியாவின் சைபர் மோசடி ஹெல்ப்லைன் 1930-ஐ அழைக்கவும்.</string>
+    <string name="call_1930">1930 சைபர் ஹெல்ப்லைனை அழைக்கவும்</string>
+    <string name="report_cybercrime">அதிகாரப்பூர்வ புகார் தளத்தைத் திறக்கவும்</string>
+
+    <string name="permissions_label">அனுமதிகள் &amp; அணுகல்</string>
+    <string name="notifications_title">அறிவிப்புகள்</string>
+    <string name="microphone_title">மைக்ரோஃபோன்</string>
+    <string name="calendar_title">கேலெண்டர்</string>
+    <string name="messages_title">செய்தி எச்சரிக்கைகள்</string>
+    <string name="allowed">அனுமதிக்கப்பட்டது</string>
+    <string name="not_required">தேவையில்லை</string>
+    <string name="on_status">ஆன்</string>
+    <string name="off_status">ஆஃப்</string>
+
+    <string name="safety_tools_title">இந்தியாவுக்கான பாதுகாப்பு கருவிகள்</string>
+    <string name="safety_tools_body">சந்தேகமான சூழ்நிலையைக் குரலில் சொல்லுங்கள் அல்லது தட்டச்சு செய்யுங்கள், எச்சரிக்கை அறிகுறிகளைப் பார்க்கவும், அதிகாரப்பூர்வ புகார் வழிகளை விரைவாக அடையவும்.</string>
+    <string name="open_voice_check">ஒரு சூழ்நிலையை விவரிக்கவும்</string>
+    <string name="open_checker">எண் அல்லது லிங்க்கைச் சரிபார்க்கவும்</string>
+    <string name="open_panic">நான் மோசடிக்கு ஆளானேன்</string>
+    <string name="ask_trusted_button">நம்பகமானவரிடம் கேளுங்கள்</string>
+
+    <string name="panic_eyebrow">அவசர உதவி</string>
+    <string name="panic_title">விரைவாகவும் பாதுகாப்பாகவும் செயல்படுவோம்</string>
+    <string name="panic_body">இப்போதே இந்தப் படிகளைப் பின்பற்றுங்கள். அமைதியாக விரைந்து செயல்படுவது சேதத்தைக் குறைக்கும்.</string>
+    <string name="panic_steps_label">இப்போதே இதைச் செய்யுங்கள்</string>
+    <string name="panic_step_1">எல்லா தொடர்பையும் நிறுத்துங்கள். மேலும் பணம் தரவோ, OTP பகிரவோ, அவர்கள் சொல்லும் எந்த ஆப்பையும் நிறுவவோ வேண்டாம்.</string>
+    <string name="panic_step_2">பணம் அனுப்பியிருந்தால், உடனே வங்கியை அழைத்து கார்டு அல்லது UPI-ஐ முடக்குங்கள்.</string>
+    <string name="panic_step_3">புகார் அளிக்க இந்தியாவின் சைபர் மோசடி ஹெல்ப்லைன் 1930-ஐ அழைக்கவும்.</string>
+    <string name="panic_step_4">எல்லா விவரங்களுடனும் cybercrime.gov.in இல் புகார் பதிவு செய்யவும்.</string>
+    <string name="panic_step_5">ஏதேனும் கடவுச்சொல் அல்லது UPI PIN பகிர்ந்திருந்தால் மாற்றுங்கள், நம்பகமானவரிடம் சொல்லுங்கள்.</string>
+
+    <string name="checker_eyebrow">எண் &amp; லிங்க் சரிபார்ப்பு</string>
+    <string name="checker_title">சந்தேகமான எண் அல்லது லிங்க்கைச் சரிபார்க்கவும்</string>
+    <string name="checker_body">ஒரு ஃபோன் எண் அல்லது லிங்க்கை ஒட்டவும். NextMove அதை உங்கள் போனில் பொதுவான மோசடி முறைகளுக்காகச் சரிபார்க்கும்.</string>
+    <string name="checker_hint">எண் அல்லது லிங்க்கை ஒட்டவும்…</string>
+    <string name="checker_check">சரிபார்க்கவும்</string>
+    <string name="checker_high_title">இது அபாயகரமாகத் தெரிகிறது</string>
+    <string name="checker_low_title">வலுவான அபாய அறிகுறிகள் இல்லை</string>
+    <string name="report_scam_button">இதை மோசடி எனப் புகாரளிக்கவும்</string>
+
+    <string name="tip_of_week_label">இந்த வாரத்தின் மோசடி</string>
+    <string name="tip_read_more">மேலும் படிக்கவும்</string>
+    <string name="tip_show_another">மற்றொரு குறிப்பைக் காட்டு</string>
+
+    <string name="scan_card_on_title">செய்தி பாதுகாப்பு இயக்கத்தில் உள்ளது</string>
+    <string name="scan_card_off_title">செய்தி பாதுகாப்பை இயக்கவும்</string>
+    <string name="scan_enable_button">பாதுகாப்பை இயக்கவும்</string>
+    <string name="scan_manage">நிர்வகிக்கவும்</string>
+
+    <string name="setup_title">NextMove-ஐ அமைக்கவும்</string>
+    <string name="setup_body">NextMove உங்களைப் பாதுகாக்கவும் நினைவூட்டவும் மூன்று விரைவு அனுமதிகள். இவற்றை பிறகு அமைப்புகளில் மாற்றலாம்.</string>
+    <string name="setup_continue_button">தொடரவும்</string>
+    <string name="setup_skip_button">இப்போதைக்கு தவிர்க்கவும்</string>
+
+    <string name="trial_banner_upgrade">மேம்படுத்து</string>
+    <string name="premium_badge">பிரீமியம் · எல்லா அம்சங்களும் திறக்கப்பட்டன</string>
+    <string name="plan_label">உங்கள் திட்டம்</string>
+    <string name="plan_trial_status">இலவச சோதனை — %1$d நாட்கள் மீதம்</string>
+    <string name="plan_premium_status">பிரீமியம் — எல்லா அம்சங்களும் திறக்கப்பட்டன</string>
+    <string name="paywall_eyebrow">இலவச சோதனை முடிந்தது</string>
+    <string name="paywall_title">NextMove-ஐ தொடர்ந்து பயன்படுத்த மேம்படுத்தவும்</string>
+    <string name="paywall_body">உங்கள் 7-நாள் இலவச சோதனை முடிந்தது. மோசடி பாதுகாப்பு மற்றும் அனைத்து அம்சங்களையும் மீண்டும் இயக்க பிரீமியத்திற்கு மேம்படுத்தவும்.</string>
+    <string name="premium_price_onetime">பிரீமியம் திறக்கவும் · ₹499 · ஒரே முறை</string>
+    <string name="ad_label">விளம்பரம்</string>
+
+    <string name="trusted_label">நம்பகமான தொடர்பு</string>
+    <string name="trusted_body">ஒரு நம்பகமானவரைச் சேர்க்கவும். ஏதேனும் மோசடி எனத் தோன்றினால், ஒரே தட்டில் அவர்களுக்கு அறிவிக்கவும்.</string>
+    <string name="trusted_add">நம்பகமான தொடர்பைச் சேர்க்கவும்</string>
+    <string name="alert_trusted_named">%1$s-க்கு அறிவிக்கவும்</string>
+
+    <string name="onboard_next">அடுத்து</string>
+    <string name="onboard_get_started">தொடங்குங்கள்</string>
+    <string name="onboard_skip">தவிர்க்கவும்</string>
+    <string name="onboard1_title">கவலையை ஒரு தெளிவான படியாக மாற்றுங்கள்</string>
+    <string name="onboard2_title">தானியங்கி மோசடி பாதுகாப்பு</string>
+    <string name="onboard3_title">தனிப்பட்டது மற்றும் நேர்மையானது</string>
+
+    <string name="version">முன்மாதிரி 0.11.0 · Android</string>
+</resources>

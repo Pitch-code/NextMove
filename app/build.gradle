@@ -10,8 +10,8 @@ android {
         applicationId "com.pitchcode.nextmove"
         minSdk 26
         targetSdk 36
-        versionCode 12
-        versionName "0.10.0"
+        versionCode 13
+        versionName "0.11.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -32,6 +32,9 @@ android {
     lint {
         abortOnError true
         checkReleaseBuilds true
+        // Regional-language files are machine-translated; any missing string
+        // falls back to English at runtime rather than failing the build.
+        disable "MissingTranslation", "ExtraTranslation"
     }
 }
 

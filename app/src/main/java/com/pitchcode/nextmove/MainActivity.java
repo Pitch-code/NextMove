@@ -441,9 +441,9 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         names.addView(Design.text(this, getString(R.string.tagline), 11, Design.MUTED, false));
         row.addView(names, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
 
-        TextView language = Design.chip(this, getString(R.string.language_button), false);
+        TextView language = Design.chip(this, "🌐", false);
         language.setContentDescription(getString(R.string.language_label));
-        language.setOnClickListener(view -> toggleLanguage());
+        language.setOnClickListener(view -> renderSettings());
         row.addView(language);
         return row;
     }
@@ -2435,18 +2435,28 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         Design.card(card, Design.CARD, 21, this);
         card.addView(Design.label(this, getString(R.string.language_label)));
         card.addView(Design.space(this, 12));
-        LinearLayout row = Design.row(this);
-        boolean hindi = currentLanguage().equals("hi");
-        TextView english = Design.chip(this, getString(R.string.english), !hindi);
-        english.setOnClickListener(view -> setLanguage("en"));
-        TextView hindiButton = Design.chip(this, getString(R.string.hindi), hindi);
-        hindiButton.setOnClickListener(view -> setLanguage("hi"));
-        row.addView(english, Design.weight());
-        View gap = new View(this);
-        row.addView(gap, new LinearLayout.LayoutParams(Design.dp(this, 10), 1));
-        row.addView(hindiButton, Design.weight());
-        card.addView(row, Design.match());
+        card.addView(languageRow("en", "English", "hi", "हिंदी", "ta", "தமிழ்"), Design.match());
+        card.addView(Design.space(this, 10));
+        card.addView(languageRow("te", "తెలుగు", "mr", "मराठी", "bn", "বাংলা"), Design.match());
         return card;
+    }
+
+    private View languageRow(String c1, String l1, String c2, String l2, String c3, String l3) {
+        LinearLayout row = Design.row(this);
+        row.addView(langChip(c1, l1), Design.weight());
+        View g1 = new View(this);
+        row.addView(g1, new LinearLayout.LayoutParams(Design.dp(this, 8), 1));
+        row.addView(langChip(c2, l2), Design.weight());
+        View g2 = new View(this);
+        row.addView(g2, new LinearLayout.LayoutParams(Design.dp(this, 8), 1));
+        row.addView(langChip(c3, l3), Design.weight());
+        return row;
+    }
+
+    private TextView langChip(String code, String label) {
+        TextView chip = Design.chip(this, label, currentLanguage().equals(code));
+        chip.setOnClickListener(view -> setLanguage(code));
+        return chip;
     }
 
     private View settingsPermissionsCard() {
@@ -2978,10 +2988,13 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         return text.length() > 4000 ? text.substring(0, 4000) : text;
     }
 
+    private static final java.util.Set<String> SUPPORTED_LANGUAGES =
+            new java.util.HashSet<>(java.util.Arrays.asList("en", "hi", "ta", "te", "mr", "bn"));
+
     private static String savedLanguage(Context context) {
         try {
             String code = HistoryStore.prefs(context).getString(KEY_LANGUAGE, null);
-            if ("en".equals(code) || "hi".equals(code)) return code;
+            if (code != null && SUPPORTED_LANGUAGES.contains(code)) return code;
             if (code != null) {
                 HistoryStore.prefs(context).edit().remove(KEY_LANGUAGE).apply();
             }
@@ -2996,7 +3009,7 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         if (saved != null) return saved;
         String deviceLanguage = getResources().getConfiguration()
                 .getLocales().get(0).getLanguage();
-        return "hi".equals(deviceLanguage) ? "hi" : "en";
+        return SUPPORTED_LANGUAGES.contains(deviceLanguage) ? deviceLanguage : "en";
     }
 
     private void toggleLanguage() {
