@@ -21,6 +21,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NextMove">
 
+        <!-- Google AdMob App ID. This is Google's public TEST App ID so the
+             prototype shows test ads without a real account. Replace it with
+             your own AdMob App ID before publishing to earn revenue. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
