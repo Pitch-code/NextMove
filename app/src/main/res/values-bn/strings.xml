@@ -118,5 +118,8 @@
     <string name="onboard2_title">স্বয়ংক্রিয় প্রতারণা সুরক্ষা</string>
     <string name="onboard3_title">ব্যক্তিগত এবং সৎ</string>
 
-    <string name="version">প্রোটোটাইপ 0.11.0 · Android</string>
+    <string name="sample_custom">নিজের রিমাইন্ডার সেট করুন</string>
+    <string name="reminder_save">রিমাইন্ডার সেভ করুন</string>
+    <string name="activity_reminders_label">আসন্ন রিমাইন্ডার</string>
+    <string name="version">প্রোটোটাইপ 0.12.0 · Android</string>
 </resources>

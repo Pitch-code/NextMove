@@ -11,6 +11,7 @@ import android.os.Build;
 import com.pitchcode.nextmove.MainActivity;
 import com.pitchcode.nextmove.R;
 import com.pitchcode.nextmove.data.FlaggedStore;
+import com.pitchcode.nextmove.data.ReminderStore;
 
 public final class NotificationHelper {
     public static final String CHANNEL_ID = "nextmove_reminders";
@@ -95,6 +96,39 @@ public final class NotificationHelper {
             builder.setPriority(Notification.PRIORITY_HIGH);
         }
         manager.notify((int) item.id, builder.build());
+    }
+
+    /** Posts a user-created reminder (bill, appointment, return, other). */
+    public static void showReminder(Context context, ReminderStore.Item item) {
+        NotificationManager manager = context.getSystemService(NotificationManager.class);
+        if (manager == null || !areEnabled(context)) return;
+
+        Intent launch = new Intent(context, MainActivity.class)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        int code = ReminderReceiver.requestCode(item.id);
+        PendingIntent contentIntent = PendingIntent.getActivity(
+                context, code, launch, pendingFlags());
+
+        StringBuilder body = new StringBuilder();
+        if (!item.detail1.isEmpty()) body.append(item.detail1);
+        if (!item.detail2.isEmpty()) {
+            if (body.length() > 0) body.append(" · ");
+            body.append(item.detail2);
+        }
+        String text = body.length() > 0
+                ? body.toString() : context.getString(R.string.reminder_notification_body);
+
+        Notification.Builder builder = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                ? new Notification.Builder(context, CHANNEL_ID)
+                : new Notification.Builder(context);
+        builder.setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle(context.getString(R.string.reminder_notification_title, item.title))
+                .setContentText(text)
+                .setStyle(new Notification.BigTextStyle().bigText(text))
+                .setContentIntent(contentIntent)
+                .setAutoCancel(true)
+                .setCategory(Notification.CATEGORY_REMINDER);
+        manager.notify(code, builder.build());
     }
 
     private static int pendingFlags() {

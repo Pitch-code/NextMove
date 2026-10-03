@@ -17,6 +17,7 @@ import com.android.billingclient.api.QueryPurchasesParams;
 
 import com.pitchcode.nextmove.data.PlanState;
 
+import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +44,10 @@ public final class BillingManager {
     private final Map<String, ProductDetails> products = new HashMap<>();
     private BillingClient client;
     private boolean connected;
+    private boolean productsLoaded;
+    // A purchase the user asked for before billing finished connecting.
+    private String pendingProductId;
+    private WeakReference<Activity> pendingActivity;
 
     public BillingManager(Context context, Listener listener) {
         this.appContext = context.getApplicationContext();
@@ -76,18 +81,31 @@ public final class BillingManager {
                         queryProducts();
                         queryExistingPurchases();
                     } else {
-                        notifyState("unavailable");
+                        failPending();
                     }
                 }
 
                 @Override
                 public void onBillingServiceDisconnected() {
                     connected = false;
+                    productsLoaded = false;
+                    // Allow the next purchase attempt to reconnect from scratch.
+                    client = null;
+                    failPending();
                 }
             });
         } catch (RuntimeException error) {
-            notifyState("unavailable");
+            client = null;
+            failPending();
         }
+    }
+
+    /** Reports "unavailable" once, and only if the user was waiting on a purchase. */
+    private void failPending() {
+        if (pendingProductId == null) return;
+        pendingProductId = null;
+        pendingActivity = null;
+        notifyState("unavailable");
     }
 
     private void queryProducts() {
@@ -105,21 +123,39 @@ public final class BillingManager {
                             products.put(detail.getProductId(), detail);
                         }
                     }
-                    notifyState(products.isEmpty() ? "unavailable" : "ready");
+                    productsLoaded = true;
+                    String pending = pendingProductId;
+                    Activity activity = pendingActivity == null ? null : pendingActivity.get();
+                    pendingProductId = null;
+                    pendingActivity = null;
+                    if (pending != null) {
+                        if (activity == null || activity.isFinishing()) return;
+                        activity.runOnUiThread(() -> launchNow(activity, pending));
+                    }
                 });
     }
 
-    /** Launches the Play purchase flow for the one-time product. */
-    public boolean launch(Activity activity, String productId) {
-        if (client == null || !connected) {
+    /**
+     * Starts the Play purchase flow. If billing is still connecting, the request is
+     * queued and runs (or reports "unavailable") once the connection finishes.
+     */
+    public void launch(Activity activity, String productId) {
+        if (client == null || !connected || !productsLoaded) {
+            pendingProductId = productId;
+            pendingActivity = new WeakReference<>(activity);
+            notifyState("connecting");
             start();
-            notifyState("unavailable");
-            return false;
+            return;
         }
+        launchNow(activity, productId);
+    }
+
+    private void launchNow(Activity activity, String productId) {
         ProductDetails details = products.get(productId);
-        if (details == null || details.getOneTimePurchaseOfferDetails() == null) {
+        if (client == null || details == null
+                || details.getOneTimePurchaseOfferDetails() == null) {
             notifyState("unavailable");
-            return false;
+            return;
         }
         BillingFlowParams params = BillingFlowParams.newBuilder()
                 .setProductDetailsParamsList(Collections.singletonList(
@@ -127,8 +163,10 @@ public final class BillingManager {
                                 .setProductDetails(details)
                                 .build()))
                 .build();
-        client.launchBillingFlow(activity, params);
-        return true;
+        BillingResult result = client.launchBillingFlow(activity, params);
+        if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) {
+            notifyState("error");
+        }
     }
 
     private void queryExistingPurchases() {

@@ -155,6 +155,60 @@ public final class MainActivityFlowTest {
     }
 
     @Test
+    public void customReminderAsksTypeSpecificQuestionsAndSaves() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit().remove("custom_reminders").apply();
+        try (ActivityScenario<MainActivity> scenario =
+                     ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(activity -> {
+                click(activity, R.id.sample_custom);
+                View form = activity.findViewById(R.id.screen_reminder);
+                assertNotNull(form);
+                // Bill type asks about the amount to pay.
+                assertTrue(containsText(form, "Amount to pay (₹)"));
+
+                ((EditText) activity.findViewById(R.id.reminder_title_input))
+                        .setText("Dentist");
+                click(activity, R.id.reminder_type_appointment);
+                View apptForm = activity.findViewById(R.id.screen_reminder);
+                assertNotNull(apptForm);
+                // Appointment type asks where, and the typed name survives the switch.
+                assertTrue(containsText(apptForm, "Where? (optional)"));
+                assertEquals("Dentist", ((EditText) activity
+                        .findViewById(R.id.reminder_title_input)).getText().toString());
+
+                click(activity, R.id.reminder_save);
+                assertNotNull(activity.findViewById(R.id.screen_activity));
+            });
+        }
+        String stored = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .getString("custom_reminders", "[]");
+        assertTrue("Reminder should be stored", stored.contains("Dentist"));
+    }
+
+    @Test
+    public void messageProtectionCardLivesInSettingsAndAdsShowOnAllTabs() {
+        try (ActivityScenario<MainActivity> scenario =
+                     ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(activity -> {
+                assertNotNull(activity.findViewById(R.id.screen_home));
+                assertNull(activity.findViewById(R.id.settings_scan_card));
+                assertNotNull(activity.findViewById(R.id.ad_banner));
+
+                click(activity, R.id.nav_activity);
+                assertNotNull(activity.findViewById(R.id.screen_activity));
+                assertNotNull(activity.findViewById(R.id.ad_banner));
+
+                click(activity, R.id.nav_settings);
+                assertNotNull(activity.findViewById(R.id.screen_settings));
+                assertNotNull(activity.findViewById(R.id.settings_scan_card));
+                assertNotNull(activity.findViewById(R.id.ad_banner));
+            });
+        }
+    }
+
+    @Test
     public void styledSharedTextAndVoiceDraftSurviveBack() {
         Intent sharedText = new Intent(
                 InstrumentationRegistry.getInstrumentation().getTargetContext(),
