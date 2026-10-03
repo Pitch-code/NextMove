@@ -116,8 +116,11 @@ public final class BillingManager {
         client.queryProductDetailsAsync(
                 QueryProductDetailsParams.newBuilder()
                         .setProductList(Collections.singletonList(product)).build(),
-                (result, details) -> {
+                (result, queryResult) -> {
+                    // Billing Library 8+: the listener receives a result object, not a list.
                     products.clear();
+                    List<ProductDetails> details =
+                            queryResult == null ? null : queryResult.getProductDetailsList();
                     if (details != null) {
                         for (ProductDetails detail : details) {
                             products.put(detail.getProductId(), detail);
@@ -152,16 +155,23 @@ public final class BillingManager {
 
     private void launchNow(Activity activity, String productId) {
         ProductDetails details = products.get(productId);
-        if (client == null || details == null
-                || details.getOneTimePurchaseOfferDetails() == null) {
+        // Billing Library 8+: one-time products expose a list of eligible offers;
+        // the purchase names the offer it is buying.
+        List<ProductDetails.OneTimePurchaseOfferDetails> offers =
+                details == null ? null : details.getOneTimePurchaseOfferDetailsList();
+        if (client == null || details == null || offers == null || offers.isEmpty()) {
             notifyState("unavailable");
             return;
         }
+        BillingFlowParams.ProductDetailsParams.Builder product =
+                BillingFlowParams.ProductDetailsParams.newBuilder()
+                        .setProductDetails(details);
+        String offerToken = offers.get(0).getOfferToken();
+        if (offerToken != null && !offerToken.isEmpty()) {
+            product.setOfferToken(offerToken);
+        }
         BillingFlowParams params = BillingFlowParams.newBuilder()
-                .setProductDetailsParamsList(Collections.singletonList(
-                        BillingFlowParams.ProductDetailsParams.newBuilder()
-                                .setProductDetails(details)
-                                .build()))
+                .setProductDetailsParamsList(Collections.singletonList(product.build()))
                 .build();
         BillingResult result = client.launchBillingFlow(activity, params);
         if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) {
