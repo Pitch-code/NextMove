@@ -121,5 +121,5 @@
     <string name="sample_custom">మీ రిమైండర్‌ను సెట్ చేయండి</string>
     <string name="reminder_save">రిమైండర్‌ను సేవ్ చేయండి</string>
     <string name="activity_reminders_label">రాబోయే రిమైండర్‌లు</string>
-    <string name="version">NextMove 1.0.0 · Android</string>
+    <string name="version">NextMove 1.0.1 · Android</string>
 </resources>
