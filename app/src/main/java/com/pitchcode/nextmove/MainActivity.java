@@ -78,6 +78,7 @@ public final class MainActivity extends Activity implements BillingManager.Liste
     private static final String KEY_HIGH_CONTRAST = "high_contrast";
     private static final String KEY_TEXT_SCALE = "text_scale";
     private static final String CYBERCRIME_URL = "https://cybercrime.gov.in/";
+    static final String PRIVACY_POLICY_URL = "https://pitch-code.github.io/NextMove/privacy.html";
 
     private enum Screen {
         HOME, PROCESSING, RESULT, ACTIVITY, SETTINGS, VOICE, VOICE_RESULT, SETUP, FLAGGED, PAYWALL,
@@ -2115,12 +2116,6 @@ public final class MainActivity extends Activity implements BillingManager.Liste
             buy.setOnClickListener(view -> startPurchase(BillingManager.PREMIUM));
             body.addView(buy, Design.match());
             body.addView(Design.space(this, 10));
-            TextView redeem = Design.button(this, getString(R.string.family_redeem_button),
-                    Color.TRANSPARENT, Design.INK);
-            redeem.setBackground(Design.outlined(Color.TRANSPARENT, Design.INK, 17, this));
-            redeem.setOnClickListener(view -> redeemFamily());
-            body.addView(redeem, Design.match());
-            body.addView(Design.space(this, 10));
             body.addView(Design.text(this, getString(R.string.paywall_billing_note), 11,
                     Design.MUTED, false));
         } else {
@@ -2134,8 +2129,12 @@ public final class MainActivity extends Activity implements BillingManager.Liste
             body.addView(continueButton, Design.match());
         }
 
-        body.addView(Design.space(this, 18));
-        body.addView(buildDemoControls(), Design.match());
+        // Demo controls unlock Premium for free, so they exist only in test (debug)
+        // builds. The Play Store release build never shows them.
+        if (isDebugBuild()) {
+            body.addView(Design.space(this, 18));
+            body.addView(buildDemoControls(), Design.match());
+        }
 
         showScreen(scroll, 0, ScreenState.of(Screen.PAYWALL));
     }
@@ -2816,65 +2815,22 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         if (premium) {
             card.addView(Design.text(this, getString(R.string.plan_premium_status), 16,
                     Design.INK, true));
-            card.addView(Design.space(this, 6));
-            card.addView(Design.text(this, getString(R.string.family_plan_body), 12,
-                    Design.MUTED, false));
-            card.addView(Design.space(this, 12));
-            TextView invite = Design.chip(this, "👥  " + getString(R.string.family_invite_button), true);
-            invite.setOnClickListener(view -> inviteFamily());
-            card.addView(invite, new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         } else {
             int days = PlanState.daysLeft(this);
             card.addView(Design.text(this,
                     getString(R.string.plan_trial_status, days), 16, Design.INK, true));
             card.addView(Design.space(this, 12));
-            LinearLayout row = Design.row(this);
             TextView upgrade = Design.chip(this, getString(R.string.trial_banner_upgrade), true);
             upgrade.setOnClickListener(view -> renderPaywall());
-            row.addView(upgrade);
-            View gap = new View(this);
-            row.addView(gap, new LinearLayout.LayoutParams(Design.dp(this, 10),
-                    ViewGroup.LayoutParams.WRAP_CONTENT));
-            TextView redeem = Design.chip(this, getString(R.string.family_redeem_button), false);
-            redeem.setOnClickListener(view -> redeemFamily());
-            row.addView(redeem);
-            card.addView(row, new LinearLayout.LayoutParams(
+            card.addView(upgrade, new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
         return card;
     }
 
-    private void inviteFamily() {
-        String code = "NM-" + String.format(Locale.ROOT, "%04d",
-                (int) (System.currentTimeMillis() % 10000));
-        shareToTrustedPerson(getString(R.string.family_invite_message, code));
-    }
-
-    private void redeemFamily() {
-        final EditText field = new EditText(this);
-        field.setHint(R.string.family_code_hint);
-        field.setSingleLine(true);
-        int pad = Design.dp(this, 20);
-        field.setPadding(pad, Design.dp(this, 12), pad, Design.dp(this, 12));
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.family_redeem_title)
-                .setMessage(R.string.family_redeem_message)
-                .setView(field)
-                .setNegativeButton(R.string.cancel, null)
-                .setPositiveButton(R.string.family_redeem_confirm, (dialog, which) -> {
-                    String code = field.getText() == null ? "" : field.getText().toString().trim();
-                    if (code.isEmpty()) {
-                        Toast.makeText(this, R.string.family_code_empty, Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    PlanState.setPremium(this, true);
-                    Toast.makeText(this, R.string.family_joined_toast, Toast.LENGTH_SHORT).show();
-                    screenHistory.clear();
-                    currentScreen = null;
-                    renderHome();
-                })
-                .show();
+    /** True for test builds (debug APKs); false for the Play Store release build. */
+    private boolean isDebugBuild() {
+        return (getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0;
     }
 
     private View settingsLanguageCard() {
@@ -3144,6 +3100,18 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         card.addView(checkLine(R.string.privacy_point_2));
         card.addView(Design.space(this, 10));
         card.addView(checkLine(R.string.privacy_point_3));
+        card.addView(Design.space(this, 14));
+        TextView policy = Design.chip(this, getString(R.string.privacy_policy_link), false);
+        policy.setId(R.id.privacy_policy_link);
+        policy.setOnClickListener(view -> {
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL)));
+            } catch (RuntimeException error) {
+                Toast.makeText(this, R.string.open_link_error, Toast.LENGTH_SHORT).show();
+            }
+        });
+        card.addView(policy, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         return card;
     }
 

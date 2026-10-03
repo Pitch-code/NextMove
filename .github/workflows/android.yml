@@ -41,6 +41,9 @@ jobs:
       - name: Build and lint debug app
         run: gradle :app:assembleDebug :app:lintDebug
 
+      - name: Build release bundle (unsigned, proves the Play build compiles and shrinks)
+        run: gradle :app:bundleRelease
+
       - name: Launch smoke test on Android 8
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         with:

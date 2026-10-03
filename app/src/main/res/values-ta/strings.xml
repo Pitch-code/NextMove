@@ -121,5 +121,5 @@
     <string name="sample_custom">உங்கள் நினைவூட்டலை அமைக்கவும்</string>
     <string name="reminder_save">நினைவூட்டலைச் சேமிக்கவும்</string>
     <string name="activity_reminders_label">வரவிருக்கும் நினைவூட்டல்கள்</string>
-    <string name="version">முன்மாதிரி 0.12.0 · Android</string>
+    <string name="version">NextMove 1.0.0 · Android</string>
 </resources>

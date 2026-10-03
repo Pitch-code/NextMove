@@ -1,0 +1,122 @@
+name: Build signed bundle for Google Play
+
+# Manual only. Produces the .aab file you upload in Play Console.
+# It never publishes anything by itself.
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: "Optional. Version code — must be HIGHER than every code already uploaded to Play. Leave blank to use app/build.gradle."
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    name: Signed App Bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Fail early if the signing secrets are missing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.NEXTMOVE_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.NEXTMOVE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.NEXTMOVE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.NEXTMOVE_KEY_PASSWORD }}
+        run: |
+          missing=""
+          [ -n "${KEYSTORE_BASE64:-}" ] || missing="$missing NEXTMOVE_KEYSTORE_BASE64"
+          [ -n "${KEYSTORE_PASSWORD:-}" ] || missing="$missing NEXTMOVE_KEYSTORE_PASSWORD"
+          [ -n "${KEY_ALIAS:-}" ] || missing="$missing NEXTMOVE_KEY_ALIAS"
+          [ -n "${KEY_PASSWORD:-}" ] || missing="$missing NEXTMOVE_KEY_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secrets:$missing — add them under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Android 16 SDK
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "platforms;android-36" \
+            "build-tools;36.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.1.0"
+
+      - name: Optionally override the version code
+        if: ${{ inputs.version_code != '' }}
+        env:
+          VERSION_CODE: ${{ inputs.version_code }}
+        run: |
+          case "$VERSION_CODE" in
+            ''|*[!0-9]*) echo "::error::version_code must be a whole number"; exit 1 ;;
+          esac
+          sed -i -E "s/versionCode [0-9]+/versionCode $VERSION_CODE/" app/build.gradle
+          grep -n "versionCode" app/build.gradle
+
+      - name: Decode the upload keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.NEXTMOVE_KEYSTORE_BASE64 }}
+        run: |
+          # Written outside the workspace and never echoed.
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          test -s "$RUNNER_TEMP/upload.jks"
+
+      - name: Build the signed bundle
+        env:
+          NEXTMOVE_KEYSTORE_PATH: ${{ runner.temp }}/upload.jks
+          NEXTMOVE_KEYSTORE_PASSWORD: ${{ secrets.NEXTMOVE_KEYSTORE_PASSWORD }}
+          NEXTMOVE_KEY_ALIAS: ${{ secrets.NEXTMOVE_KEY_ALIAS }}
+          NEXTMOVE_KEY_PASSWORD: ${{ secrets.NEXTMOVE_KEY_PASSWORD }}
+        run: gradle :app:bundleRelease
+
+      - name: Delete the keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload.jks"
+
+      - name: Confirm the bundle is signed
+        run: |
+          AAB=$(ls app/build/outputs/bundle/release/*.aab)
+          ls -lh "$AAB"
+          if unzip -l "$AAB" | grep -qE "META-INF/.*\.(RSA|DSA|EC)"; then
+            echo "Signature block present."
+          else
+            echo "::error::The bundle is UNSIGNED — Play would reject it."
+            exit 1
+          fi
+          VERSION_CODE=$(grep -oP 'versionCode \K[0-9]+' app/build.gradle)
+          VERSION_NAME=$(grep -oP 'versionName "\K[^"]+' app/build.gradle)
+          mv "$AAB" "app/build/outputs/bundle/release/NextMove-${VERSION_NAME}-vc${VERSION_CODE}.aab"
+
+      - name: Upload the bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextmove-play-bundle
+          path: app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: What to do next
+        run: |
+          {
+            echo "### Bundle ready for Google Play"
+            echo ""
+            echo "1. Scroll down to **Artifacts** and download **nextmove-play-bundle** (a .zip containing the .aab)."
+            echo "2. Unzip it. Upload the .aab in Play Console → NextMove → Test and release → Closed testing → Create release."
+            echo ""
+            echo "Every future upload needs a **higher version code**."
+          } >> "$GITHUB_STEP_SUMMARY"
