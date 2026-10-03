@@ -43,4 +43,20 @@
     <item name="screen_onboarding" type="id" />
     <item name="onboarding_next" type="id" />
     <item name="onboarding_skip" type="id" />
+    <item name="sample_custom" type="id" />
+    <item name="screen_reminder" type="id" />
+    <item name="reminder_type_bill" type="id" />
+    <item name="reminder_type_appointment" type="id" />
+    <item name="reminder_type_return" type="id" />
+    <item name="reminder_type_other" type="id" />
+    <item name="reminder_title_input" type="id" />
+    <item name="reminder_detail1_input" type="id" />
+    <item name="reminder_detail2_input" type="id" />
+    <item name="reminder_date" type="id" />
+    <item name="reminder_time" type="id" />
+    <item name="reminder_save" type="id" />
+    <item name="activity_add_reminder" type="id" />
+    <item name="ad_banner" type="id" />
+    <item name="settings_scan_card" type="id" />
+    <item name="scan_status_action" type="id" />
 </resources>

@@ -118,5 +118,8 @@
     <string name="onboard2_title">स्वयंचलित फसवणूक संरक्षण</string>
     <string name="onboard3_title">खाजगी आणि प्रामाणिक</string>
 
-    <string name="version">प्रोटोटाइप 0.11.0 · Android</string>
+    <string name="sample_custom">तुमचे स्मरणपत्र सेट करा</string>
+    <string name="reminder_save">स्मरणपत्र सेव्ह करा</string>
+    <string name="activity_reminders_label">येणारी स्मरणपत्रे</string>
+    <string name="version">प्रोटोटाइप 0.12.0 · Android</string>
 </resources>

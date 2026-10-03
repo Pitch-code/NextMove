@@ -42,7 +42,9 @@ import com.pitchcode.nextmove.billing.BillingManager;
 import com.pitchcode.nextmove.data.FlaggedStore;
 import com.pitchcode.nextmove.data.HistoryStore;
 import com.pitchcode.nextmove.data.PlanState;
+import com.pitchcode.nextmove.data.ReminderStore;
 import com.pitchcode.nextmove.data.SampleAnalysis;
+import com.pitchcode.nextmove.notifications.ReminderReceiver;
 import com.pitchcode.nextmove.notifications.NotificationHelper;
 import com.pitchcode.nextmove.data.ScamDatabase;
 import com.pitchcode.nextmove.data.ScamTips;
@@ -67,6 +69,7 @@ public final class MainActivity extends Activity implements BillingManager.Liste
     private static final int REQUEST_MICROPHONE = 202;
     private static final int REQUEST_SETUP_NOTIFICATIONS = 203;
     private static final int REQUEST_SETUP_MIC = 204;
+    private static final int REQUEST_REMINDER_NOTIFICATIONS = 205;
     private static final String KEY_LANGUAGE = "language";
     private static final String KEY_NOTIFICATION_REQUESTED = "notification_requested";
     private static final String KEY_SETUP_DONE = "setup_done";
@@ -78,7 +81,7 @@ public final class MainActivity extends Activity implements BillingManager.Liste
 
     private enum Screen {
         HOME, PROCESSING, RESULT, ACTIVITY, SETTINGS, VOICE, VOICE_RESULT, SETUP, FLAGGED, PAYWALL,
-        PANIC, CHECKER, CHECKER_RESULT, TIP, ONBOARDING
+        PANIC, CHECKER, CHECKER_RESULT, TIP, ONBOARDING, REMINDER
     }
 
     private static final class ScreenState {
@@ -125,6 +128,14 @@ public final class MainActivity extends Activity implements BillingManager.Liste
     private boolean returningFromListenerSettings;
     private boolean launchPermissionsAsked;
     private BillingManager billing;
+    // Custom reminder form state (kept while switching type or navigating away).
+    private EditText reminderTitleInput;
+    private EditText reminderDetail1Input;
+    private EditText reminderDetail2Input;
+    private String reminderDraftTitle = "";
+    private String reminderDraftDetail1 = "";
+    private String reminderDraftDetail2 = "";
+    private final Calendar reminderWhen = Calendar.getInstance();
     private AdView adView;
     private static final String TEST_BANNER_UNIT = "ca-app-pub-3940256099942544/6300978111";
 
@@ -158,6 +169,7 @@ public final class MainActivity extends Activity implements BillingManager.Liste
             // Never let the ads SDK stop the app from launching.
         }
         NotificationHelper.createChannel(this);
+        ReminderReceiver.rescheduleAll(this);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                     OnBackInvokedDispatcher.PRIORITY_DEFAULT,
@@ -198,15 +210,23 @@ public final class MainActivity extends Activity implements BillingManager.Liste
     @Override
     public void onBillingState(String state) {
         runOnUiThread(() -> {
-            int message;
+            if (isFinishing()) return;
             switch (state) {
-                case "cancelled" -> message = R.string.billing_cancelled;
-                case "purchased" -> message = R.string.billing_purchased;
-                case "ready" -> message = 0;
-                case "error" -> message = R.string.billing_error;
-                default -> message = R.string.billing_unavailable;
+                case "cancelled" -> Toast.makeText(this, R.string.billing_cancelled,
+                        Toast.LENGTH_SHORT).show();
+                case "purchased" -> Toast.makeText(this, R.string.billing_purchased,
+                        Toast.LENGTH_LONG).show();
+                case "connecting" -> Toast.makeText(this, R.string.billing_connecting,
+                        Toast.LENGTH_SHORT).show();
+                case "error" -> Toast.makeText(this, R.string.billing_error,
+                        Toast.LENGTH_LONG).show();
+                case "unavailable" -> new AlertDialog.Builder(this)
+                        .setTitle(R.string.billing_unavailable_title)
+                        .setMessage(R.string.billing_unavailable)
+                        .setPositiveButton(R.string.billing_ok, null)
+                        .show();
+                default -> { }
             }
-            if (message != 0) Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         });
     }
 
@@ -387,6 +407,9 @@ public final class MainActivity extends Activity implements BillingManager.Liste
             currentScreen = new ScreenState(
                     Screen.VOICE, null, voiceInput.getText().toString());
         }
+        if (currentScreen != null && currentScreen.screen == Screen.REMINDER) {
+            captureReminderDraft();
+        }
         if (currentScreen != null
                 && currentScreen.screen == Screen.CHECKER
                 && next.screen != Screen.CHECKER
@@ -476,13 +499,8 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         body.addView(Design.space(this, 14));
         body.addView(buildTipCard(), Design.match());
         body.addView(Design.space(this, 14));
-        body.addView(buildScanStatusCard(), Design.match());
-        body.addView(Design.space(this, 14));
         body.addView(buildSafetyToolsCard(), Design.match());
-        if (!PlanState.isPremium(this)) {
-            body.addView(Design.space(this, 14));
-            body.addView(buildAdBanner(), Design.match());
-        }
+        addAdIfFree(body);
         showScreen(scroll, 0, ScreenState.of(Screen.HOME));
     }
 
@@ -523,12 +541,32 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         scroll.setClipToPadding(false);
         LinearLayout row = Design.row(this);
         row.setPadding(0, 0, Design.dp(this, 12), 0);
-        addSampleChip(row, SampleAnalysis.Kind.BILL, 0);
-        addSampleChip(row, SampleAnalysis.Kind.VISIT, 1);
-        addSampleChip(row, SampleAnalysis.Kind.RETURN, 2);
-        addSampleChip(row, SampleAnalysis.Kind.SCAM, 3);
+        addCustomReminderChip(row);
+        addSampleChip(row, SampleAnalysis.Kind.BILL, 1);
+        addSampleChip(row, SampleAnalysis.Kind.VISIT, 2);
+        addSampleChip(row, SampleAnalysis.Kind.RETURN, 3);
+        addSampleChip(row, SampleAnalysis.Kind.SCAM, 4);
         scroll.addView(row);
         return scroll;
+    }
+
+    /** First chip in the row: lets the user create a reminder for anything not listed. */
+    private void addCustomReminderChip(LinearLayout row) {
+        TextView chip = Design.chip(this, "＋  " + getString(R.string.sample_custom), false);
+        chip.setId(R.id.sample_custom);
+        chip.setOnClickListener(view -> {
+            view.animate().scaleX(0.96f).scaleY(0.96f).setDuration(70)
+                    .withEndAction(() ->
+                            view.animate().scaleX(1f).scaleY(1f).setDuration(110).start())
+                    .start();
+            startNewReminder(ReminderStore.KIND_BILL);
+        });
+        LinearLayout.LayoutParams params = Design.match();
+        params.setMarginEnd(Design.dp(this, 9));
+        row.addView(chip, params);
+        chip.setAlpha(0f);
+        chip.setTranslationY(Design.dp(this, 10));
+        chip.animate().alpha(1f).translationY(0f).setDuration(280).start();
     }
 
     private void addSampleChip(LinearLayout row, SampleAnalysis.Kind kind, int index) {
@@ -636,8 +674,11 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         card.addView(Design.space(this, 12));
         TextView chip = Design.chip(this,
                 getString(active ? R.string.scan_manage : R.string.scan_enable_button), true);
+        chip.setId(R.id.scan_status_action);
         chip.setOnClickListener(view -> {
-            if (active) renderSettings();
+            // The card now lives in Settings: "Manage" opens the system
+            // Notification Access screen; otherwise guide the user to enable it.
+            if (active) openListenerSettings();
             else promptEnableScan();
         });
         card.addView(chip, new LinearLayout.LayoutParams(
@@ -962,6 +1003,20 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         body.addView(buildSummaryCard(), Design.match());
         body.addView(Design.space(this, 18));
 
+        List<ReminderStore.Item> reminders = ReminderStore.upcoming(this);
+        body.addView(Design.label(this, getString(R.string.activity_reminders_label)));
+        body.addView(Design.space(this, 10));
+        for (ReminderStore.Item reminder : reminders) {
+            body.addView(reminderActivityCard(reminder), Design.match());
+            body.addView(Design.space(this, 10));
+        }
+        TextView addReminder = Design.chip(this, "＋  " + getString(R.string.sample_custom), true);
+        addReminder.setId(R.id.activity_add_reminder);
+        addReminder.setOnClickListener(view -> startNewReminder(ReminderStore.KIND_BILL));
+        body.addView(addReminder, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        body.addView(Design.space(this, 22));
+
         List<FlaggedStore.Item> alerts = FlaggedStore.read(this);
         if (!alerts.isEmpty()) {
             body.addView(Design.label(this, getString(R.string.activity_alerts_label)));
@@ -1015,6 +1070,7 @@ public final class MainActivity extends Activity implements BillingManager.Liste
             body.addView(clear, new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
+        addAdIfFree(body);
         showScreen(scroll, 1, ScreenState.of(Screen.ACTIVITY));
     }
 
@@ -1289,6 +1345,385 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         text.setPadding(Design.dp(this, 11), 0, 0, 0);
         row.addView(text, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         return row;
+    }
+
+    // ---------------------------------------------------------------------
+    // Custom reminders ("Set your own reminder")
+    // ---------------------------------------------------------------------
+
+    /** Field labels/hints for each reminder type: name, detail 1, detail 2, date. */
+    private static final class ReminderForm {
+        final int nameLabel, nameHint, d1Label, d1Hint, d1Short, d2Label, d2Hint, d2Short, dateLabel;
+        final boolean d1Money, d2Money;
+
+        ReminderForm(int nameLabel, int nameHint, int d1Label, int d1Hint, int d1Short,
+                     boolean d1Money, int d2Label, int d2Hint, int d2Short, boolean d2Money,
+                     int dateLabel) {
+            this.nameLabel = nameLabel; this.nameHint = nameHint;
+            this.d1Label = d1Label; this.d1Hint = d1Hint; this.d1Short = d1Short;
+            this.d1Money = d1Money;
+            this.d2Label = d2Label; this.d2Hint = d2Hint; this.d2Short = d2Short;
+            this.d2Money = d2Money;
+            this.dateLabel = dateLabel;
+        }
+
+        static ReminderForm of(int kind) {
+            return switch (kind) {
+                case ReminderStore.KIND_APPOINTMENT -> new ReminderForm(
+                        R.string.rem_appt_name, R.string.rem_appt_name_hint,
+                        R.string.rem_appt_place, R.string.rem_appt_place_hint,
+                        R.string.rem_short_place, false,
+                        R.string.rem_appt_fee, R.string.rem_appt_fee_hint,
+                        R.string.rem_short_notes, false,
+                        R.string.rem_appt_date);
+                case ReminderStore.KIND_RETURN -> new ReminderForm(
+                        R.string.rem_return_name, R.string.rem_return_name_hint,
+                        R.string.rem_return_order, R.string.rem_return_order_hint,
+                        R.string.rem_short_order, false,
+                        R.string.rem_return_amount, R.string.rem_amount_hint,
+                        R.string.rem_short_refund, true,
+                        R.string.rem_return_date);
+                case ReminderStore.KIND_OTHER -> new ReminderForm(
+                        R.string.rem_other_name, R.string.rem_other_name_hint,
+                        R.string.rem_other_notes, R.string.rem_other_notes_hint,
+                        R.string.rem_short_notes, false,
+                        R.string.rem_other_amount, R.string.rem_amount_hint,
+                        R.string.rem_short_amount, true,
+                        R.string.rem_other_date);
+                default -> new ReminderForm(
+                        R.string.rem_bill_name, R.string.rem_bill_name_hint,
+                        R.string.rem_bill_amount, R.string.rem_amount_hint,
+                        R.string.rem_short_amount, true,
+                        R.string.rem_bill_payee, R.string.rem_bill_payee_hint,
+                        R.string.rem_short_payee, false,
+                        R.string.rem_bill_date);
+            };
+        }
+    }
+
+    /** Opens a fresh reminder form (clears any earlier draft). */
+    private void startNewReminder(int kind) {
+        reminderDraftTitle = "";
+        reminderDraftDetail1 = "";
+        reminderDraftDetail2 = "";
+        reminderWhen.setTimeInMillis(System.currentTimeMillis());
+        reminderWhen.add(Calendar.DAY_OF_MONTH, 1);
+        reminderWhen.set(Calendar.HOUR_OF_DAY, 10);
+        reminderWhen.set(Calendar.MINUTE, 0);
+        reminderWhen.set(Calendar.SECOND, 0);
+        reminderWhen.set(Calendar.MILLISECOND, 0);
+        renderReminder(kind);
+    }
+
+    private void captureReminderDraft() {
+        if (reminderTitleInput != null) reminderDraftTitle = reminderTitleInput.getText().toString();
+        if (reminderDetail1Input != null) {
+            reminderDraftDetail1 = reminderDetail1Input.getText().toString();
+        }
+        if (reminderDetail2Input != null) {
+            reminderDraftDetail2 = reminderDetail2Input.getText().toString();
+        }
+    }
+
+    private void renderReminder(int kind) {
+        if (PlanState.isLocked(this)) { renderPaywall(); return; }
+        ReminderForm form = ReminderForm.of(kind);
+        ScrollView scroll = scrollPage();
+        scroll.setId(R.id.screen_reminder);
+        LinearLayout body = pageBody();
+        body.setFocusableInTouchMode(true);
+        body.requestFocus();
+        scroll.addView(body);
+
+        TextView back = Design.chip(this, "‹ " + getString(R.string.back), false);
+        back.setOnClickListener(view -> navigateBack());
+        body.addView(back, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        body.addView(Design.space(this, 22));
+        body.addView(Design.label(this, getString(R.string.reminder_eyebrow)));
+        body.addView(Design.space(this, 8));
+        body.addView(Design.text(this, getString(R.string.reminder_title_screen), 30,
+                Design.INK, true));
+        body.addView(Design.space(this, 8));
+        body.addView(Design.text(this, getString(R.string.reminder_body), 14,
+                Design.MUTED, false));
+        body.addView(Design.space(this, 18));
+
+        // Type picker: changing it swaps the questions below.
+        body.addView(Design.label(this, getString(R.string.reminder_type_label)));
+        body.addView(Design.space(this, 8));
+        LinearLayout typeRow1 = Design.row(this);
+        typeRow1.addView(reminderTypeChip(kind, ReminderStore.KIND_BILL,
+                R.string.reminder_type_bill, R.id.reminder_type_bill), Design.weight());
+        View g1 = new View(this);
+        typeRow1.addView(g1, new LinearLayout.LayoutParams(Design.dp(this, 8), 1));
+        typeRow1.addView(reminderTypeChip(kind, ReminderStore.KIND_APPOINTMENT,
+                R.string.reminder_type_appointment, R.id.reminder_type_appointment),
+                Design.weight());
+        body.addView(typeRow1, Design.match());
+        body.addView(Design.space(this, 8));
+        LinearLayout typeRow2 = Design.row(this);
+        typeRow2.addView(reminderTypeChip(kind, ReminderStore.KIND_RETURN,
+                R.string.reminder_type_return, R.id.reminder_type_return), Design.weight());
+        View g2 = new View(this);
+        typeRow2.addView(g2, new LinearLayout.LayoutParams(Design.dp(this, 8), 1));
+        typeRow2.addView(reminderTypeChip(kind, ReminderStore.KIND_OTHER,
+                R.string.reminder_type_other, R.id.reminder_type_other), Design.weight());
+        body.addView(typeRow2, Design.match());
+        body.addView(Design.space(this, 20));
+
+        reminderTitleInput = reminderField(body, form.nameLabel, form.nameHint,
+                reminderDraftTitle, false, R.id.reminder_title_input);
+        reminderDetail1Input = reminderField(body, form.d1Label, form.d1Hint,
+                reminderDraftDetail1, form.d1Money, R.id.reminder_detail1_input);
+        reminderDetail2Input = reminderField(body, form.d2Label, form.d2Hint,
+                reminderDraftDetail2, form.d2Money, R.id.reminder_detail2_input);
+
+        body.addView(Design.text(this, getString(form.dateLabel), 13, Design.INK, true));
+        body.addView(Design.space(this, 6));
+        LinearLayout whenRow = Design.row(this);
+        TextView date = Design.chip(this, "📅  " + formatReminderDate(reminderWhen), true);
+        date.setId(R.id.reminder_date);
+        date.setOnClickListener(view -> pickReminderDate(kind));
+        whenRow.addView(date, Design.weight());
+        View g3 = new View(this);
+        whenRow.addView(g3, new LinearLayout.LayoutParams(Design.dp(this, 8), 1));
+        TextView time = Design.chip(this, "⏰  " + formatReminderTime(reminderWhen), true);
+        time.setId(R.id.reminder_time);
+        time.setOnClickListener(view -> pickReminderTime(kind));
+        whenRow.addView(time, Design.weight());
+        body.addView(whenRow, Design.match());
+        body.addView(Design.space(this, 22));
+
+        TextView save = Design.button(this, getString(R.string.reminder_save),
+                Design.SAFFRON, Design.INK);
+        save.setId(R.id.reminder_save);
+        save.setOnClickListener(view -> saveReminder(kind));
+        body.addView(save, Design.match());
+        body.addView(Design.space(this, 14));
+        body.addView(Design.text(this, getString(R.string.reminder_note), 11,
+                Design.MUTED, false));
+
+        showScreen(scroll, 0, new ScreenState(Screen.REMINDER, null, null, kind));
+    }
+
+    private TextView reminderTypeChip(int selected, int kind, int labelRes, int id) {
+        TextView chip = Design.chip(this, getString(labelRes), selected == kind);
+        chip.setId(id);
+        chip.setOnClickListener(view -> {
+            if (selected == kind) return;
+            captureReminderDraft();
+            restoringPreviousScreen = true; // replace the form, don't stack it
+            renderReminder(kind);
+            restoringPreviousScreen = false;
+        });
+        return chip;
+    }
+
+    private EditText reminderField(LinearLayout body, int labelRes, int hintRes, String value,
+                                   boolean money, int id) {
+        body.addView(Design.text(this, getString(labelRes), 13, Design.INK, true));
+        body.addView(Design.space(this, 6));
+        EditText field = new EditText(this);
+        field.setId(id);
+        field.setTextSize(Design.scaled(15));
+        field.setTextColor(Design.INK);
+        field.setHintTextColor(Design.MUTED);
+        field.setHint(hintRes);
+        field.setSingleLine(true);
+        if (money) {
+            field.setInputType(android.text.InputType.TYPE_CLASS_NUMBER
+                    | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        } else {
+            field.setInputType(android.text.InputType.TYPE_CLASS_TEXT
+                    | android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+        }
+        field.setPadding(Design.dp(this, 16), Design.dp(this, 13),
+                Design.dp(this, 16), Design.dp(this, 13));
+        field.setBackground(Design.outlined(Design.CARD, Design.SOFT, 16, this));
+        if (value != null && !value.isEmpty()) field.setText(value);
+        body.addView(field, Design.match());
+        body.addView(Design.space(this, 14));
+        return field;
+    }
+
+    private void pickReminderDate(int kind) {
+        captureReminderDraft();
+        android.app.DatePickerDialog dialog = new android.app.DatePickerDialog(this,
+                (picker, year, month, day) -> {
+                    reminderWhen.set(Calendar.YEAR, year);
+                    reminderWhen.set(Calendar.MONTH, month);
+                    reminderWhen.set(Calendar.DAY_OF_MONTH, day);
+                    rerenderReminder(kind);
+                },
+                reminderWhen.get(Calendar.YEAR),
+                reminderWhen.get(Calendar.MONTH),
+                reminderWhen.get(Calendar.DAY_OF_MONTH));
+        dialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000L);
+        dialog.show();
+    }
+
+    private void pickReminderTime(int kind) {
+        captureReminderDraft();
+        new android.app.TimePickerDialog(this,
+                (picker, hour, minute) -> {
+                    reminderWhen.set(Calendar.HOUR_OF_DAY, hour);
+                    reminderWhen.set(Calendar.MINUTE, minute);
+                    reminderWhen.set(Calendar.SECOND, 0);
+                    rerenderReminder(kind);
+                },
+                reminderWhen.get(Calendar.HOUR_OF_DAY),
+                reminderWhen.get(Calendar.MINUTE),
+                android.text.format.DateFormat.is24HourFormat(this)).show();
+    }
+
+    private void rerenderReminder(int kind) {
+        if (currentScreen == null || currentScreen.screen != Screen.REMINDER) return;
+        restoringPreviousScreen = true;
+        renderReminder(kind);
+        restoringPreviousScreen = false;
+    }
+
+    private String formatReminderDate(Calendar when) {
+        return DateUtils.formatDateTime(this, when.getTimeInMillis(),
+                DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_ABBREV_MONTH
+                        | DateUtils.FORMAT_SHOW_WEEKDAY | DateUtils.FORMAT_ABBREV_WEEKDAY);
+    }
+
+    private String formatReminderTime(Calendar when) {
+        return DateUtils.formatDateTime(this, when.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME);
+    }
+
+    private String formatReminderWhen(long millis) {
+        return DateUtils.formatDateTime(this, millis,
+                DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_ABBREV_MONTH
+                        | DateUtils.FORMAT_SHOW_TIME);
+    }
+
+    /** "Amount: ₹1,240" — prefixes rupee for money fields. */
+    private String reminderDetail(int shortLabel, String raw, boolean money) {
+        String value = raw == null ? "" : raw.trim();
+        if (value.isEmpty()) return "";
+        if (money && !value.startsWith("₹")) value = "₹" + value;
+        return getString(R.string.reminder_detail_format, getString(shortLabel), value);
+    }
+
+    private void saveReminder(int kind) {
+        captureReminderDraft();
+        ReminderForm form = ReminderForm.of(kind);
+        String title = reminderDraftTitle.trim();
+        if (title.isEmpty()) {
+            Toast.makeText(this, R.string.reminder_name_required, Toast.LENGTH_SHORT).show();
+            if (reminderTitleInput != null) reminderTitleInput.requestFocus();
+            return;
+        }
+        long when = reminderWhen.getTimeInMillis();
+        if (when <= System.currentTimeMillis()) {
+            Toast.makeText(this, R.string.reminder_time_past, Toast.LENGTH_LONG).show();
+            return;
+        }
+        String d1 = reminderDetail(form.d1Short, reminderDraftDetail1, form.d1Money);
+        String d2 = reminderDetail(form.d2Short, reminderDraftDetail2, form.d2Money);
+        ReminderStore.Item item = ReminderStore.add(this, kind, title, d1, d2, when);
+        ReminderReceiver.schedule(this, item);
+
+        InputMethodManager inputMethod = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        if (inputMethod != null && reminderTitleInput != null) {
+            inputMethod.hideSoftInputFromWindow(reminderTitleInput.getWindowToken(), 0);
+        }
+        Toast.makeText(this, getString(R.string.reminder_saved, formatReminderWhen(when)),
+                Toast.LENGTH_LONG).show();
+
+        // Notifications are how the reminder reaches the user.
+        if (!NotificationHelper.areEnabled(this)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        REQUEST_REMINDER_NOTIFICATIONS);
+            } else {
+                Toast.makeText(this, R.string.reminder_notifications_off,
+                        Toast.LENGTH_LONG).show();
+            }
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.reminder_add_calendar_title)
+                .setMessage(R.string.reminder_add_calendar_body)
+                .setNegativeButton(R.string.reminder_add_calendar_no, null)
+                .setPositiveButton(R.string.reminder_add_calendar_yes,
+                        (dialog, which) -> addReminderToCalendar(item))
+                .show();
+        // Show it in the Activity list, replacing the form in the history.
+        restoringPreviousScreen = true;
+        renderActivity();
+        restoringPreviousScreen = false;
+    }
+
+    private void addReminderToCalendar(ReminderStore.Item item) {
+        StringBuilder description = new StringBuilder();
+        if (!item.detail1.isEmpty()) description.append(item.detail1);
+        if (!item.detail2.isEmpty()) {
+            if (description.length() > 0) description.append('\n');
+            description.append(item.detail2);
+        }
+        Intent intent = new Intent(Intent.ACTION_INSERT)
+                .setData(CalendarContract.Events.CONTENT_URI)
+                .putExtra(CalendarContract.Events.TITLE, item.title)
+                .putExtra(CalendarContract.Events.DESCRIPTION, description.toString())
+                .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, item.timeMillis)
+                .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, item.timeMillis + 30 * 60 * 1000L);
+        try {
+            startActivity(Intent.createChooser(intent, getString(R.string.calendar_chooser)));
+        } catch (RuntimeException error) {
+            Toast.makeText(this, R.string.image_picker_unavailable, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private View reminderActivityCard(ReminderStore.Item item) {
+        LinearLayout card = Design.row(this);
+        card.setPadding(Design.dp(this, 15), Design.dp(this, 15),
+                Design.dp(this, 15), Design.dp(this, 15));
+        Design.card(card, Design.CARD, 19, this);
+        String icon = switch (item.kind) {
+            case ReminderStore.KIND_BILL -> "₹";
+            case ReminderStore.KIND_APPOINTMENT -> "🗓";
+            case ReminderStore.KIND_RETURN -> "↩";
+            default -> "⏰";
+        };
+        TextView badge = Design.text(this, icon, 15, Design.INK, true);
+        badge.setGravity(Gravity.CENTER);
+        badge.setBackground(Design.rounded(Design.CREAM, 15, this));
+        card.addView(badge, new LinearLayout.LayoutParams(Design.dp(this, 40), Design.dp(this, 40)));
+        LinearLayout copy = Design.column(this);
+        copy.setPadding(Design.dp(this, 12), 0, Design.dp(this, 8), 0);
+        copy.addView(Design.text(this, item.title, 14, Design.INK, true));
+        copy.addView(Design.text(this, formatReminderWhen(item.timeMillis), 11,
+                Design.MUTED, false));
+        if (!item.detail1.isEmpty()) {
+            copy.addView(Design.text(this, item.detail1, 11, Design.MUTED, false));
+        }
+        if (!item.detail2.isEmpty()) {
+            copy.addView(Design.text(this, item.detail2, 11, Design.MUTED, false));
+        }
+        card.addView(copy, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        card.addView(Design.text(this, "›", 25, Design.MUTED, false));
+        card.setClickable(true);
+        card.setFocusable(true);
+        card.setOnClickListener(view -> new AlertDialog.Builder(this)
+                .setTitle(item.title)
+                .setMessage(R.string.reminder_manage_body)
+                .setNeutralButton(R.string.reminder_delete, (dialog, which) -> {
+                    ReminderReceiver.cancel(this, item.id);
+                    ReminderStore.remove(this, item.id);
+                    Toast.makeText(this, R.string.reminder_deleted, Toast.LENGTH_SHORT).show();
+                    restoringPreviousScreen = true;
+                    renderActivity();
+                    restoringPreviousScreen = false;
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.reminder_add_calendar_yes,
+                        (dialog, which) -> addReminderToCalendar(item))
+                .show());
+        return card;
     }
 
     // ---------------------------------------------------------------------
@@ -1799,6 +2234,15 @@ public final class MainActivity extends Activity implements BillingManager.Liste
             strip.addView(upgrade);
         }
         return strip;
+    }
+
+    /** Adds the banner ad to the bottom of a tab, only for non-premium users. */
+    private void addAdIfFree(LinearLayout body) {
+        if (PlanState.isPremium(this)) return;
+        body.addView(Design.space(this, 14));
+        View ad = buildAdBanner();
+        ad.setId(R.id.ad_banner);
+        body.addView(ad, Design.match());
     }
 
     private View buildAdBanner() {
@@ -2342,6 +2786,10 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         body.addView(Design.space(this, 14));
         body.addView(settingsPermissionsCard(), Design.match());
         body.addView(Design.space(this, 14));
+        View scanCard = buildScanStatusCard();
+        scanCard.setId(R.id.settings_scan_card);
+        body.addView(scanCard, Design.match());
+        body.addView(Design.space(this, 14));
         body.addView(settingsTrustedContactCard(), Design.match());
         body.addView(Design.space(this, 14));
         body.addView(settingsShareSafelyCard(), Design.match());
@@ -2349,6 +2797,7 @@ public final class MainActivity extends Activity implements BillingManager.Liste
         body.addView(settingsPrivacyCard(), Design.match());
         body.addView(Design.space(this, 14));
         body.addView(settingsAccuracyCard(), Design.match());
+        addAdIfFree(body);
         body.addView(Design.space(this, 22));
         TextView version = Design.text(this, getString(R.string.version), 11, Design.MUTED, false);
         version.setGravity(Gravity.CENTER);
@@ -2796,6 +3245,11 @@ public final class MainActivity extends Activity implements BillingManager.Liste
             if (currentScreen != null && currentScreen.screen == Screen.SETTINGS) renderSettings();
         } else if (requestCode == REQUEST_SETUP_NOTIFICATIONS) {
             requestMicIfPending();
+        } else if (requestCode == REQUEST_REMINDER_NOTIFICATIONS) {
+            if (!granted) {
+                Toast.makeText(this, R.string.reminder_notifications_off,
+                        Toast.LENGTH_LONG).show();
+            }
         } else if (requestCode == REQUEST_SETUP_MIC) {
             // Runtime permission chain complete; message-alert access is enabled
             // separately from the Home card because it needs a settings visit.
@@ -2912,6 +3366,7 @@ public final class MainActivity extends Activity implements BillingManager.Liste
             case CHECKER_RESULT -> renderCheckerResult(
                     state.voiceDescription == null ? "" : state.voiceDescription);
             case TIP -> renderTip((int) state.flaggedId);
+            case REMINDER -> renderReminder((int) state.flaggedId);
             case FLAGGED -> renderFlaggedDetail(state.flaggedId);
             case VOICE -> renderVoice(state.voiceDescription);
             case RESULT -> renderResult(SampleAnalysis.of(state.sampleKind));
