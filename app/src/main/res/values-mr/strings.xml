@@ -121,5 +121,5 @@
     <string name="sample_custom">तुमचे स्मरणपत्र सेट करा</string>
     <string name="reminder_save">स्मरणपत्र सेव्ह करा</string>
     <string name="activity_reminders_label">येणारी स्मरणपत्रे</string>
-    <string name="version">NextMove 1.0.1 · Android</string>
+    <string name="version">NextMove 1.0.2 · Android</string>
 </resources>

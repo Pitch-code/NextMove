@@ -60,4 +60,6 @@
     <item name="settings_scan_card" type="id" />
     <item name="scan_status_action" type="id" />
     <item name="privacy_policy_link" type="id" />
+    <item name="brand_mark" type="id" />
+    <item name="reviewer_code_input" type="id" />
 </resources>

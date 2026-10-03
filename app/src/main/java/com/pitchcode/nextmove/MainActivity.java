@@ -455,8 +455,14 @@ public final class MainActivity extends Activity implements BillingManager.Liste
     private View brandHeader() {
         LinearLayout row = Design.row(this);
         TextView mark = Design.text(this, "N↗", 21, Design.INK, true);
+        mark.setId(R.id.brand_mark);
         mark.setGravity(Gravity.CENTER);
         mark.setBackground(Design.rounded(Design.SAFFRON, 15, this));
+        // Hidden entry for the Google Play review team's access code.
+        mark.setOnLongClickListener(view -> {
+            showReviewerAccessDialog();
+            return true;
+        });
         row.addView(mark, new LinearLayout.LayoutParams(Design.dp(this, 48), Design.dp(this, 48)));
 
         LinearLayout names = Design.column(this);
@@ -2826,6 +2832,60 @@ public final class MainActivity extends Activity implements BillingManager.Liste
                     ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
         return card;
+    }
+
+    /**
+     * SHA-256 of the private access code given only to Google Play's review team in
+     * Play Console ("Sign in details"). Only the hash is stored, so the code cannot
+     * be read from this public source code. To rotate: generate a new code, replace
+     * this hash, and update Play Console.
+     */
+    private static final String REVIEWER_CODE_SHA256 =
+            "c628317ec568aa40562ea3e95581f730b650b9063463f715eaa036f8d6c8db24";
+
+    static boolean isReviewerCode(String input) {
+        if (input == null) return false;
+        String normalized = input.trim().toUpperCase(Locale.ROOT);
+        if (normalized.isEmpty()) return false;
+        try {
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(normalized.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
+            for (byte b : digest) hex.append(String.format(Locale.ROOT, "%02x", b));
+            return java.security.MessageDigest.isEqual(
+                    hex.toString().getBytes(java.nio.charset.StandardCharsets.US_ASCII),
+                    REVIEWER_CODE_SHA256.getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+        } catch (java.security.NoSuchAlgorithmException impossible) {
+            return false;
+        }
+    }
+
+    private void showReviewerAccessDialog() {
+        final EditText field = new EditText(this);
+        field.setId(R.id.reviewer_code_input);
+        field.setSingleLine(true);
+        field.setHint(R.string.reviewer_code_hint);
+        int pad = Design.dp(this, 20);
+        field.setPadding(pad, Design.dp(this, 12), pad, Design.dp(this, 12));
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.reviewer_code_title)
+                .setView(field)
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.billing_ok, (dialog, which) ->
+                        applyReviewerCode(field.getText() == null ? "" : field.getText().toString()))
+                .show();
+    }
+
+    void applyReviewerCode(String code) {
+        if (!isReviewerCode(code)) {
+            Toast.makeText(this, R.string.reviewer_code_invalid, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        PlanState.setPremium(this, true);
+        Toast.makeText(this, R.string.reviewer_code_ok, Toast.LENGTH_LONG).show();
+        screenHistory.clear();
+        currentScreen = null;
+        renderHome();
     }
 
     /** True for test builds (debug APKs); false for the Play Store release build. */
