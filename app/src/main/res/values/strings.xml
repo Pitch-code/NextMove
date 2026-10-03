@@ -61,7 +61,7 @@
     <string name="privacy_point_3">Activity remains on this device</string>
     <string name="accuracy_label">ACCURACY PROMISE</string>
     <string name="accuracy_body" formatted="false">The future AI version will show evidence and ask you to confirm important details. It will never claim 100% accuracy.</string>
-    <string name="version">NextMove 1.0.1 · Android</string>
+    <string name="version">NextMove 1.0.2 · Android</string>
     <string name="import_not_live_title">Image selected safely</string>
     <string name="import_not_live_body">Cloud analysis is intentionally not connected in this free prototype. Preview a sample result to experience the flow.</string>
     <string name="preview_result">Preview sample result</string>
@@ -396,6 +396,10 @@
     <string name="billing_ok">OK</string>
     <string name="recheck_permissions">Re-check permissions</string>
     <string name="privacy_policy_link">Read the full privacy policy</string>
+    <string name="reviewer_code_title">Access code</string>
+    <string name="reviewer_code_hint">Enter access code</string>
+    <string name="reviewer_code_invalid">That code is not valid.</string>
+    <string name="reviewer_code_ok">Premium unlocked for review.</string>
 
     <!-- Custom reminders -->
     <string name="sample_custom">Set your own reminder</string>

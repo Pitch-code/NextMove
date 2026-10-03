@@ -61,7 +61,7 @@
     <string name="privacy_point_3">एक्टिविटी इसी डिवाइस पर रहती है</string>
     <string name="accuracy_label">सटीकता का वादा</string>
     <string name="accuracy_body" formatted="false">भविष्य का AI वर्ज़न सबूत दिखाएगा और ज़रूरी जानकारी की पुष्टि माँगेगा। यह कभी 100% सटीकता का दावा नहीं करेगा।</string>
-    <string name="version">NextMove 1.0.1 · Android</string>
+    <string name="version">NextMove 1.0.2 · Android</string>
     <string name="import_not_live_title">इमेज सुरक्षित रूप से चुनी गई</string>
     <string name="import_not_live_body">इस मुफ़्त प्रोटोटाइप में क्लाउड विश्लेषण जानबूझकर नहीं जोड़ा गया है। अनुभव देखने के लिए नमूना नतीजा खोलें।</string>
     <string name="preview_result">नमूना नतीजा देखें</string>
@@ -396,6 +396,10 @@
     <string name="billing_ok">ठीक है</string>
     <string name="recheck_permissions">अनुमतियाँ फिर जाँचें</string>
     <string name="privacy_policy_link">पूरी प्राइवेसी पॉलिसी पढ़ें</string>
+    <string name="reviewer_code_title">एक्सेस कोड</string>
+    <string name="reviewer_code_hint">एक्सेस कोड डालें</string>
+    <string name="reviewer_code_invalid">यह कोड मान्य नहीं है।</string>
+    <string name="reviewer_code_ok">रिव्यू के लिए प्रीमियम अनलॉक हुआ।</string>
 
     <!-- अपना रिमाइंडर -->
     <string name="sample_custom">अपना रिमाइंडर सेट करें</string>

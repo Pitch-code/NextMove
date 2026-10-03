@@ -1,6 +1,7 @@
 package com.pitchcode.nextmove;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -106,6 +107,27 @@ public final class MainActivityFlowTest {
                 // in tests); the demo control unlocks Premium locally.
                 click(activity, R.id.plan_demo_premium);
                 assertNotNull(activity.findViewById(R.id.screen_home));
+            });
+        }
+    }
+
+    @Test
+    public void wrongReviewerCodeDoesNotUnlockPremium() {
+        setSetupComplete(true);
+        setPlan(false, System.currentTimeMillis() - 8L * DAY_MS);
+        assertFalse(MainActivity.isReviewerCode(""));
+        assertFalse(MainActivity.isReviewerCode("NMREVIEW-AAAA-BBBB-CCCC"));
+        try (ActivityScenario<MainActivity> scenario =
+                     ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(activity -> {
+                assertNotNull(activity.findViewById(R.id.screen_paywall));
+                // The hidden reviewer entry is on the logo, reachable even when locked.
+                View logo = activity.findViewById(R.id.brand_mark);
+                assertNotNull(logo);
+                assertTrue(logo.isLongClickable());
+                activity.applyReviewerCode("not-the-code");
+                assertNotNull(activity.findViewById(R.id.screen_paywall));
+                assertNull(activity.findViewById(R.id.screen_home));
             });
         }
     }
