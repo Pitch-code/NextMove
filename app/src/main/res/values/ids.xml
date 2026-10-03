@@ -59,4 +59,5 @@
     <item name="ad_banner" type="id" />
     <item name="settings_scan_card" type="id" />
     <item name="scan_status_action" type="id" />
+    <item name="privacy_policy_link" type="id" />
 </resources>

@@ -55,13 +55,13 @@
     <string name="language_label">ऐप की भाषा</string>
     <string name="english">English</string>
     <string name="hindi">हिंदी</string>
-    <string name="privacy_label">इस प्रोटोटाइप में प्राइवेसी</string>
+    <string name="privacy_label">आपकी प्राइवेसी</string>
     <string name="privacy_point_1">अकाउंट या लॉगिन की ज़रूरत नहीं</string>
     <string name="privacy_point_2">स्क्रीनशॉट फ़ोन से बाहर नहीं जाता</string>
     <string name="privacy_point_3">एक्टिविटी इसी डिवाइस पर रहती है</string>
     <string name="accuracy_label">सटीकता का वादा</string>
     <string name="accuracy_body" formatted="false">भविष्य का AI वर्ज़न सबूत दिखाएगा और ज़रूरी जानकारी की पुष्टि माँगेगा। यह कभी 100% सटीकता का दावा नहीं करेगा।</string>
-    <string name="version">प्रोटोटाइप 0.12.0 · Android</string>
+    <string name="version">NextMove 1.0.0 · Android</string>
     <string name="import_not_live_title">इमेज सुरक्षित रूप से चुनी गई</string>
     <string name="import_not_live_body">इस मुफ़्त प्रोटोटाइप में क्लाउड विश्लेषण जानबूझकर नहीं जोड़ा गया है। अनुभव देखने के लिए नमूना नतीजा खोलें।</string>
     <string name="preview_result">नमूना नतीजा देखें</string>
@@ -136,7 +136,7 @@
     <string name="official_india_body">वित्तीय साइबर फ्रॉड की शिकायत 1930 पर की जा सकती है और cybercrime.gov.in पर पूरी की जा सकती है। NextMove आपकी ओर से रिपोर्ट दर्ज नहीं करता।</string>
 
     <string name="notification_channel_name">NextMove रिमाइंडर</string>
-    <string name="notification_channel_description">प्रोटोटाइप नोटिफ़िकेशन अनुमति की पुष्टि</string>
+    <string name="notification_channel_description">NextMove के रिमाइंडर और पुष्टि</string>
     <string name="enable_notifications">नोटिफ़िकेशन चालू करें</string>
     <string name="notification_ready_title">NextMove नोटिफ़िकेशन तैयार हैं</string>
     <string name="notification_ready_body">यह जाँच पुष्टि करती है कि आपके फ़ोन पर नोटिफ़िकेशन एक्सेस काम करता है।</string>
@@ -241,7 +241,7 @@
     <string name="paywall_premium_title">आप प्रीमियम पर हैं</string>
     <string name="paywall_premium_body">सभी फ़ीचर अनलॉक हैं और विज्ञापन बंद हैं। NextMove का साथ देने के लिए धन्यवाद।</string>
     <string name="paywall_plan_name">NextMove प्रीमियम</string>
-    <string name="paywall_plan_price">₹499 · एक बार का भुगतान · 5 फ़ैमिली फ़ोन तक</string>
+    <string name="paywall_plan_price">₹499 · एक बार का भुगतान · कोई सब्सक्रिप्शन नहीं</string>
     <string name="paywall_benefit_1">स्कैम मैसेज स्कैनिंग चालू रहती है</string>
     <string name="paywall_benefit_2">आवाज़ और टेक्स्ट सुरक्षा जाँच</string>
     <string name="paywall_benefit_3">कोई विज्ञापन नहीं</string>
@@ -361,17 +361,6 @@
     <string name="summary_body_idle">इस हफ़्ते मैसेज सुरक्षा ने अभी कुछ नहीं जाँचा। नए मैसेज देखना शुरू करने के लिए इसे चालू करें।</string>
     <string name="summary_body_active">NextMove ने इस हफ़्ते इन्हें आपके फ़ोन पर जाँचा। गिनती हर हफ़्ते रीसेट होती है।</string>
 
-    <!-- फ़ैमिली प्लान -->
-    <string name="family_plan_body">प्रीमियम 5 फ़ैमिली फ़ोन तक कवर करता है। माता-पिता या रिश्तेदार को भी सुरक्षित रखने के लिए आमंत्रित करें।</string>
-    <string name="family_invite_button">फ़ैमिली को आमंत्रित करें</string>
-    <string name="family_invite_message">मैं स्कैम मैसेज पकड़ने के लिए NextMove इस्तेमाल कर रहा/रही हूँ और आपको अपने फ़ैमिली प्लान में जोड़ना चाहता/चाहती हूँ। इसे इंस्टॉल करें और यह फ़ैमिली कोड डालें: %1$s</string>
-    <string name="family_redeem_button">फ़ैमिली कोड है?</string>
-    <string name="family_redeem_title">फ़ैमिली प्लान से जुड़ें</string>
-    <string name="family_redeem_message">इस फ़ोन पर प्रीमियम अनलॉक करने के लिए किसी ने जो फ़ैमिली कोड शेयर किया है, वह डालें।</string>
-    <string name="family_redeem_confirm">जुड़ें</string>
-    <string name="family_code_hint">फ़ैमिली कोड (जैसे NM-1234)</string>
-    <string name="family_code_empty">कृपया फ़ैमिली कोड डालें।</string>
-    <string name="family_joined_toast">फ़ैमिली प्लान से जुड़ गए — प्रीमियम अनलॉक (डेमो)।</string>
 
     <!-- स्कैम प्रतिष्ठा और भरोसेमंद संपर्क -->
     <string name="alert_trusted_named">%1$s को सूचित करें</string>
@@ -397,15 +386,16 @@
     <!-- बिलिंग / मूल्य -->
     <string name="premium_price_onetime">प्रीमियम अनलॉक करें · ₹499 · एक बार</string>
     <string name="ad_label">विज्ञापन</string>
-    <string name="paywall_billing_note">भुगतान Google Play के ज़रिए एक बार के भुगतान के रूप में सुरक्षित रूप से होता है। असली खरीद स्क्रीन तब दिखेगी जब NextMove Play Store पर पब्लिश होगा — यह प्रोटोटाइप अभी भुगतान नहीं ले सकता।</string>
+    <string name="paywall_billing_note">Google Play द्वारा एक बार के भुगतान के रूप में सुरक्षित बिलिंग। कोई सब्सक्रिप्शन नहीं, कोई रिन्यूअल नहीं।</string>
     <string name="billing_cancelled">खरीद रद्द की गई।</string>
     <string name="billing_purchased">प्रीमियम अनलॉक हो गया। धन्यवाद!</string>
     <string name="billing_error">Google Play बिलिंग में कुछ गड़बड़ी हुई। कृपया फिर से कोशिश करें।</string>
-    <string name="billing_unavailable">NextMove की यह कॉपी फ़ाइल से इंस्टॉल की गई है, Google Play Store से नहीं, इसलिए Google Play अभी ₹499 का भुगतान नहीं ले सकता।\n\nयह बटन तब काम करेगा जब NextMove Play Store पर पब्लिश होगा और Play Console में ₹499 का प्रोडक्ट बनाया जाएगा।\n\nअभी प्रीमियम आज़माने के लिए नीचे डेमो कंट्रोल में “प्रीमियम सिम्युलेट करें” दबाएँ।</string>
+    <string name="billing_unavailable">Google Play अभी प्रीमियम खरीद लोड नहीं कर सका।\n\nकृपया इंटरनेट कनेक्शन जाँचें और पक्का करें कि NextMove Google Play Store से इंस्टॉल किया गया है, फिर दोबारा कोशिश करें।</string>
     <string name="billing_unavailable_title">प्रीमियम अभी नहीं खरीदा जा सकता</string>
     <string name="billing_connecting">Google Play से जुड़ रहे हैं…</string>
     <string name="billing_ok">ठीक है</string>
     <string name="recheck_permissions">अनुमतियाँ फिर जाँचें</string>
+    <string name="privacy_policy_link">पूरी प्राइवेसी पॉलिसी पढ़ें</string>
 
     <!-- अपना रिमाइंडर -->
     <string name="sample_custom">अपना रिमाइंडर सेट करें</string>

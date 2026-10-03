@@ -10,10 +10,25 @@ android {
         applicationId "com.pitchcode.nextmove"
         minSdk 26
         targetSdk 36
-        versionCode 14
-        versionName "0.12.0"
+        versionCode 15
+        versionName "1.0.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    // The Play upload key never lives in this public repo. The release workflow
+    // decodes it from GitHub secrets into a temp file and passes these env vars.
+    // Without them (e.g. normal CI), the release build is simply unsigned.
+    def uploadKeystore = System.getenv("NEXTMOVE_KEYSTORE_PATH")
+    signingConfigs {
+        if (uploadKeystore) {
+            upload {
+                storeFile file(uploadKeystore)
+                storePassword System.getenv("NEXTMOVE_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("NEXTMOVE_KEY_ALIAS")
+                keyPassword System.getenv("NEXTMOVE_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
@@ -21,6 +36,9 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            if (uploadKeystore) {
+                signingConfig signingConfigs.upload
+            }
         }
     }
 
