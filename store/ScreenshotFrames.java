@@ -16,7 +16,7 @@ public class ScreenshotFrames {
             SAFFRON = new Color(0xF5A524), MUTED = new Color(0xC6D3CD);
 
     static final String[][] CAPTIONS = {
-        {"01-home", "One clear, safe next step", "Share it, say it, or set a reminder."},
+        {"01-home", "One clear next step", "Share it, say it, or set a reminder."},
         {"02-scam-alert", "Scam messages flagged in time", "See why it looks risky and what to do."},
         {"03-link-check", "Check any link or number", "Fake bank sites, short links, reported scams."},
         {"04-panic", "Scammed? Act in minutes", "Clear steps, 1930 helpline and reporting."},
