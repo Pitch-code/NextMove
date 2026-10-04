@@ -52,6 +52,8 @@ public final class StoreScreenshotTest {
         context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         device.executeShellCommand("mkdir -p " + OUT);
+        // Touch mode hides keyboard-focus highlights (e.g. on the bottom tabs).
+        InstrumentationRegistry.getInstrumentation().setInTouchMode(true);
 
         SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         Calendar now = Calendar.getInstance();
@@ -103,6 +105,7 @@ public final class StoreScreenshotTest {
         VoiceRiskAssessment risk = VoiceRiskAssessment.evaluate(message);
         FlaggedStore.Item alert = FlaggedStore.add(context, "Messages · AX-KYCUPD", message,
                 risk.signalCount, true, TextUtils.join(", ", risk.matchedTerms));
+        backdate(alert.id, 8L * 60L * 1000L); // shows "8 minutes ago"
         Intent open = new Intent(context, MainActivity.class)
                 .putExtra(MainActivity.EXTRA_FLAGGED_ID, alert.id);
         try (ActivityScenario<MainActivity> s = ActivityScenario.launch(open)) {
@@ -159,6 +162,17 @@ public final class StoreScreenshotTest {
         }
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .edit().putString("language", "en").commit();
+    }
+
+    /** Moves a saved alert's timestamp into the past so it reads naturally. */
+    private void backdate(long id, long ageMillis) throws Exception {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        org.json.JSONArray array = new org.json.JSONArray(prefs.getString("flagged_alerts", "[]"));
+        for (int i = 0; i < array.length(); i++) {
+            org.json.JSONObject o = array.getJSONObject(i);
+            if (o.optLong("id") == id) o.put("time", System.currentTimeMillis() - ageMillis);
+        }
+        prefs.edit().putString("flagged_alerts", array.toString()).commit();
     }
 
     private static long at(int daysFromNow, int hour, int minute) {
