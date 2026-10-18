@@ -10,8 +10,8 @@ android {
         applicationId "com.pitchcode.nextmove"
         minSdk 26
         targetSdk 36
-        versionCode 17
-        versionName "1.0.2"
+        versionCode 18
+        versionName "1.0.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -33,9 +33,15 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            // Code/resource shrinking is intentionally OFF. The app is ~2 MB and
+            // uses only framework + Play SDKs, so shrinking saves almost nothing,
+            // but R8's optimizer (with no keep rules) was stripping/renaming code
+            // on the startup path and crashing the signed Play build on launch
+            // ("NextMove keeps stopping") while the debug build ran fine.
+            // Keeping this off trades a negligible size increase for a build that
+            // behaves identically to the debug build testers were happy with.
+            minifyEnabled false
+            shrinkResources false
             if (uploadKeystore) {
                 signingConfig signingConfigs.upload
             }
